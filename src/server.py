@@ -21,10 +21,24 @@ def add(a: int, b: int) -> int:
     """
     return a + b
 
-# 3. 定义 Resource: 时间
-# 资源是类似于文件的只读数据，用于提供上下文信息
-@mcp.resource("time://now")
-def get_time() -> str:
+@mcp.tool()
+def subtract(a: int, b: int) -> int:
+    """
+    执行两个整数的减法。
+    
+    Args:
+        a: 第一个整数
+        b: 第二个整数
+        
+    Returns:
+        两个数的差
+    """
+    return a - b    
+
+# 3. 定义 Tool: 时间
+# 工具是可以被模型调用的函数，用于执行具体操作
+@mcp.tool()
+def get_current_time() -> str:
     """
     获取当前系统时间。
     

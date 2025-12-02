@@ -43,11 +43,11 @@ async def run():
             for resource in resources.resources:
                 print(f"  - {resource.uri}: {resource.name}")
 
-            # 5. 读取 'time://now' 资源
-            print("\n⚡ 正在读取资源 'time://now'...")
-            # 注意：读取资源时传入的是 uri
-            resource_content = await session.read_resource("time://now")
-            print(f"✅ 当前时间: {resource_content.contents[0].text}")
+            # 5. 调用 'get_current_time' 工具
+            print("\n⚡ 正在调用工具 'get_current_time'...")
+            # 注意：现在时间获取变成了一个工具
+            time_result = await session.call_tool("get_current_time")
+            print(f"✅ 当前时间: {time_result.content[0].text}")
 
 if __name__ == "__main__":
     asyncio.run(run())
