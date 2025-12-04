@@ -5,6 +5,20 @@ import asyncio
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
 
+# Add project root to sys.path to import src.common
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, "..", "..", ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+try:
+    from src.common.config import load_config
+except ImportError:
+    # Fallback if running from installed package or different structure
+    # This simple fallback mimics the behavior of load_config but without reading the file
+    def load_config(default=None):
+        return default or {}
+
 try:
     from .path_utils import map_path_to_container
     from .converter import convert_file_sync
@@ -13,20 +27,42 @@ except ImportError:
     from path_utils import map_path_to_container
     from converter import convert_file_sync
 
-# 加载环境变量
+# Load config
+config = load_config({
+    "mcp_debug": False,
+    "host_root": "",
+    "container_root": "",
+    "log_level": "INFO"
+})
+
+# Set env vars from config if present (Config.json takes precedence over defaults, but .env might override if loaded after? 
+# Usually we want Config.json to be the way for EXE users to configure without Env vars.)
+if config.get("host_root"):
+    os.environ["HOST_ROOT"] = config["host_root"]
+if config.get("container_root"):
+    os.environ["CONTAINER_ROOT"] = config["container_root"]
+if config.get("mcp_debug"):
+    os.environ["MCP_DEBUG"] = "1"
+
+# Load .env (for development or overrides)
 load_dotenv()
-# 尝试加载脚本所在目录的 .env
 script_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(script_dir, ".env")
 if os.path.exists(env_path):
     load_dotenv(env_path)
 
-# 配置日志
+# Configure logging
+log_level_name = config.get("log_level", "INFO").upper()
+log_level = getattr(logging, log_level_name, logging.INFO)
+
+# Force DEBUG if MCP_DEBUG is set
 if getattr(sys, 'frozen', False) or os.environ.get("MCP_DEBUG"):
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    log_level = logging.DEBUG
+
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # 初始化 MCP Server
 mcp = FastMCP("Everything2MD")

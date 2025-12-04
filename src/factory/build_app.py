@@ -109,10 +109,12 @@ def build_app(app_name: str, display_name: str = None):
         release_dir.mkdir(parents=True, exist_ok=True)
         print(f"📦 组装交付物至: {release_dir}")
         
-        # 3.1 移动 EXE
+        # 3.1 复制 EXE (改为 copy 而不是 move，以便保留 dist 中的原始文件用于调试)
         exe_path = dist_dir / f"{app_name}.exe"
+        target_exe = release_dir / f"{app_name}.exe"
         if exe_path.exists():
-            shutil.move(str(exe_path), str(release_dir / f"{app_name}.exe"))
+            shutil.copy(str(exe_path), str(target_exe))
+            print(f"  - 已复制 EXE: {target_exe}")
         else:
             print(f"⚠️ 警告: 未找到生成的 EXE 文件: {exe_path}")
 
