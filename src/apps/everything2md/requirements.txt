@@ -5,3 +5,5 @@ pptx2md
 fastapi
 uvicorn
 python-multipart
+pytesseract
+Pillow

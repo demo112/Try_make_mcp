@@ -35,7 +35,10 @@ mcp = FastMCP("Everything2MD")
 async def convert_to_markdown(source_path: str, output_path: str) -> str:
     """
     将各种文档格式转换为 Markdown (异步)。
-    支持格式: .docx, .doc, .xlsx, .xls, .pptx, .ppt, .pdf
+    支持格式: 
+    - Office: .docx, .doc, .xlsx, .xls, .pptx, .ppt
+    - PDF: .pdf
+    - Images (OCR): .png, .jpg, .jpeg, .tiff, .bmp
 
     Args:
         source_path: 源文件的绝对路径。

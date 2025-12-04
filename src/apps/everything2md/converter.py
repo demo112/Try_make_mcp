@@ -19,6 +19,15 @@ except ImportError:
     logger.warning("pymupdf4llm not installed. PDF conversion will fail.")
     pymupdf4llm = None
 
+# Try to import pytesseract and Pillow
+try:
+    import pytesseract
+    from PIL import Image
+except ImportError:
+    logger.warning("pytesseract or Pillow not installed. OCR conversion will fail.")
+    pytesseract = None
+    Image = None
+
 # Load environment variables
 load_dotenv()
 # Try loading from script directory
@@ -69,6 +78,24 @@ try:
         r"C:\Program Files\Pandoc\pandoc.exe",
         r"C:\Users\Administrator\AppData\Local\Pandoc\pandoc.exe"
     ], "PANDOC_PATH")
+    
+    # Tesseract Path Configuration
+    try:
+        TESSERACT_PATH = find_executable("tesseract", [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+            "/usr/bin/tesseract",
+            "/usr/local/bin/tesseract"
+        ], "TESSERACT_PATH")
+        
+        # Configure pytesseract if found and module is available
+        if pytesseract and os.path.exists(TESSERACT_PATH) and os.path.isfile(TESSERACT_PATH):
+             pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+             
+    except Exception as e:
+        logger.warning(f"Tesseract not found: {e}. OCR will not work.")
+        TESSERACT_PATH = None
+
 except FileNotFoundError as e:
     logger.error(f"Critical Error: {e}")
     # We don't exit here to avoid killing the importing process, but conversion will fail
@@ -142,6 +169,31 @@ def _convert_pdf_to_md(source_path: str, output_path: str) -> None:
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(md_text)
 
+def _convert_image_to_md(source_path: str, output_path: str) -> None:
+    """同步处理图片 OCR 转换"""
+    if pytesseract is None or Image is None:
+        raise ImportError("pytesseract or Pillow not installed. Please install them to convert images.")
+    
+    # Check if Tesseract path is valid/set in pytesseract
+    try:
+        # Attempt to get version to check if binary works
+        pytesseract.get_tesseract_version()
+    except Exception:
+        raise RuntimeError("Tesseract-OCR executable not found or not working. Please install Tesseract and set TESSERACT_PATH.")
+
+    try:
+        image = Image.open(source_path)
+        # Perform OCR
+        # lang='chi_sim+eng' could be used if we want chinese support by default, 
+        # but let's stick to default (eng) or whatever is installed/default for now to avoid errors if chi_sim missing.
+        # We can improve this later to be configurable.
+        text = pytesseract.image_to_string(image)
+        
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+    except Exception as e:
+        raise RuntimeError(f"OCR conversion failed: {e}")
+
 def convert_file_sync(source_path: str, output_path: str) -> None:
     """
     Synchronously convert a file to Markdown.
@@ -165,6 +217,9 @@ def convert_file_sync(source_path: str, output_path: str) -> None:
 
     elif file_extension == '.pdf':
         _convert_pdf_to_md(source_path, output_path)
+        
+    elif file_extension in ['.png', '.jpg', '.jpeg', '.tiff', '.bmp']:
+        _convert_image_to_md(source_path, output_path)
 
     else:
         raise ValueError(f"Unsupported file type: {file_extension}")
