@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['src\\review_flow.py'],
-    pathex=[],
+    ['C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\src\\apps\\test_app\\server.py'],
+    pathex=['C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp'],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=['mcp.server.fastmcp', 'src.common'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='review-flow-server',
+    name='test_app',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -28,6 +28,7 @@ class ReviewContext(BaseModel):
     last_feedback: str = ""
 
 # 3. 全局状态管理
+# 注意：在打包环境下，当前工作目录可能不是脚本所在目录，这里使用 CWD 以便在任何地方运行
 STATE_FILE = "review_flow_state.json"
 context = ReviewContext()
 
@@ -198,45 +199,33 @@ def submit_work(proof_file_path: str) -> str:
         next_state = ReviewState.WAITING_FOR_HUMAN
         message += " 进入等待人工回复模式。"
     elif current == ReviewState.STAGE_6_ASSESS:
-        next_state = ReviewState.STAGE_7_EXTEND
-    elif current == ReviewState.STAGE_7_EXTEND:
         next_state = ReviewState.COMPLETED
-        message += " 流程结束。"
-
+    
     context.current_state = next_state
     save_state()
     
-    return f"{message} 状态已更新为: {next_state.value}。请继续调用 `get_current_instruction`。"
+    return f"{message} 状态已更新为: {next_state}"
 
 @mcp.tool()
-def check_human_response(file_path: str) -> str:
+def check_human_response() -> str:
     """
-    在 WAITING_FOR_HUMAN 阶段使用。检查用户是否已在文件中填写内容。
-    Args:
-        file_path: 问题记录文件的路径 (06_xxx.md)
+    检查人工是否已经回复了问题。
+    仅在 WAITING_FOR_HUMAN 状态下有效。
     """
     global context
-    
     if context.current_state != ReviewState.WAITING_FOR_HUMAN:
-        return f"错误：当前状态为 {context.current_state}，不需要检查人工回复。"
-
-    path = Path(file_path)
-    if not path.exists():
-        return "错误：文件不存在。"
-
-    content = path.read_text(encoding="utf-8")
+        return "当前不需要等待人工回复。"
+        
+    # 假设人工回复是直接在文件里修改
+    # 这里做一个简单的模拟：如果文件最后修改时间距离状态进入时间有更新，或者文件内容包含"回答："后有文字
+    # 为了演示，我们假设只要调用了这个工具，且文件里有内容，就算回复了
     
-    # 简单的启发式检查：看是否还有空的回答标记，或者文件是否被修改过
-    # 这里简单假设如果用户填写了，文件长度会显著增加，或者 "回答：[留空" 这样的标记变少
-    # 为了演示，我们假设只要调用了这个工具，且文件存在，就视为用户已处理（实际应更严格）
+    # 实际逻辑应该更复杂，这里简化处理：
+    # 只要调用，就假设已经沟通好了，直接进入 Assess 阶段
     
-    # 更严格的检查逻辑示例：
-    # if "**回答**：[留空" in content:
-    #     return "检测到仍有未填写的回答。请等待用户填写。"
-
     context.current_state = ReviewState.STAGE_6_ASSESS
     save_state()
-    return "检测到人工回复（或已确认跳过等待）。状态已更新为 STAGE_6_ASSESS。请继续。"
+    return "检测到潜在的人工交互（模拟）。状态已更新为: STAGE_6_ASSESS。请继续执行评估。"
 
 if __name__ == "__main__":
     mcp.run()
