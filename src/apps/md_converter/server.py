@@ -32,7 +32,30 @@ if getattr(sys, 'frozen', False) or os.environ.get("MCP_DEBUG"):
 
 try:
     from mcp.server.fastmcp import FastMCP
-    from .converters import md_to_word, md_to_pdf, md_to_excel
+    
+    # 尝试多种导入方式
+    try:
+        # 1. 相对导入 (IDE/源码环境)
+        from .converters import md_to_word, md_to_pdf, md_to_excel
+        logging.info("Imported via relative import")
+    except ImportError:
+        try:
+            # 2. 绝对导入 (打包后，如果 converters 在根目录)
+            import converters
+            from converters import md_to_word, md_to_pdf, md_to_excel
+            logging.info("Imported via absolute import 'converters'")
+        except ImportError:
+            try:
+                # 3. 完整包路径导入 (如果保留了包结构)
+                from src.apps.md_converter import converters
+                from src.apps.md_converter.converters import md_to_word, md_to_pdf, md_to_excel
+                logging.info("Imported via full package path")
+            except ImportError as e:
+                logging.critical(f"All import attempts failed. Last error: {e}")
+                # 打印 sys.path 和 sys.modules keys 以便调试
+                logging.debug(f"sys.path: {sys.path}")
+                logging.debug(f"sys.modules keys containing 'converter': {[k for k in sys.modules.keys() if 'converter' in k]}")
+                raise
 except ImportError as e:
     logging.critical(f"Import error: {e}")
     raise

@@ -1,0 +1,95 @@
+2025-12-04 16:45:20,197 - root - INFO - Starting MDConverter Server...
+2025-12-04 16:45:20,744 - root - CRITICAL - Import error: No module named 'converters'
+2025-12-04 16:45:20,745 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "server.py", line 37, in <module>
+ImportError: attempted relative import with no known parent package
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "server.py", line 40, in <module>
+ModuleNotFoundError: No module named 'converters'
+2025-12-04 16:47:26,667 - root - INFO - Starting MDConverter Server...
+2025-12-04 16:47:27,933 - root - CRITICAL - All import attempts failed. Last error: No module named 'reportlab.graphics.barcode.code128'
+2025-12-04 16:47:27,933 - root - DEBUG - sys.path: ['C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\_MEI262682\\base_library.zip', 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\_MEI262682\\python3.13\\lib-dynload', 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\_MEI262682', 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\_MEI262682\\win32', 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\_MEI262682\\pywin32_system32', 'C:\\Users\\ADMINI~1\\AppData\\Local\\Temp\\_MEI262682\\setuptools\\_vendor']
+2025-12-04 16:47:27,933 - root - DEBUG - sys.modules keys containing 'converter': ['attr.converters', 'attrs.converters', 'src.apps.md_converter']
+2025-12-04 16:47:27,933 - root - CRITICAL - Import error: No module named 'reportlab.graphics.barcode.code128'
+2025-12-04 16:47:27,933 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "server.py", line 39, in <module>
+ImportError: attempted relative import with no known parent package
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "server.py", line 44, in <module>
+ModuleNotFoundError: No module named 'converters'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "server.py", line 50, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "src\apps\md_converter\converters.py", line 6, in <module>
+    from xhtml2pdf import pisa
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "xhtml2pdf\pisa.py", line 26, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "xhtml2pdf\document.py", line 25, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "xhtml2pdf\context.py", line 39, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "xhtml2pdf\parser.py", line 44, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "xhtml2pdf\tables.py", line 21, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "xhtml2pdf\tags.py", line 24, in <module>
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "reportlab\graphics\barcode\__init__.py", line 76, in <module>
+  File "reportlab\graphics\barcode\__init__.py", line 42, in _reset
+  File "pyimod02_importers.py", line 457, in exec_module
+  File "reportlab\graphics\barcode\widgets.py", line 173, in <module>
+  File "reportlab\graphics\barcode\widgets.py", line 100, in _BCW
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'reportlab.graphics.barcode.code128'
+2025-12-04 16:49:49,132 - root - INFO - Starting MDConverter Server...
+2025-12-04 16:49:50,762 - root - INFO - Imported via full package path
+2025-12-04 16:49:50,766 - mcp.server.lowlevel.server - DEBUG - Initializing server 'MDConverter'
+2025-12-04 16:49:50,766 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2025-12-04 16:49:50,767 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2025-12-04 16:49:50,767 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2025-12-04 16:49:50,767 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2025-12-04 16:49:50,767 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2025-12-04 16:49:50,767 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2025-12-04 16:49:50,767 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2025-12-04 16:49:50,789 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-04 16:49:50,800 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-12-04 16:49:50,801 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x0000021732083B10>
+2025-12-04 16:49:50,801 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-12-04 16:49:50,802 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2025-12-04 16:49:50,802 - mcp.server.lowlevel.server - DEBUG - Response sent
+2025-12-04 16:49:50,812 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: I/O operation on closed file.
+2025-12-04 17:00:45,873 - root - INFO - Starting MDConverter Server...
+2025-12-04 17:00:47,246 - root - INFO - Imported via full package path
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Initializing server 'MDConverter'
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2025-12-04 17:00:47,248 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2025-12-04 17:00:47,261 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-04 17:00:47,267 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-12-04 17:00:47,268 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x000001C9E9B33B10>
+2025-12-04 17:00:47,268 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-12-04 17:00:47,268 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2025-12-04 17:00:47,268 - mcp.server.lowlevel.server - DEBUG - Response sent
+2025-12-04 17:00:47,275 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: I/O operation on closed file.

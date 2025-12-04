@@ -1,10 +1,39 @@
 import os
+import logging
 import markdown
 from bs4 import BeautifulSoup
 from openpyxl import Workbook
 from docx import Document
 from xhtml2pdf import pisa
 import platform
+
+# 离线安全回调：禁止网络请求
+def link_callback(uri, rel):
+    """
+    Convert HTML URIs to absolute system paths so xhtml2pdf can access those resources
+    Enforces OFFLINE ONLY rule: rejects http/https/ftp
+    """
+    # 1. 拒绝网络协议
+    if uri.startswith('http://') or uri.startswith('https://') or uri.startswith('ftp://'):
+        logging.warning(f"Offline Policy: Blocked network resource: {uri}")
+        return None
+
+    # 2. 处理本地文件
+    # 如果是绝对路径，直接返回
+    if os.path.isabs(uri):
+        if os.path.exists(uri):
+            return uri
+        return None
+        
+    # 3. 处理相对路径 (需要知道 base path，这里简化处理，假设相对于 cwd)
+    # 实际上 pisa.CreatePDF 应该通过 context 传递 base path，但在 MCP 中通常文件是完全限定的
+    # 如果 rel 有定义，尝试结合
+    # 暂时只支持绝对路径的本地资源，或者与 cwd 相关的
+    abs_path = os.path.abspath(uri)
+    if os.path.exists(abs_path):
+        return abs_path
+        
+    return None
 
 # 设置 Windows 字体路径
 # 优先使用系统中确实存在的字体，避免临时文件权限问题
@@ -123,7 +152,8 @@ def md_to_pdf(source_path: str, output_path: str) -> str:
         pisa_status = pisa.CreatePDF(
             src=full_html,
             dest=result_file,
-            encoding='utf-8'
+            encoding='utf-8',
+            link_callback=link_callback  # 注入离线回调
         )
         
     if pisa_status.err:

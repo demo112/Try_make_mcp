@@ -3,6 +3,12 @@ import sys
 import shutil
 import subprocess
 from pathlib import Path
+try:
+    from .verify_mcp import verify_mcp_exe
+except ImportError:
+    # Fallback for direct script execution
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    from src.factory.verify_mcp import verify_mcp_exe
 
 def build_app(app_name: str, display_name: str = None):
     root_dir = Path(os.getcwd())
@@ -47,14 +53,16 @@ def build_app(app_name: str, display_name: str = None):
         "--paths", str(root_dir),
         "--hidden-import", "mcp.server.fastmcp",
         "--hidden-import", "src.common",
+        # 显式包含 converters 模块
+        "--hidden-import", "src.apps.md_converter.converters",
         # 添加更多潜在的隐式依赖
         "--hidden-import", "uvicorn",
         "--hidden-import", "starlette",
         "--hidden-import", "sse_starlette",
         "--hidden-import", "pydantic",
         "--hidden-import", "anyio",
-        "--hidden-import", "xhtml2pdf",
-        "--hidden-import", "reportlab",
+        "--collect-all", "xhtml2pdf",
+        "--collect-all", "reportlab",
         "--hidden-import", "html5lib",
         "--hidden-import", "openpyxl",
         "--hidden-import", "docx",
@@ -70,6 +78,15 @@ def build_app(app_name: str, display_name: str = None):
     except subprocess.CalledProcessError as e:
         print(f"❌ 打包失败: {e}")
         return
+
+    # 2.5 验证 EXE
+    exe_path = dist_dir / f"{app_name}.exe"
+    print(f"\n🕵️ 开始自动化验证: {exe_path}")
+    if not verify_mcp_exe(str(exe_path)):
+        print(f"❌ 验证失败！EXE 无法正常启动或响应 MCP 协议。")
+        print("⚠️ 跳过发布包组装。请检查日志或代码。")
+        return
+    print("✅ 验证通过！应用功能正常。")
 
     # 3. 创建 Release 目录并组装交付物
     try:
