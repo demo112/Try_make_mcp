@@ -4,29 +4,39 @@ import shutil
 import subprocess
 from pathlib import Path
 
-def build_app(app_name: str):
+def build_app(app_name: str, display_name: str = None):
     root_dir = Path(os.getcwd())
-    apps_dir = root_dir / "src" / "apps"
-    target_app_dir = apps_dir / app_name
-    server_script = target_app_dir / "server.py"
+    app_dir = root_dir / "src" / "apps" / app_name
+    server_script = app_dir / "server.py"
+    dist_dir = root_dir / "dist"
+    build_dir = root_dir / "build"
     
-    if not target_app_dir.exists():
-        print(f"❌ 错误: 应用不存在: {app_name}")
-        return
+    # 如果未提供 display_name，尝试从目录结构推断（这里简化处理，如果不传则需手动处理文档路径）
+    # 为了兼容性，这里尝试去 docs 目录查找匹配的 display_name
+    docs_root = root_dir / "docs"
+    doc_dir = None
+    if display_name:
+        doc_dir = docs_root / display_name
     
     if not server_script.exists():
-        print(f"❌ 错误: 找不到入口文件: {server_script}")
+        print(f"❌ 错误: 找不到应用脚本: {server_script}")
         return
 
-    print(f"🚀 开始打包应用: {app_name}")
-    
-    # 构造 PyInstaller 命令
-    # 注意：我们需要包含 src 目录以确保 import src.common 正常工作
-    # hidden-import 也是必须的，因为 fastmcp 可能使用了动态加载
-    
-    dist_dir = root_dir / "dist"
-    build_dir = root_dir / "build" / app_name
-    
+    print(f"🚀 开始构建应用: {app_name}")
+
+    # 1. 清理旧构建
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+        
+    # 注意：我们不完全删除 dist，因为可能包含其他应用的构建。
+    # 但我们会删除当前应用的旧 release 文件夹
+    release_dir_name = f"{app_name}_release"
+    release_dir = dist_dir / release_dir_name
+    if release_dir.exists():
+        shutil.rmtree(release_dir)
+
+    # 2. 执行 PyInstaller
+    # 使用 --hidden-import 确保 fastmcp 和 common 被正确打包
     cmd = [
         "pyinstaller",
         "--name", app_name,
@@ -34,32 +44,63 @@ def build_app(app_name: str):
         "--clean",
         "--distpath", str(dist_dir),
         "--workpath", str(build_dir),
-        "--paths", str(root_dir),  # 将根目录加入路径，以便能找到 src
+        "--paths", str(root_dir),
         "--hidden-import", "mcp.server.fastmcp",
         "--hidden-import", "src.common",
         str(server_script)
     ]
     
-    print(f"📦 执行命令: {' '.join(cmd)}")
-    
+    print(f"执行命令: {' '.join(cmd)}")
     try:
-        subprocess.check_call(cmd, shell=True)
-        print(f"\n✅ 打包成功！")
-        print(f"👉 产物路径: {dist_dir / (app_name + '.exe')}")
+        subprocess.check_call(cmd)
+        print(f"✅ EXE 打包成功: {dist_dir / (app_name + '.exe')}")
     except subprocess.CalledProcessError as e:
         print(f"❌ 打包失败: {e}")
+        return
+
+    # 3. 创建 Release 目录并组装交付物
+    try:
+        release_dir.mkdir(parents=True, exist_ok=True)
+        print(f"📦 组装交付物至: {release_dir}")
+        
+        # 3.1 移动 EXE
+        exe_path = dist_dir / f"{app_name}.exe"
+        if exe_path.exists():
+            shutil.move(str(exe_path), str(release_dir / f"{app_name}.exe"))
+        else:
+            print(f"⚠️ 警告: 未找到生成的 EXE 文件: {exe_path}")
+
+        # 3.2 复制配置文件 (如果存在)
+        config_src = app_dir / "config.json"
+        if config_src.exists():
+            shutil.copy(str(config_src), str(release_dir / "config.json"))
+            print("  - 已复制 config.json")
+        else:
+            print("  - (无 config.json，跳过)")
+
+        # 3.3 复制说明文档
+        # 优先级: UserManual.md > Readme.md
+        manual_src = None
+        if doc_dir and (doc_dir / "UserManual.md").exists():
+            manual_src = doc_dir / "UserManual.md"
+        elif doc_dir and (doc_dir / "Readme.md").exists():
+            manual_src = doc_dir / "Readme.md"
+        
+        if manual_src:
+            shutil.copy(str(manual_src), str(release_dir / "README.md"))
+            print(f"  - 已复制文档 ({manual_src.name} -> README.md)")
+        else:
+            print("⚠️ 警告: 未找到文档 (UserManual.md 或 Readme.md)")
+
+        print(f"\n🎉 构建完成！发布包位置: {release_dir}")
+
+    except Exception as e:
+        print(f"❌ 组装交付物失败: {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python -m src.factory.build_app <app_name>")
-        
-        # 列出可用应用
-        root_dir = Path(os.getcwd())
-        apps_dir = root_dir / "src" / "apps"
-        if apps_dir.exists():
-            print("\n可用应用:")
-            for item in apps_dir.iterdir():
-                if item.is_dir() and (item / "server.py").exists():
-                    print(f"  - {item.name}")
+        print("Usage: python -m src.factory.build_app <app_name> [display_name]")
+        print("Example: python -m src.factory.build_app todo_list 待办清单")
     else:
-        build_app(sys.argv[1])
+        display_name = sys.argv[2] if len(sys.argv) > 2 else None
+        build_app(sys.argv[1], display_name)

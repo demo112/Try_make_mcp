@@ -1,0 +1,4 @@
+{
+    "log_level": "INFO",
+    "custom_message": "Hello from config.json!"
+}
