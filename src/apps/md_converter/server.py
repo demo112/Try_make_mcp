@@ -1,6 +1,41 @@
-from mcp.server.fastmcp import FastMCP
+import sys
 import os
-from .converters import md_to_word, md_to_pdf, md_to_excel
+import logging
+import traceback
+
+# 配置日志记录，以便在打包为 EXE 后排查启动错误
+# 仅在 frozen (打包) 模式下，或显式请求调试时启用文件日志
+if getattr(sys, 'frozen', False) or os.environ.get("MCP_DEBUG"):
+    # 获取 EXE 所在目录
+    if getattr(sys, 'frozen', False):
+        application_path = os.path.dirname(sys.executable)
+    else:
+        application_path = os.getcwd()
+        
+    log_file = os.path.join(application_path, 'server_debug.log')
+    
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # 捕获未处理的异常
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+        logging.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+    sys.excepthook = handle_exception
+    logging.info("Starting MDConverter Server...")
+
+try:
+    from mcp.server.fastmcp import FastMCP
+    from .converters import md_to_word, md_to_pdf, md_to_excel
+except ImportError as e:
+    logging.critical(f"Import error: {e}")
+    raise
 
 # 初始化 MCP Server
 mcp = FastMCP("MDConverter")

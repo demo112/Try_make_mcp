@@ -47,6 +47,19 @@ def build_app(app_name: str, display_name: str = None):
         "--paths", str(root_dir),
         "--hidden-import", "mcp.server.fastmcp",
         "--hidden-import", "src.common",
+        # 添加更多潜在的隐式依赖
+        "--hidden-import", "uvicorn",
+        "--hidden-import", "starlette",
+        "--hidden-import", "sse_starlette",
+        "--hidden-import", "pydantic",
+        "--hidden-import", "anyio",
+        "--hidden-import", "xhtml2pdf",
+        "--hidden-import", "reportlab",
+        "--hidden-import", "html5lib",
+        "--hidden-import", "openpyxl",
+        "--hidden-import", "docx",
+        "--hidden-import", "markdown",
+        "--hidden-import", "bs4",
         str(server_script)
     ]
     
