@@ -138,6 +138,14 @@ def build_app(app_name: str, display_name: str = None):
         else:
             print("⚠️ 警告: 未找到文档 (UserManual.md 或 Readme.md)")
 
+        # 3.4 复制变更日志 (CHANGELOG.md)
+        if doc_dir and (doc_dir / "CHANGELOG.md").exists():
+            changelog_src = doc_dir / "CHANGELOG.md"
+            shutil.copy(str(changelog_src), str(release_dir / "CHANGELOG.md"))
+            print(f"  - 已复制变更日志 (CHANGELOG.md)")
+        else:
+            print("  - (无 CHANGELOG.md，跳过)")
+
         print(f"\n🎉 构建完成！发布包位置: {release_dir}")
 
         # 4. 自动压缩发布包
