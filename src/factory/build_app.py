@@ -124,6 +124,15 @@ def build_app(app_name: str, display_name: str = None):
 
         print(f"\n🎉 构建完成！发布包位置: {release_dir}")
 
+        # 4. 自动压缩发布包
+        try:
+            zip_base_name = dist_dir / f"{app_name}_release_v{server_info.get('version', 'latest')}" if 'server_info' in locals() else dist_dir / f"{app_name}_release"
+            # 这里的 zip_base_name 不需要 .zip 后缀，make_archive 会自动添加
+            zip_file = shutil.make_archive(str(zip_base_name), 'zip', str(release_dir))
+            print(f"🤐 已生成压缩包: {zip_file}")
+        except Exception as e:
+            print(f"⚠️ 压缩失败: {e}")
+
     except Exception as e:
         print(f"❌ 组装交付物失败: {e}")
 

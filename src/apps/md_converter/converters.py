@@ -3,6 +3,8 @@ import logging
 import markdown
 from bs4 import BeautifulSoup
 from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from openpyxl.utils import get_column_letter
 from docx import Document
 from xhtml2pdf import pisa
 import platform
@@ -161,6 +163,56 @@ def md_to_pdf(source_path: str, output_path: str) -> str:
         
     return f"Successfully converted to PDF: {output_path}"
 
+def extract_cell_content(cell_element):
+    """
+    Extracts text from a BeautifulSoup element (td/th) while preserving:
+    - Line breaks (<br>)
+    - Paragraphs (<p>)
+    - Lists (<ul>, <ol>, <li>)
+    """
+    # We work on a copy if we want to be safe, but here modifying the soup 
+    # in the loop is fine as we don't reuse these elements.
+    # However, to be safe against side-effects if soup is reused, we'll just modify 'cell_element'
+    # since 'soup' is created locally in md_to_excel and discarded.
+    
+    # 1. Handle <br> and <br/>
+    for br in cell_element.find_all("br"):
+        br.replace_with("\n")
+        
+    # 2. Handle Lists (<ul>, <ol>, <li>)
+    # We process <li> first.
+    for li in cell_element.find_all("li"):
+        parent = li.parent
+        prefix = "• " # Default for ul
+        if parent and parent.name == 'ol':
+            # Try to find index
+            siblings = parent.find_all("li", recursive=False)
+            try:
+                idx = siblings.index(li) + 1
+                prefix = f"{idx}. "
+            except ValueError:
+                pass
+        
+        # Insert prefix and newline
+        li.insert(0, prefix)
+        li.append("\n")
+        # We don't unwrap li yet, get_text will handle the content. 
+        # But unwrapping helps prevent double spacing if get_text adds separators.
+        
+    # 3. Handle Paragraphs <p>
+    for p in cell_element.find_all("p"):
+        p.append("\n")
+        
+    # 4. Get text
+    # get_text might join with spaces if not specified, but since we inserted \n, it should be fine.
+    # separator="" ensures we control the newlines
+    text = cell_element.get_text(separator="")
+    
+    # 5. Cleanup
+    # Remove multiple consecutive newlines if desired, or just strip ends
+    text = text.strip()
+    return text
+
 def md_to_excel(source_path: str, output_path: str) -> str:
     """
     Markdown 转 Excel (提取表格)。
@@ -183,8 +235,29 @@ def md_to_excel(source_path: str, output_path: str) -> str:
     # 移除默认创建的 Sheet
     wb.remove(wb.active)
     
+    # 定义样式
+    header_font = Font(bold=True, name='微软雅黑')
+    header_fill = PatternFill(start_color="DCE6F1", end_color="DCE6F1", fill_type="solid") # 淡蓝色背景
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    
+    cell_alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    thin_border = Border(left=Side(style='thin'), 
+                         right=Side(style='thin'), 
+                         top=Side(style='thin'), 
+                         bottom=Side(style='thin'))
+
+    def set_cell_style(cell, is_header=False):
+        cell.border = thin_border
+        if is_header:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+        else:
+            cell.alignment = cell_alignment
+
     for i, table in enumerate(tables):
         ws = wb.create_sheet(title=f"Table {i+1}")
+        col_widths = {} # 记录每列的最大字符长度
         
         # 处理表头
         thead = table.find("thead")
@@ -193,28 +266,65 @@ def md_to_excel(source_path: str, output_path: str) -> str:
             for tr in thead.find_all("tr"):
                 col_idx = 1
                 for th in tr.find_all("th"):
-                    ws.cell(row=row_idx, column=col_idx, value=th.get_text())
+                    cell_text = extract_cell_content(th)
+                    cell = ws.cell(row=row_idx, column=col_idx, value=cell_text)
+                    set_cell_style(cell, is_header=True)
+                    
+                    # 记录长度 (简单的字符长度计算)
+                    val_len = len(str(cell.value)) if cell.value else 0
+                    # 中文字符通常占宽更多，简单加权
+                    # 考虑到换行，取最长的一行作为宽度依据
+                    lines = str(cell.value).split('\n') if cell.value else []
+                    max_line_len = 0
+                    if lines:
+                        for line in lines:
+                            line_len = sum(2 if ord(c) > 127 else 1 for c in line)
+                            max_line_len = max(max_line_len, line_len)
+                    else:
+                        max_line_len = 0
+                        
+                    col_widths[col_idx] = max(col_widths.get(col_idx, 0), max_line_len)
+                    
                     col_idx += 1
                 row_idx += 1
         
         # 处理表体
         tbody = table.find("tbody")
-        if tbody:
-            for tr in tbody.find_all("tr"):
-                col_idx = 1
-                for td in tr.find_all("td"):
-                    ws.cell(row=row_idx, column=col_idx, value=td.get_text())
-                    col_idx += 1
-                row_idx += 1
-                
-        # 如果没有 thead/tbody，尝试直接处理 tr
+        rows_to_process = tbody.find_all("tr") if tbody else []
+        
+        # 如果没有 thead/tbody，尝试直接查找所有 tr
         if not thead and not tbody:
-             for tr in table.find_all("tr"):
-                col_idx = 1
-                for cell in tr.find_all(["td", "th"]):
-                    ws.cell(row=row_idx, column=col_idx, value=cell.get_text())
-                    col_idx += 1
-                row_idx += 1
+             rows_to_process = table.find_all("tr")
+
+        for tr in rows_to_process:
+            col_idx = 1
+            cells = tr.find_all(["td", "th"])
+            for item in cells:
+                cell_text = extract_cell_content(item)
+                cell = ws.cell(row=row_idx, column=col_idx, value=cell_text)
+                set_cell_style(cell, is_header=False)
+                
+                # 更新列宽记录
+                lines = str(cell.value).split('\n') if cell.value else []
+                max_line_len = 0
+                if lines:
+                    for line in lines:
+                        line_len = sum(2 if ord(c) > 127 else 1 for c in line)
+                        max_line_len = max(max_line_len, line_len)
+                else:
+                    max_line_len = 0
+                    
+                col_widths[col_idx] = max(col_widths.get(col_idx, 0), max_line_len)
+                
+                col_idx += 1
+            row_idx += 1
+            
+        # 应用自动列宽 (带限制)
+        for col_idx, width in col_widths.items():
+            col_letter = get_column_letter(col_idx)
+            # 最小宽度 10，最大宽度 50 (超过则换行)
+            adjusted_width = min(max(width + 2, 10), 50)
+            ws.column_dimensions[col_letter].width = adjusted_width
                 
     wb.save(output_path)
     return f"Successfully extracted {len(tables)} tables to Excel: {output_path}"
