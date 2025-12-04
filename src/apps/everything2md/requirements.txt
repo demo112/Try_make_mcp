@@ -1,0 +1,7 @@
+mcp[cli]
+python-dotenv
+pymupdf4llm
+pptx2md
+fastapi
+uvicorn
+python-multipart
