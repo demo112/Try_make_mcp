@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import subprocess
+import re
 from pathlib import Path
 try:
     from .verify_mcp import verify_mcp_exe
@@ -10,12 +11,27 @@ except ImportError:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from src.factory.verify_mcp import verify_mcp_exe
 
+def get_app_version(server_script_path):
+    """Extract version from server.py using regex to avoid import errors"""
+    try:
+        content = server_script_path.read_text(encoding='utf-8')
+        match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
+        if match:
+            return match.group(1)
+    except Exception:
+        pass
+    return "latest"
+
 def build_app(app_name: str, display_name: str = None):
     root_dir = Path(os.getcwd())
     app_dir = root_dir / "src" / "apps" / app_name
     server_script = app_dir / "server.py"
     dist_dir = root_dir / "dist"
     build_dir = root_dir / "build"
+    
+    # 获取版本号
+    app_version = get_app_version(server_script)
+    print(f"📌 检测到应用版本: {app_version}")
     
     # 如果未提供 display_name，尝试从目录结构推断（这里简化处理，如果不传则需手动处理文档路径）
     # 为了兼容性，这里尝试去 docs 目录查找匹配的 display_name
@@ -126,7 +142,8 @@ def build_app(app_name: str, display_name: str = None):
 
         # 4. 自动压缩发布包
         try:
-            zip_base_name = dist_dir / f"{app_name}_release_v{server_info.get('version', 'latest')}" if 'server_info' in locals() else dist_dir / f"{app_name}_release"
+            # 使用从源码提取的版本号
+            zip_base_name = dist_dir / f"{app_name}_v{app_version}"
             # 这里的 zip_base_name 不需要 .zip 后缀，make_archive 会自动添加
             zip_file = shutil.make_archive(str(zip_base_name), 'zip', str(release_dir))
             print(f"🤐 已生成压缩包: {zip_file}")

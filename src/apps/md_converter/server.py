@@ -61,6 +61,9 @@ except ImportError as e:
     raise
 
 # 初始化 MCP Server
+__version__ = "1.1.0"
+# FastMCP(name, instructions=None, dependencies=None, **kwargs)
+# 如果 FastMCP 不支持 version 参数，这里会报错。暂时移除 version 参数传递，但保留变量供构建脚本读取
 mcp = FastMCP("MDConverter")
 
 @mcp.tool()

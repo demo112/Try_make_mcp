@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Distribution / Build
+build/
+dist/
+*.spec
+*.exe
+*.zip
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# MCP specific
+server_debug.log

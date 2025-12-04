@@ -133,3 +133,49 @@ ValueError: I/O operation on closed file.
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
 ValueError: I/O operation on closed file.
+2025-12-04 17:57:42,148 - root - INFO - Starting MDConverter Server...
+2025-12-04 17:57:43,542 - root - INFO - Imported via full package path
+2025-12-04 17:57:43,544 - mcp.server.lowlevel.server - DEBUG - Initializing server 'MDConverter'
+2025-12-04 17:57:43,544 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2025-12-04 17:57:43,545 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2025-12-04 17:57:43,545 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2025-12-04 17:57:43,545 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2025-12-04 17:57:43,545 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2025-12-04 17:57:43,545 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2025-12-04 17:57:43,545 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2025-12-04 17:57:43,558 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-04 17:57:43,564 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-12-04 17:57:43,565 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x0000026091B53C50>
+2025-12-04 17:57:43,565 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-12-04 17:57:43,565 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2025-12-04 17:57:43,565 - mcp.server.lowlevel.server - DEBUG - Response sent
+2025-12-04 17:57:43,572 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: I/O operation on closed file.
+2025-12-04 18:02:00,853 - root - INFO - Starting MDConverter Server...
+2025-12-04 18:02:02,295 - root - INFO - Imported via full package path
+2025-12-04 18:02:02,295 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "server.py", line 65, in <module>
+TypeError: FastMCP.__init__() got an unexpected keyword argument 'version'
+2025-12-04 18:03:37,312 - root - INFO - Starting MDConverter Server...
+2025-12-04 18:03:38,810 - root - INFO - Imported via full package path
+2025-12-04 18:03:38,812 - mcp.server.lowlevel.server - DEBUG - Initializing server 'MDConverter'
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListToolsRequest
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for CallToolRequest
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourcesRequest
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for ReadResourceRequest
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for PromptListRequest
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for GetPromptRequest
+2025-12-04 18:03:38,813 - mcp.server.lowlevel.server - DEBUG - Registering handler for ListResourceTemplatesRequest
+2025-12-04 18:03:38,826 - asyncio - DEBUG - Using proactor: IocpProactor
+2025-12-04 18:03:38,832 - mcp.server.lowlevel.server - DEBUG - Received message: root=InitializedNotification(method='notifications/initialized', params=None, jsonrpc='2.0')
+2025-12-04 18:03:38,832 - mcp.server.lowlevel.server - DEBUG - Received message: <mcp.shared.session.RequestResponder object at 0x0000020B535E3C50>
+2025-12-04 18:03:38,833 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-12-04 18:03:38,833 - mcp.server.lowlevel.server - DEBUG - Dispatching request of type ListToolsRequest
+2025-12-04 18:03:38,833 - mcp.server.lowlevel.server - DEBUG - Response sent
+2025-12-04 18:03:38,839 - root - CRITICAL - Uncaught exception
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ValueError: I/O operation on closed file.
