@@ -69,23 +69,36 @@ def build_app(app_name: str, display_name: str = None):
         "--paths", str(root_dir),
         "--hidden-import", "mcp.server.fastmcp",
         "--hidden-import", "src.common",
-        # 显式包含 converters 模块
-        "--hidden-import", "src.apps.md_converter.converters",
         # 添加更多潜在的隐式依赖
         "--hidden-import", "uvicorn",
         "--hidden-import", "starlette",
         "--hidden-import", "sse_starlette",
         "--hidden-import", "pydantic",
         "--hidden-import", "anyio",
-        "--collect-all", "xhtml2pdf",
-        "--collect-all", "reportlab",
-        "--hidden-import", "html5lib",
-        "--hidden-import", "openpyxl",
-        "--hidden-import", "docx",
-        "--hidden-import", "markdown",
-        "--hidden-import", "bs4",
-        str(server_script)
     ]
+
+    # Special handling for everything2md dependencies
+    if app_name == "everything2md" or app_name == "md_converter":
+        cmd.extend([
+            "--hidden-import", "src.apps.md_converter.converters",
+            "--collect-all", "xhtml2pdf",
+            "--collect-all", "reportlab",
+            "--hidden-import", "html5lib",
+            "--hidden-import", "openpyxl",
+            "--hidden-import", "docx",
+            "--hidden-import", "markdown",
+            "--hidden-import", "bs4",
+        ])
+
+    # Check for 'core' directory in the app and add it as data
+    core_dir = app_dir / "core"
+    if core_dir.exists():
+        print(f"📦 Including 'core' package from {core_dir}")
+        cmd.extend(["--add-data", f"{core_dir}{os.pathsep}core"])
+        # Also try to import it as hidden import to ensure python modules are analyzed
+        cmd.extend(["--hidden-import", f"src.apps.{app_name}.core"])
+
+    cmd.append(str(server_script))
     
     print(f"执行命令: {' '.join(cmd)}")
     try:

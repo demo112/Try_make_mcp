@@ -142,6 +142,7 @@
 ### 7.1 验收测试
 
 * 在 `docs/<Display Name>/06_Assess/ACCEPTANCE_<名称>.md` 中记录测试结果。
+* 添加mcp到Trea中，验证是否可正常部署
 * **验证工具**: 使用 `src.factory.verify_mcp` 验证最终 EXE：
   ```powershell
   python -m src.factory.verify_mcp dist/<app_name>/<app_name>.exe
@@ -149,11 +150,8 @@
 
 ### 7.2 交付物整理
 
-*   **文档完整性**:
-    *   **说明文档**: `docs/<Display Name>/UserManual.md` 需包含完整的安装、配置和使用说明。
-    *   **配置示例**: 必须提供详细的 `config.json` 字段说明及常见场景示例。
-    *   **版本迭代日志**: 必须包含版本变更记录 (Changelog)，说明新增功能、修复的 Bug 及不兼容变更。
-*   **同步**: 更新项目里程碑，同步所有文档状态。
+* **User Manual**: 确保 `docs/<Display Name>/UserManual.md` 包含 Client 配置示例。
+* **同步**: 更新项目里程碑，同步所有文档状态。
 
 ---
 
