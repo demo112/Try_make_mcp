@@ -13,6 +13,28 @@ class DocumentProcessor:
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
 
+    def extract_metadata(self, content: str) -> Dict[str, str]:
+        """
+        Extract metadata from YAML frontmatter or implied context.
+        Example Frontmatter:
+        ---
+        product: Payment
+        module: Gateway
+        ---
+        """
+        metadata = {"product": "General", "module": "General"}
+        
+        # Simple YAML-like parsing between first two ---
+        match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+        if match:
+            yaml_block = match.group(1)
+            for line in yaml_block.split('\n'):
+                if ':' in line:
+                    key, val = line.split(':', 1)
+                    metadata[key.strip().lower()] = val.strip()
+        
+        return metadata
+
     def parse_questions(self, content: str) -> List[Dict]:
         """
         Parse questions from the markdown content.

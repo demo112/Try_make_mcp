@@ -1,59 +1,91 @@
-# TASK: GetInRAGFlow
+# 任务清单：GetInRAGFlow (统一版 v2.0)
 
-## 1. 任务分解图
+## 1. 任务依赖图
+
 ```mermaid
 graph TD
-    T1[初始化项目结构] --> T2[配置模块 Config]
-    T2 --> T3[文档处理器 DocProc]
-    T2 --> T4[RAG客户端 RAGClient]
-    T3 --> T5[评估器 Evaluator]
-    T4 --> T5
-    T3 --> T6[MCP Server 集成]
+    T1["任务1: 初始化引擎骨架"] --> T2["任务2: 推理引擎"]
+    T1 --> T3["任务3: 进化引擎 (NEW)"]
+    T1 --> T4["任务4: 治理引擎"]
+    T1 --> T5["任务5: 生命周期引擎"]
+    T2 --> T6["任务6: MCP 集成"]
+    T3 --> T6
     T4 --> T6
     T5 --> T6
-    T6 --> T7[集成测试与验证]
+    T6 --> T7["任务7: 端到端验证"]
 ```
 
-## 2. 原子任务清单
+## 2. 原子任务清单 (5W1H)
 
-### Task 1: 初始化项目
-- **输入**: 无
-- **输出**: `src/apps/rag_flow_mcp/` 目录及空的 `__init__.py`, `server.py`.
-- **标准**: 目录结构符合工厂规范。
+### 任务 1: 初始化核心引擎骨架 (Init Engine Scaffold)
 
-### Task 2: 实现配置模块
-- **输入**: `.env` 文件
-- **输出**: `src/apps/rag_flow_mcp/config.py`
-- **功能**: 加载 `RAGFLOW_API_KEY`, `RAGFLOW_HOST`, `RAG_DATASET_IDS`.
+* **Who**: 开发者
+* **What**: 创建 `src/apps/rag_flow_mcp/engines/` 目录结构，并定义基类接口。
+* **Where**: `src/apps/rag_flow_mcp/engines/` (`__init__.py`, `inference.py`, `evolution.py`, `governance.py`, `lifecycle.py`)。
+* **Why**: 解耦模块，支持新增的“进化引擎”。
+* **How**:
+  1. 创建空文件。
+  2. 重构 `config.py`。
+  3. 定义 ABC。
 
-### Task 3: 实现文档处理器
-- **输入**: Markdown 文件路径
-- **输出**: `src/apps/rag_flow_mcp/core/doc_processor.py`
-- **功能**: 
-  - `extract_global_context(project_name)`: 读取 ALIGNMENT/CONSENSUS 等文档。
-  - `parse_questions(content)` -> List[Dict] (需包含 question, local_context, existing_ai_answer)。
-  - `inject_ai_answers(content, answers_map)`: 在 `**回答**` 字段前插入 `**AI 参考建议**`。
-- **测试**: 单元测试覆盖解析和回写逻辑，确保不破坏原文档结构。
+### 任务 2: 实现推理引擎 (Implement Inference Engine)
 
-### Task 4: 实现 RAG 客户端与查询增强
-- **输入**: Question string, Contexts
-- **输出**: `src/apps/rag_flow_mcp/core/rag_client.py`
-- **功能**: 
-  - `refine_query(global_ctx, local_ctx, question)`: 调用 LLM (可使用 MCP 通用 LLM 能力) 生成搜索 Query。
-  - `retrieve_and_answer(query)`: 调用 RAGFlow API。
-  - 模拟/真实调用 RAGFlow API。
+* **Who**: 开发者
+* **What**: 实现基于 RAGFlow 的智能检索与建议生成。
+* **Where**: `src/apps/rag_flow_mcp/engines/inference.py`。
+* **Why**: **主线能力**，提供澄清建议。
+* **How**:
+  1. 实现 `search(query, metadata_scope)`。
+  2. 实现 `fill_clarification_doc(doc_path)`: 读取 Markdown，填充 `**AI 参考建议**`，更新 Checkbox 状态。
 
-### Task 5: 实现质量评估器
-- **输入**: Question, Answer
-- **输出**: `src/apps/rag_flow_mcp/core/evaluator.py`
-- **功能**: 返回 {score, reason}。简单实现可随机或基于规则。
+### 任务 3: 实现进化引擎 (Implement Evolution Engine) **[NEW]**
 
-### Task 6: MCP Server 集成
-- **输入**: 各核心模块
-- **输出**: `src/apps/rag_flow_mcp/server.py`
-- **功能**: 定义 FastMCP 工具，串联逻辑。
+* **Who**: 开发者
+* **What**: 基于澄清结果，自动迭代方案文档。
+* **Where**: `src/apps/rag_flow_mcp/engines/evolution.py`。
+* **Why**: **主线核心价值**，实现方案的自我进化。
+* **How**:
+  1. 实现 `evolve_scheme(doc_path, clarification_doc_path)`。
+  2. Prompt 设计: "基于以下问答对，修改方案文档的对应章节..."。
+  3. 实现 Markdown 文档的精确插入与修订记录更新。
 
-### Task 7: 验证与交付
-- **输入**: 测试文档 `test_questions.md`
-- **输出**: 填充好答案的文档。
-- **动作**: 运行 `verify_mcp`。
+### 任务 4: 实现治理引擎 (Implement Governance Engine)
+
+* **Who**: 开发者
+* **What**: 元数据管理与冲突检测。
+* **Where**: `src/apps/rag_flow_mcp/engines/governance.py`。
+* **Why**: 多产品线区分与防污染。
+* **How**:
+  1. 实现分层 Metadata 解析 (`family`, `product`, `module`)。
+  2. 实现 `validate_conflict`。
+
+### 任务 5: 实现生命周期引擎 (Implement Lifecycle Engine)
+
+* **Who**: 开发者
+* **What**: 知识收割与晋升。
+* **Where**: `src/apps/rag_flow_mcp/engines/lifecycle.py`。
+* **Why**: **支线能力**，沉淀知识。
+* **How**:
+  1. 实现 `harvest_candidates`: 仅提取 `[x]` 且含 `**回答**` 的条目。
+  2. 实现 `promote_to_golden`。
+
+### 任务 6: MCP Server 接口适配 (MCP Integration)
+
+* **Who**: 开发者
+* **What**: 注册 MCP Tools。
+* **Where**: `src/apps/rag_flow_mcp/server.py`。
+* **Tools**:
+  1. `check_metadata_compliance` (Governance)
+  2. `fill_clarification_suggestions` (Inference) **[Renamed]**
+  3. `evolve_scheme_document` (Evolution) **[New]**
+  4. `harvest_knowledge_candidates` (Lifecycle)
+  5. `validate_knowledge_conflict` (Governance)
+  6. `promote_knowledge` (Lifecycle)
+
+### 任务 7: 端到端验证 (E2E Verification)
+
+* **Who**: 开发者
+* **What**: 验证主线（澄清->进化）和支线（收割->晋升）。
+* **How**:
+  1. **Case 1 (主线)**: 生成问题 -> AI 建议 -> 人工确认 -> 方案自动进化。
+  2. **Case 2 (支线)**: 确认问题 -> 知识收割 -> 冲突检测 -> 晋升入库。

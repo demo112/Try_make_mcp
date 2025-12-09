@@ -1,29 +1,44 @@
-# GetInRAGFlow 需求分析与实现
+# 项目看板: GetInRAGFlow
 
-## 1. 简介
-本方案旨在解决评审工作流中产生的大量待澄清点问题。通过集成 RAGFlow 知识库，自动检索已有方案和文档，为新特性的待澄清点提供高质量的解答，并建立质量评估机制。
+> **状态**: ✅ Stage 6: Assess (已交付)
+> **版本**: v2.0
+> **最后更新**: 2025-12-09
 
-## 2. 核心价值
-- **效率提升**：自动化回答重复性或已有文档覆盖的澄清问题。
-- **质量保障**：防止因遗漏旧有知识而导致的新方案设计缺陷。
-- **知识复用**：激活沉淀的文档资产，服务于新特性评审。
+## 1. 项目简介
+**GetInRAGFlow** 是一个基于 6A 工作流打造的 MCP 服务，旨在通过 RAG 技术闭环软件架构设计过程中的“问题澄清-方案进化-知识沉淀”链路。
 
-## 3. 6A 工作流状态
-- [x] Stage 0: Initialization
-- [x] Stage 1: Align
-- [x] Stage 2: Architect
-- [x] Stage 3: Atomize
-- [x] Stage 4: Approve
-- [x] Stage 5: Automate
-- [x] Stage 6: Assess
+👉 **[技术文档与使用说明](../../src/apps/rag_flow_mcp/README.md)**
 
-## 4. 快速开始
-### 配置
-在 `.env` 中设置：
-```bash
-RAGFLOW_API_KEY=your_key
-RAGFLOW_HOST=http://your_host
+## 2. 6A 工作流执行记录
+
+| 阶段 | 名称 | 状态 | 交付物 |
+| :--- | :--- | :--- | :--- |
+| **S0** | **Initialization** | ✅ 完成 | 项目骨架, `.venv` |
+| **S1** | **Align (对齐)** | ✅ 完成 | [需求对齐](01_Align/ALIGNMENT_GetInRAGFlow.md), [共识确认](01_Align/CONSENSUS_GetInRAGFlow.md) |
+| **S2** | **Architect (架构)** | ✅ 完成 | [统一架构设计 v2.0](02_Architect/UNIFIED_DESIGN.md) |
+| **S3** | **Atomize (原子化)** | ✅ 完成 | [原子任务清单](03_Atomize/TASK_GetInRAGFlow.md) |
+| **S4** | **Approve (审批)** | ✅ 完成 | [执行前检查单](04_Approve/CHECKLIST_GetInRAGFlow.md) |
+| **S5** | **Automate (执行)** | ✅ 完成 | 源代码 (`src/apps/rag_flow_mcp/`) |
+| **S6** | **Assess (评估)** | ✅ 完成 | [验收报告](06_Assess/ACCEPTANCE_GetInRAGFlow.md), [项目总结](06_Assess/FINAL_GetInRAGFlow.md) |
+
+## 3. 核心架构 (v2.0)
+
+```mermaid
+graph LR
+    User -->|MCP| Server[GetInRAGFlow Server]
+    
+    subgraph "Four-Core Engines"
+        Server --> Inference[推理引擎]
+        Server --> Evolution[进化引擎]
+        Server --> Governance[治理引擎]
+        Server --> Lifecycle[生命周期引擎]
+    end
+    
+    Inference <--> RAG((RAGFlow))
+    Evolution --> Docs[Markdown Docs]
+    Lifecycle --> KB[Knowledge Base]
 ```
 
-### 使用
-调用 MCP 工具 `process_review_doc`，传入评审问题文档路径。
+## 4. 快速链接
+- [用户手册 (User Manual)](UserManual.md)
+- [待办事项 (TODO)](06_Assess/TODO_GetInRAGFlow.md)

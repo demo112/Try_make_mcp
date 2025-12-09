@@ -1,20 +1,25 @@
-# CHECKLIST: GetInRAGFlow
+# CHECKLIST: GetInRAGFlow v2.0
 
-## 1. 完整性检查
-- [x] ALIGNMENT 文档已确认业务目标和上下文。
-- [x] DESIGN 文档已定义架构和模块职责。
-- [x] TASK 文档已拆分原子任务。
-- [x] 依赖项已识别 (requests, mcp)。
+## 1. 完整性检查 (Completeness)
+- [x] **四核引擎**: `UNIFIED_DESIGN.md` 已包含 **Evolution Engine (进化引擎)** 及其职责定义。
+- [x] **分层架构**: L1 (企业)/L2 (产品族)/L3 (项目) 知识库分层结构已在设计中明确。
+- [x] **任务解耦**: 主线 (澄清+进化) 与 支线 (收割+晋升) 已在 MCP 工具链中物理解耦。
+- [x] **状态持久化**: 基于 Markdown 的状态管理 (Checkboxes, Revision Logs) 已定义。
 
-## 2. 风险评估
-- **RAGFlow 连接风险**: 若无真实环境，需确保 Mock 模式可用。 -> **已在 Task 4 包含 Mock 计划**。
-- **文档解析风险**: 正则表达式可能无法处理复杂 Markdown。 -> **建议使用行级状态机解析**。
-- **环境隔离**: 确保使用 `.venv`。
+## 2. 一致性检查 (Consistency)
+- [x] **5W1H**: 所有核心节点 (Node) 和原子任务 (Task) 已补充 5W1H 定义。
+- [x] **MCP 接口**: `TASK_GetInRAGFlow.md` 中的 MCP 工具列表已包含 `evolve_scheme_document`。
+- [x] **流程闭环**: 进化引擎输出的 `v1.1` 文档设计为可作为新一轮循环的输入。
 
-## 3. 验收标准确认
-- 输入：一个标准的评审问题 Markdown 文件。
-- 输出：该文件被修改，问题下方的“回答”字段被填充。
-- 质量：不破坏原文件结构。
+## 3. 可行性检查 (Feasibility)
+- [x] **进化逻辑**: `evolve_scheme` 已规划基于 LLM 分析问答对并应用 Diff/Patch 的策略。
+- [x] **元数据锚点**: `check_metadata_compliance` 已设计支持 Family/Product/Module 多层级校验。
+- [x] **红蓝对抗**: 冲突检测逻辑已定义为基于 LLM 的观点比对步骤。
 
-## 4. 批准结论
-- [x] 批准进入开发阶段 (Automate)。
+## 4. 风险控制 (Risk Control)
+- [x] **死循环风险**: 进化触发依赖人工确认 (Human-in-the-loop)，避免自动无限循环。
+- [x] **知识覆盖**: L1/L2/L3 分层策略已针对“相似但有细微差异”场景优化。
+- [x] **数据安全**: 敏感信息 (API Keys) 严格遵循 `.env` 隔离规范。
+
+## 5. 结论
+- [x] **READY TO AUTOMATE**: 确认所有 v2.0 变更已就绪，可以进入 Stage 5: Automate。

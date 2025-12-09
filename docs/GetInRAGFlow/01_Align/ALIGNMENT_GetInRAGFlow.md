@@ -3,49 +3,52 @@
 ## 1. 原始需求与背景
 **用户输入**：
 > 在执行评审工作流的过程中，会产生很多的待澄清点... 需要从原有的资料中找到这部分内容来解答新方案的待澄清点。此时就需要调用ragflow平台的知识库来查询相关的信息以做出澄清。同时，需要对检索以及回答的质量要有个评估和规范。
+> 1、在查询前不仅携带该澄清点的所有内容，也要大模型总结上下文信息一起携带查询 
+> 2、给这种由RAG提供信息，大模型回答的答案以独立的回答字段。与人工回答的信息不冲突。且以人工回答的信息为优先。
+> 3、保证流程可靠执行而不是虚设流程。
 
 **核心痛点**：
-- 评审过程中产生的“待澄清点”数量多，人工回答效率低。
-- 很多问题的答案其实存在于旧有的产品文档或方案中，但由于信息分散，新方案编写者未注意到。
-- 依赖人工检索容易遗漏，且质量参差不齐。
+1.  **效率瓶颈**: 评审过程中产生的“待澄清点”依赖人工检索，效率低下且易遗漏。
+2.  **知识污染 (Knowledge Pollution)**: 如果 RAG 检索了错误的上下文（如跨模块引用），会导致“幻觉”并在后续流程中污染新知识库。
+3.  **流程虚设 (Process Formality)**: 传统的 checklist 往往流于形式，缺乏强制性的技术卡点（Technical Gates）来确保执行质量。
+4.  **上下文丢失 (Context Loss)**: 简单的关键词搜索往往丢失了项目背景（Global Context）和局部上下文（Local Context），导致回答不准确。
 
 **业务目标**：
-- **自动化答疑**：利用 RAGFlow 检索现有知识库，自动回答待澄清点。
-- **质量可控**：建立回答质量评估机制，确保自动生成的答案准确、相关，不误导用户。
-- **无缝集成**：嵌入现有的“评审工作流”中，作为辅助工具。
+- **深度集成 (Deep Integration)**: 将 RAGFlow 深度整合进 6A 工作流，使其成为“评审即知识管理”的核心引擎。
+- **治理管控 (Governance)**: 通过强制元数据（Metadata）和红蓝对抗（Red Teaming）机制，确保知识的纯净性。
+- **知识闭环 (Knowledge Loop)**: 实现从“检索旧知识”到“沉淀新知识”的完整闭环，并具备晋升（Promotion）机制。
 
 ## 2. 业务上下文分析
-### 2.1 现有评审工作流 (Reference: `docs\评审工作流MCP\评审工作流原文.md`)
-- **Stage 3 (Atomize)**: 产生 `04_业务澄清点_【方案名称】.md`。
-- **Stage 5 (Automate)**: 生成 `06_方案业务评审问题_【方案名称】.md`，其中包含 `**回答**：[留空供负责人填写]`。
-- **切入点**：在 Stage 5 生成问题列表后，或者在 Stage 3 识别澄清点时，引入 GetInRAGFlow。
-- **最佳切入时机**：在生成 `06_方案业务评审问题` 文档之前或之后，自动预填充“回答”字段，并标记“置信度/来源”。
+### 2.1 6A 工作流的演进
+- **原状**: 线性流程，文档流转，人工评审。
+- **目标状态**: 
+    - **Stage 1 (Align)**: 强制锚定知识边界（Product/Module Scope）。
+    - **Stage 3 (Atomize)**: Agentic RAG 主动介入，提供基于上下文的建议。
+    - **Stage 5 (Automate)**: 自动收割（Harvest）人工决策产生的新知识。
+    - **Stage 6 (Assess)**: 引入“红蓝对抗”和“架构师审批”作为强制卡点，决定知识是否晋升。
 
-### 2.2 RAGFlow 角色
-- 作为知识源（Knowledge Base）。
-- 提供检索（Retrieval）和生成（Generation）能力。
-- 需要通过 API 进行交互。
+### 2.2 风险与缓解 (Risk & Mitigation)
+- **幻觉风险**: 
+    - *缓解*: 引入 **Metadata Anchoring**，强制检索时携带 Product/Module 标签，物理隔离无关知识。
+- **文件覆盖风险**:
+    - *缓解*: 设立独立字段 `**AI 参考建议**`，严禁覆盖 `**回答**` 字段（该字段仅限人工填写）。
+- **知识冲突风险**:
+    - *缓解*: 在入库前执行 **Red Teaming**，用新知识去攻击旧知识，若发现矛盾，必须人工介入解决。
 
-### 2.3 质量评估 (Quality Assurance)
-- 仅有 RAG 结果是不够的，必须评估：
-    - **检索相关性 (Context Relevance)**: 检索到的文档片段是否真的与问题相关？
-    - **答案忠实度 (Faithfulness)**: 答案是否忠实于检索到的文档？
-    - **答案有用性 (Answer Relevance)**: 答案是否直接解决了用户的澄清点？
-- 策略：引入 **LLM-as-a-Judge** 或使用 RAGFlow 自带的评分（如果有），输出置信度分数。低分答案不予展示或标记为“需人工确认”。
+## 3. 核心能力定义
+1.  **Inference Engine (智能检索)**: 
+    - 支持 Global + Local 上下文融合。
+    - 支持 Agentic Search (Query Rewriting + Self-Correction)。
+2.  **Governance Engine (治理管控)**:
+    - 强制检查 `ALIGNMENT` 文档的 YAML 元数据。
+    - 执行知识冲突检测。
+3.  **Lifecycle Engine (生命周期)**:
+    - 自动提取评审结论。
+    - 生成晋升审批单（Promotion Request）。
+    - 执行跨库同步（Project KB -> Golden KB）。
 
-## 3. 待澄清问题与假设
-1.  **RAGFlow 接口**：假设 RAGFlow 提供了标准的 HTTP API 用于查询和检索。我们需要具体的 API 文档或 Endpoint。
-2.  **知识库准备**：假设相关的旧产品文档、方案已导入 RAGFlow。
-3.  **触发方式**：是用户手动触发“自动回答”，还是工作流自动触发？建议作为 MCP Tool 提供，由 Agent 或用户按需调用。
-4.  **输出形式**：直接修改 Markdown 文档，还是提供一个独立的建议报告？建议直接填充到 `06` 文档的“回答”栏，并附带引用来源。
-
-## 4. 建议方案方向
-开发一个名为 `get_in_ragflow` 的 MCP Server (或集成进 `review_workflow_mcp`)，提供以下工具：
-- `rag_answer_question(question, context)`: 查询 RAGFlow 并返回答案及引用。
-- `evaluate_rag_quality(question, answer, contexts)`: 评估答案质量。
-- `batch_process_clarifications(file_path)`: 读取澄清点文档，批量回答并回写。
-
-## 5. 决策点
-- **架构模式**：独立 MCP App 还是 现有 App 的插件？
-    - *建议*：独立 App `rag_flow_mcp`，保持职责单一，通用性强。
-- **评估标准**：使用 RAGAS 框架思想（Relevance, Faithfulness, Correctness）。
+## 4. 决策点
+- **架构模式**: 采用“三引擎”架构 (`Inference`, `Governance`, `Lifecycle`) 替代单一的 Client 模式。
+- **卡点策略**: 
+    - **Hard Gate**: 无元数据不启动，无验证不入库。
+    - **Soft Gate**: 低置信度回答仅做标记，不阻断流程。

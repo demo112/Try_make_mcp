@@ -1,47 +1,44 @@
 # CONSENSUS: GetInRAGFlow
 
-## 1. 需求定义
-构建一个基于 MCP 协议的 RAG 服务代理（`rag_flow_mcp`），用于连接 RAGFlow 知识库与评审工作流。核心能力是自动回答业务澄清点，并提供质量评估报告。
+## 1. 需求定义 (Requirement Definition)
+构建一个深度集成于 6A 工作流的 **智能知识治理系统 (Intelligent Knowledge Governance System)**。
+不仅仅是回答问题，更是管理评审过程中知识的流动、验证与沉淀。
 
-## 2. 核心功能规范
+## 2. 核心共识 (Core Consensus)
 
-### 2.1 知识检索与问答 (Retrieval & QA)
-- **输入**: 
-  - `question`: 待澄清的问题描述。
-  - `context` (可选): 问题的业务上下文（如所属模块、关联实体）。
-- **处理**: 调用 RAGFlow API 进行语义检索和答案生成。
-- **输出**: 
-  - `answer`: 生成的答案文本。
-  - `citations`: 引用来源（文档名、段落）。
+### 2.1 知识分层与隔离 (Knowledge Layering)
+必须严格遵守以下分层，防止知识污染：
+- **L1 Global (Golden)**: 全企业通用的规范（如安全红线、编码规范）。**[Read-Only for Project]**
+- **L2 Product (Golden)**: 特定产品线的稳定知识（如支付网关接口定义）。**[Read-Only for Project]**
+- **L3 Project (Transient)**: 当前评审项目产生的临时知识。**[Read-Write]**
 
-### 2.2 质量评估 (Quality Evaluation)
-- **机制**: 对每个 RAG 生成的答案进行实时评估。
-- **指标**:
-  - **Relevance Score (0-1)**: 答案与问题的相关性。
-  - **Confidence Score (0-1)**: 模型对自己回答的置信度。
-- **策略**: 
-  - 设定阈值（如 0.7）。低于阈值的答案标记为“低置信度”，提示人工复核。
+### 2.2 强制技术卡点 (Mandatory Technical Gates)
+系统必须在代码层面强制执行以下检查，**不允许绕过**：
+1.  **Gate 1: Initialization Check**
+    - `init_review` 时，必须检测 `ALIGNMENT` 文档是否存在合法的 YAML Frontmatter (Product/Module)。
+    - **Fail Action**: 报错并拒绝初始化后续文档。
+2.  **Gate 2: Validation Check**
+    - `harvest_knowledge` 后，必须自动触发 `GovernanceEngine.validate_conflict`。
+    - **Fail Action**: 标记冲突条目，禁止自动入库。
+3.  **Gate 3: Promotion Check**
+    - `promote_knowledge` 时，必须检测 `Promotion_Request.md` 是否包含有效的架构师签名 (`[Approved by: ...]`)。
+    - **Fail Action**: 拒绝写入 L1/L2 知识库。
 
-### 2.3 批量处理 (Batch Processing)
-- **能力**: 支持读取 `06_方案业务评审问题_*.md` 格式文档。
-- **动作**: 自动解析其中的“问题描述”，批量调用 QA 接口，并将结果回填至“回答”字段。
+### 2.3 交互规范 (Interaction Specs)
+- **文档优先**: 所有的输入（问题）和输出（答案、审批单）必须以 Markdown 文档为载体，不依赖即时通讯软件。
+- **独立字段**: AI 生成的内容必须写入 `**AI 参考建议**`，严禁触碰 `**回答**` 字段。
+- **人工最终决策**: 只有 `**回答**` 字段的内容会被 Harvest 进知识库。
 
-## 3. 技术约束与依赖
-- **协议**: MCP (Model Context Protocol)。
-- **语言**: Python 3.10+。
-- **外部依赖**: RAGFlow API (需配置 Endpoint 和 API Key)。
-- **评估模型**: 可复用当前环境的 LLM 或 RAGFlow 内置能力进行评估。
+## 3. 技术实现边界 (Technical Boundaries)
+- **协议**: MCP (Model Context Protocol) over Stdio。
+- **核心依赖**: 
+    - RAGFlow API (提供向量检索与 LLM 能力)。
+    - Python 3.10+ (Logic Layer)。
+- **交付物**: 
+    - `rag_flow_mcp` (包含 Inference, Governance, Lifecycle 三大引擎)。
+    - 预置的 MCP Tools (`agentic_search`, `check_metadata`, `promote_knowledge` 等)。
 
-## 4. 交付物
-1.  **源代码**: `src/apps/rag_flow_mcp/`
-2.  **配置文件**: `.env` (包含 RAGFLOW_API_KEY, RAGFLOW_HOST 等)
-3.  **工具定义**:
-    - `query_ragflow`
-    - `batch_answer_clarifications`
-4.  **文档**: 使用说明与集成指南。
-
-## 5. 验收标准
-- [ ] 能够成功连接 RAGFlow 并获取答案。
-- [ ] 能够准确解析评审工作流的 Markdown 问题文档。
-- [ ] 能够将答案回填到 Markdown 文档中，且格式正确。
-- [ ] 能够输出每个答案的质量评分。
+## 4. 验收标准 (Acceptance Criteria)
+1.  **流程阻断测试**: 故意删除元数据，系统应拒绝工作；故意不签名，系统应拒绝晋升。
+2.  **知识隔离测试**: 在 Payment 项目中提问，不应检索到 Logistics 项目的私有知识（除非标记为 Global）。
+3.  **红蓝对抗测试**: 故意录入与旧知识矛盾的结论，系统应发出冲突警报。
