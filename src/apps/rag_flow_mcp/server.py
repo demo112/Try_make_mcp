@@ -18,7 +18,11 @@ logger = get_app_logger("rag_flow_mcp")
 mcp = FastMCP("rag_flow_mcp")
 
 doc_processor = DocumentProcessor()
-rag_client = RAGClient(config["RAGFLOW_API_KEY"], config["RAGFLOW_HOST"])
+rag_client = RAGClient(
+    config["RAGFLOW_API_KEY"], 
+    config["RAGFLOW_HOST"],
+    config.get("RAGFLOW_CHAT_ID", "")
+)
 evaluator = QualityEvaluator()
 
 @mcp.tool()

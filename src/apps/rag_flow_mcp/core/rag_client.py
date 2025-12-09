@@ -7,9 +7,10 @@ from typing import Dict, Any
 logger = logging.getLogger(__name__)
 
 class RAGClient:
-    def __init__(self, api_key: str, base_url: str):
+    def __init__(self, api_key: str, base_url: str, chat_id: str = ""):
         self.api_key = api_key
         self.base_url = base_url.rstrip('/')
+        self.chat_id = chat_id
         
     def refine_query(self, global_ctx: str, local_ctx: str, question: str) -> str:
         """
@@ -75,39 +76,137 @@ class RAGClient:
         Call RAGFlow API to get an answer.
         Returns dict with 'answer', 'citation', 'score'.
         """
-        # Mock implementation if no real API Key
+        # If API key is explicitly set to mock or default, use mock
         if self.api_key == "mock_key":
             return self._mock_response(query)
             
         try:
-            # Real RAGFlow API structure (Hypothetical, adjust to actual API)
-            url = f"{self.base_url}/api/v1/retrieval_completion"
+            # RAGFlow API v1 Implementation
+            # Endpoint: /api/v1/chats_openai/{chat_id}/chat/completions
+            
+            if not self.chat_id:
+                return {
+                    "answer": "Error: RAGFLOW_CHAT_ID is not configured.",
+                    "citation": "Config Error",
+                    "score": 0.0
+                }
+            
+            url = f"{self.base_url}/api/v1/chats_openai/{self.chat_id}/chat/completions"
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json"
             }
+            
+            # Payload construction
+            # RAGFlow typically expects 'question' and 'stream' inside the body
+            # And 'quote' to get citations.
+            # Using standard OpenAI-like structure: messages
             payload = {
-                "question": query,
-                "dataset_ids": dataset_ids.split(",") if dataset_ids else []
+                "model": "ragflow",  # Required by API but ignored
+                "messages": [{"role": "user", "content": query}],
+                "stream": False,
+                "quote": True
             }
             
-            # NOTE: This is a placeholder for the actual API call
-            # resp = requests.post(url, headers=headers, json=payload, timeout=30)
-            # resp.raise_for_status()
-            # data = resp.json()
-            # return {
-            #     "answer": data.get("answer", ""),
-            #     "citation": str(data.get("chunks", [])),
-            #     "score": data.get("confidence", 0.0)
-            # }
+            # If specific datasets are required, RAGFlow usually handles this via 
+            # the conversation ID or session. 
+            # If this is a stateless call, we might need to pass dataset_ids if the API supports it.
+            # For now, we assume the API Key is bound to a specific tenant/knowledge base context 
+            # OR we pass it in payload if documented. 
+            # Let's try passing it if provided.
+            if dataset_ids:
+                 payload["dataset_ids"] = dataset_ids.split(",")
+
+            logger.info(f"Sending request to RAGFlow: {url}")
+            resp = requests.post(url, headers=headers, json=payload, timeout=60)
             
-            # Fallback to mock for now as we don't have a live RAGFlow instance
-            return self._mock_response(query)
+            if resp.status_code != 200:
+                logger.error(f"RAGFlow API Error: {resp.status_code} - {resp.text}")
+                return {
+                    "answer": f"Error: RAGFlow returned {resp.status_code} - {resp.text[:200]}",
+                    "citation": "API Error",
+                    "score": 0.0
+                }
+                
+            data = resp.json()
+            logger.info(f"RAGFlow Response: {data}")
             
-        except Exception as e:
-            logger.error(f"RAG Error: {e}")
+            if not isinstance(data, dict):
+                 return {
+                    "answer": f"Unexpected Response Format: {type(data)}",
+                    "citation": "API Error",
+                    "score": 0.0
+                }
+
+            if data.get("code", 0) != 0:
+                 msg = data.get('message', 'Unknown error')
+                 if "Model(@None)" in msg:
+                     msg += " (Hint: Please configure an LLM model for this Chat Assistant in RAGFlow UI)"
+                 return {
+                    "answer": f"RAGFlow Error: {msg}",
+                    "citation": "API Error",
+                    "score": 0.0
+                }
+            # { "choices": [ { "message": { "content": "..." } } ], "code": 0 }
+            # Wait, if it's OpenAI compatible, it might not have "code": 0 at top level if success.
+            # But RAGFlow wrapper might add it.
+            
+            answer = ""
+            citations = []
+            
+            if "choices" in data and len(data["choices"]) > 0:
+                answer = data["choices"][0].get("message", {}).get("content", "")
+            
+            # Check for top-level code error (RAGFlow specific) if answer is empty
+            if not answer and data.get("code", 0) != 0:
+                 msg = data.get('message', 'Unknown error')
+                 if "Model(@None)" in msg:
+                     msg += " (Hint: Please configure an LLM model for this Chat Assistant in RAGFlow UI)"
+                 return {
+                    "answer": f"RAGFlow Error: {msg}",
+                    "citation": "API Error",
+                    "score": 0.0
+                }
+            # RAGFlow might return it in a different way or in the content?
+            # Based on docs, if quote=True, it might be in 'reference' field of data if it's not strictly OpenAI?
+            # Or maybe inside the message?
+            # Let's check if 'data' has 'reference' (some implementations do this).
+            
+            # Fallback: Check standard RAGFlow 'data' field if the structure is mixed
+            result_data = data.get("data") or {}
+            if not answer and "answer" in result_data:
+                answer = result_data["answer"]
+                
+            # Refs
+            refs = result_data.get("reference", [])
+            # Also check if refs are in data root (some versions)
+            if not refs and "reference" in data:
+                refs = data["reference"]
+                
+            score = 0.8 if refs else 0.3
+            
+            if isinstance(refs, list):
+                for r in refs:
+                    if isinstance(r, dict):
+                        doc_name = r.get("doc_name", "Unknown")
+                        citations.append(doc_name)
+                    elif isinstance(r, str):
+                        citations.append(r)
+            
+            citation_str = ", ".join(citations[:3]) if citations else "No citation"
+            
             return {
-                "answer": "Error retrieving answer from RAGFlow.",
+                "answer": answer,
+                "citation": citation_str,
+                "score": score
+            }
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            logger.error(f"RAG Connection Error: {e}")
+            return {
+                "answer": f"Connection Error: {str(e)}",
                 "citation": "System Error",
                 "score": 0.0
             }
