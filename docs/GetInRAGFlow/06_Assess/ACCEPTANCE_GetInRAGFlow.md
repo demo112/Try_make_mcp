@@ -22,6 +22,16 @@
 - [x] **状态持久化**: 所有状态均通过 Markdown 文档内容 (Checkbox, Revision Log) 和文件系统 (v1.0 -> v1.1) 实现持久化，无额外数据库依赖。
 - [x] **L1/L2 分层**: 通过 Metadata Scope 和文件目录结构实现了知识库分层管理的基础。
 
+### 1.3 交付物验证 (Deliverables Verification)
+- [x] **EXE 打包**:
+  - 成功使用 `PyInstaller` 构建 `rag_flow_mcp.exe`。
+  - 包含所有依赖 (`uvicorn`, `pydantic`, `mcp`, `engines`, `config` 等)。
+- [x] **EXE 冒烟测试**:
+  - 运行 EXE 并通过 Stdio 发送 `initialize` 请求。
+  - Server 成功响应 `serverInfo`，版本号匹配 (v2.0.0)。
+- [x] **发布包**:
+  - 生成 `rag_flow_mcp_v2.0.0.zip`，包含 EXE 和 UserManual。
+
 ## 2. 遗留问题与风险 (Known Issues & Risks)
 - **RAG 接口稳定性**: 测试中发现 RAGFlow 接口偶发超时，虽有重试机制，但需关注生产环境网络状况。
 - **进化精度**: 当前进化逻辑采用 Append (追加) 或基于 LLM 的全段重写。对于复杂文档的精细修改 (Diff/Patch)，仍依赖 LLM 的指令遵循能力，需进一步 Prompt 调优。

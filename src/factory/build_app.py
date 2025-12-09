@@ -103,6 +103,19 @@ def build_app(app_name: str, display_name: str = None):
         # Also try to import it as hidden import to ensure python modules are analyzed
         cmd.extend(["--hidden-import", f"src.apps.{app_name}.core"])
 
+    # Include engines if exists
+    engines_dir = app_dir / "engines"
+    if engines_dir.exists():
+        print(f"📦 Including 'engines' package from {engines_dir}")
+        cmd.extend(["--add-data", f"{engines_dir}{os.pathsep}engines"])
+        cmd.extend(["--hidden-import", f"src.apps.{app_name}.engines"])
+
+    # Explicitly include config module
+    config_file = app_dir / "config.py"
+    if config_file.exists():
+        print(f"📦 Including 'config' module from {config_file}")
+        cmd.extend(["--hidden-import", f"src.apps.{app_name}.config"])
+
     cmd.append(str(server_script))
     
     print(f"执行命令: {' '.join(cmd)}")

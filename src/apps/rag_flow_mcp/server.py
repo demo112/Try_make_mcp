@@ -4,10 +4,22 @@ import json
 from mcp.server.fastmcp import FastMCP
 from src.common import get_app_logger
 
-# Ensure core modules can be imported
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+__version__ = "2.0.0"
 
-from config import load_config
+# Ensure core modules can be imported
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    sys.path.append(sys._MEIPASS)
+else:
+    # Running in a normal Python environment
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from config import load_config
+except ImportError:
+    # Try absolute import if relative/implicit fails
+    from src.apps.rag_flow_mcp.config import load_config
+
 from engines import (
     InferenceEngine,
     EvolutionEngine,
@@ -110,3 +122,6 @@ def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
         return json.dumps(result, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         return json.dumps({"status": "error", "message": "Invalid JSON"}, ensure_ascii=False)
+
+if __name__ == "__main__":
+    mcp.run()
