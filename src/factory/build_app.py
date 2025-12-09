@@ -49,6 +49,10 @@ def build_app(app_name: str, display_name: str = None):
     # 1. 清理旧构建
     if build_dir.exists():
         shutil.rmtree(build_dir)
+    
+    specs_dir = root_dir / "specs"
+    if not specs_dir.exists():
+        specs_dir.mkdir(exist_ok=True)
         
     # 注意：我们不完全删除 dist，因为可能包含其他应用的构建。
     # 但我们会删除当前应用的旧 release 文件夹
@@ -66,6 +70,7 @@ def build_app(app_name: str, display_name: str = None):
         "--clean",
         "--distpath", str(dist_dir),
         "--workpath", str(build_dir),
+        "--specpath", str(specs_dir),
         "--paths", str(root_dir),
         "--hidden-import", "mcp.server.fastmcp",
         "--hidden-import", "src.common",
