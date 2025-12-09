@@ -49,11 +49,11 @@ lifecycle_engine.initialize()
 @mcp.tool()
 def fill_clarification_suggestions(doc_path: str) -> str:
     """
-    [Main Task] Fill clarification suggestions into the review document.
-    Reads questions, queries RAG, and injects answers with confidence scores.
+    [主线任务] 填充澄清建议。
+    读取评审问题记录文档，调用 RAG 检索知识库，并将带有置信度的建议填入文档。
     
     Args:
-        doc_path: Absolute path to '04_评审问题记录.md'
+        doc_path: '04_评审问题记录.md' 的绝对路径。
     """
     result = inference_engine.fill_clarification_suggestions(doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
@@ -61,12 +61,12 @@ def fill_clarification_suggestions(doc_path: str) -> str:
 @mcp.tool()
 def evolve_scheme_document(scheme_doc_path: str, clarification_doc_path: str) -> str:
     """
-    [Main Task] Evolve the scheme document based on clarified decisions.
-    Applies changes to the scheme document and generates v1.1.
+    [主线任务] 基于澄清决策进化方案文档。
+    将已确认的澄清点应用到原方案文档中，生成 v1.1 版本。
     
     Args:
-        scheme_doc_path: Path to the original scheme document (v1.0)
-        clarification_doc_path: Path to the clarified questions doc
+        scheme_doc_path: 原方案文档 (v1.0) 的路径。
+        clarification_doc_path: 已澄清的问题记录文档路径。
     """
     result = evolution_engine.evolve_scheme_document(scheme_doc_path, clarification_doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
@@ -76,7 +76,7 @@ def evolve_scheme_document(scheme_doc_path: str, clarification_doc_path: str) ->
 @mcp.tool()
 def check_metadata_compliance(doc_path: str) -> str:
     """
-    [Governance] Check if the document has required metadata (product, module, etc.).
+    [治理管控] 检查文档是否包含必要的元数据 (如 product, module 等)。
     """
     result = governance_engine.check_metadata_compliance(doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
@@ -84,25 +84,25 @@ def check_metadata_compliance(doc_path: str) -> str:
 @mcp.tool()
 def validate_knowledge_conflict(candidate_json: str) -> str:
     """
-    [Governance] Validate if a knowledge candidate conflicts with existing knowledge.
+    [治理管控] 验证知识候选是否与现有知识库冲突。
     
     Args:
-        candidate_json: JSON string representing the candidate
+        candidate_json: 候选知识的 JSON 字符串。
     """
     try:
         candidate_data = json.loads(candidate_json)
         result = governance_engine.validate_knowledge_conflict(candidate_data)
         return json.dumps(result, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
-        return json.dumps({"status": "error", "message": "Invalid JSON"}, ensure_ascii=False)
+        return json.dumps({"status": "error", "message": "无效的 JSON 格式"}, ensure_ascii=False)
 
 # --- Lifecycle Tools (Side Task) ---
 
 @mcp.tool()
 def harvest_knowledge_candidates(doc_path: str) -> str:
     """
-    [Side Task] Harvest knowledge candidates from a clarification document.
-    Returns a list of candidates found.
+    [支线任务] 从澄清文档中收割知识候选。
+    仅提取已确认且有答案的条目。
     """
     candidates = lifecycle_engine.harvest_knowledge_candidates(doc_path)
     return json.dumps(candidates, ensure_ascii=False, indent=2)
@@ -110,18 +110,18 @@ def harvest_knowledge_candidates(doc_path: str) -> str:
 @mcp.tool()
 def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
     """
-    [Side Task] Promote a candidate to the permanent knowledge base.
+    [支线任务] 将知识候选晋升到永久知识库 (L1/L2)。
     
     Args:
-        candidate_json: JSON string of the candidate
-        target_kb_path: Directory path for the knowledge base (L1/L2)
+        candidate_json: 候选知识的 JSON 字符串。
+        target_kb_path: 目标知识库的目录路径。
     """
     try:
         candidate_data = json.loads(candidate_json)
         result = lifecycle_engine.promote_knowledge(candidate_data, target_kb_path)
         return json.dumps(result, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
-        return json.dumps({"status": "error", "message": "Invalid JSON"}, ensure_ascii=False)
+        return json.dumps({"status": "error", "message": "无效的 JSON 格式"}, ensure_ascii=False)
 
 if __name__ == "__main__":
     mcp.run()

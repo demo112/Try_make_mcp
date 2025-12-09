@@ -15,7 +15,7 @@ class EvolutionEngine(BaseEngine):
     """
     
     def initialize(self) -> bool:
-        self.logger.info("Initializing Evolution Engine...")
+        self.logger.info("正在初始化进化引擎...")
         try:
             self.rag_client = RAGClient(
                 self.config.get("RAGFLOW_API_KEY", ""),
@@ -24,7 +24,7 @@ class EvolutionEngine(BaseEngine):
             )
             return True
         except Exception as e:
-            self.logger.error(f"Failed to initialize Evolution Engine: {e}")
+            self.logger.error(f"进化引擎初始化失败: {e}")
             return False
         
     def evolve_scheme_document(self, scheme_doc_path: str, clarification_doc_path: str) -> Dict[str, Any]:
@@ -38,41 +38,40 @@ class EvolutionEngine(BaseEngine):
         Returns:
             Dict: 进化结果 (新文档路径, 修改点摘要)
         """
-        self.logger.info(f"Evolving scheme {scheme_doc_path} using {clarification_doc_path}")
+        self.logger.info(f"正在基于 {clarification_doc_path} 进化方案 {scheme_doc_path}")
         
         if not os.path.exists(scheme_doc_path) or not os.path.exists(clarification_doc_path):
-            return {"status": "error", "message": "File not found"}
+            return {"status": "error", "message": "文件未找到"}
             
         try:
-            # 1. Parse Decisions from Clarification Doc
+            # 1. 解析决策
             decisions = self._parse_decisions(clarification_doc_path)
             if not decisions:
-                return {"status": "success", "message": "No decisions found to evolve.", "changes": []}
+                return {"status": "success", "message": "未发现需要进化的决策点。", "changes": []}
             
-            # 2. Read Scheme Doc
+            # 2. 读取方案文档
             with open(scheme_doc_path, 'r', encoding='utf-8') as f:
                 scheme_content = f.read()
             
             changes_log = []
             current_content = scheme_content
             
-            # 3. Apply Evolutions
+            # 3. 应用进化
             for idx, (question, answer) in enumerate(decisions):
-                self.logger.info(f"Processing decision {idx+1}/{len(decisions)}...")
+                self.logger.info(f"正在处理决策 {idx+1}/{len(decisions)}...")
                 
                 # Use LLM to identify and rewrite the section
-                # We treat the RAGClient as a general LLM interface here
                 # Prompt Engineering:
                 prompt = (
-                    f"You are a technical writer. "
-                    f"I have a software design document and a clarification decision.\n"
-                    f"Please rewrite the relevant section of the document to incorporate the decision.\n\n"
-                    f"**Decision**:\nQuestion: {question}\nAnswer: {answer}\n\n"
-                    f"**Task**:\n"
-                    f"1. Identify the most relevant section in the document.\n"
-                    f"2. Rewrite that section to reflect the answer.\n"
-                    f"3. Return ONLY the new section content, wrapped in ```markdown ... ```.\n"
-                    f"If the document already covers it or no change is needed, reply 'NO_CHANGE'."
+                    f"你是一位技术文档撰写专家。"
+                    f"我有一份软件设计文档和一个评审澄清决策。\n"
+                    f"请基于决策内容重写文档的相关章节。\n\n"
+                    f"**决策点**:\n问题: {question}\n回答: {answer}\n\n"
+                    f"**任务**:\n"
+                    f"1. 识别文档中最相关的章节。\n"
+                    f"2. 重写该章节以包含决策内容。\n"
+                    f"3. 仅返回新的章节内容，使用 ```markdown ... ``` 包裹。\n"
+                    f"如果文档已经包含该内容或无需修改，请回复 'NO_CHANGE'。"
                 )
                 
                 # Note: sending the whole doc might exceed context window. 
@@ -95,27 +94,20 @@ class EvolutionEngine(BaseEngine):
                 match = re.search(r'```markdown\n(.*?)\n```', generated_text, re.DOTALL)
                 if match:
                     new_section = match.group(1)
-                    # Ideally we need to know WHICH section to replace.
-                    # This is the tricky part of "Evolution".
-                    # For MVP, we might just append a "Clarifications" section or use a placeholder.
-                    # Or we ask LLM to return "Original Text" and "New Text" for search-replace.
-                    
-                    # Let's try the Append Strategy for safety in this version, 
-                    # or better: Ask LLM for a diff.
                     
                     # Alternative Strategy: Append to a "## Version 1.1 Updates" section
-                    changes_log.append(f"- Incorporated decision for: {question[:50]}...")
+                    changes_log.append(f"- 已整合决策: {question[:50]}...")
                     
                     # For now, let's just append to the end as a proof of concept
-                    current_content += f"\n\n## 进化更新 (Based on Q{idx+1})\n{new_section}\n"
+                    current_content += f"\n\n## 进化更新 (基于 Q{idx+1})\n{new_section}\n"
             
-            # 4. Save v1.1
+            # 4. 保存 v1.1
             new_path = scheme_doc_path.replace("v1.0", "v1.1")
             if new_path == scheme_doc_path:
                 new_path = scheme_doc_path.replace(".md", "_v1.1.md")
                 
             # Add Revision Log
-            revision_log = "\n\n---\n**Revision Log (Auto-Evolved)**:\n" + "\n".join(changes_log)
+            revision_log = "\n\n---\n**修订日志 (自动进化)**:\n" + "\n".join(changes_log)
             final_content = current_content + revision_log
             
             with open(new_path, 'w', encoding='utf-8') as f:
@@ -128,7 +120,7 @@ class EvolutionEngine(BaseEngine):
             }
             
         except Exception as e:
-            self.logger.error(f"Evolution failed: {e}")
+            self.logger.error(f"方案进化失败: {e}")
             return {"status": "error", "message": str(e)}
 
     def _parse_decisions(self, file_path: str) -> List[Tuple[str, str]]:

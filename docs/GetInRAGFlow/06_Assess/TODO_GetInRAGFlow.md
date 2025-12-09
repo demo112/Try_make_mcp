@@ -1,14 +1,14 @@
-# TODO: GetInRAGFlow Future Improvements
+# TODO: GetInRAGFlow
 
-## 1. High Priority (高优先级)
-- [ ] **Prompt 优化**: 优化 `EvolutionEngine` 中的 Rewrite Prompt，支持更精细的 "Diff/Patch" 模式，而不仅仅是 "Append" 或 "Replace Section"。
-- [ ] **RAGFlow 深度集成**: 对接 RAGFlow 的 Dataset Management API，实现知识库的自动创建与索引更新（目前仅支持文件级存储）。
-- [ ] **红蓝对抗实装**: 实现 `validate_knowledge_conflict` 的真实逻辑，调用 LLM 对比新旧知识点。
+## 待办事项 (Backlog)
 
-## 2. Medium Priority (中优先级)
-- [ ] **UI 插件化**: 开发 VS Code 插件，右键点击 `.md` 文件即可触发 "Evolve" 或 "Harvest" 操作。
-- [ ] **多模态支持**: 支持从架构图 (Mermaid/Image) 中提取知识。
+### High Priority
+- [ ] **Prompt 调优**: 针对复杂文档结构，优化 `evolution.py` 中的提示词，提高 Markdown 格式保持的稳定性。
+- [ ] **L2 知识库扩容**: 导入更多历史评审记录，构建初始的 L2 知识库，避免“冷启动”时 RAG 效果不佳。
 
-## 3. Low Priority (低优先级)
-- [ ] **性能优化**: 对超大文档进行分块处理，避免 Context Window 溢出。
-- [ ] **统计大屏**: 生成知识库贡献度与文档进化频率的统计报表。
+### Medium Priority
+- [ ] **可视化配置**: 为 MCP Server 增加简单的 Web UI 用于配置 API Key 和 RAG Endpoint (目前依赖 .env)。
+- [ ] **流式响应**: 将 RAG 检索过程改为 Streaming 响应，减少用户等待焦虑。
+
+### Low Priority
+- [ ] **多语言支持**: 虽然当前要求全中文，但架构上可预留 i18n 接口，支持未来扩展。

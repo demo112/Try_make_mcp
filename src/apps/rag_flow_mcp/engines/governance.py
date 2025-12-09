@@ -12,14 +12,14 @@ class GovernanceEngine(BaseEngine):
     """
     
     def initialize(self) -> bool:
-        self.logger.info("Initializing Governance Engine...")
+        self.logger.info("正在初始化治理引擎...")
         return True
         
     def check_metadata_compliance(self, doc_path: str) -> Dict[str, Any]:
         """
         校验元数据合规性 (Check Metadata Compliance)
         """
-        self.logger.info(f"Checking metadata for {doc_path}")
+        self.logger.info(f"检查文档元数据: {doc_path}")
         try:
             with open(doc_path, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -36,7 +36,7 @@ class GovernanceEngine(BaseEngine):
             if missing_fields:
                 return {
                     "status": "failed",
-                    "reason": f"Missing required metadata fields: {', '.join(missing_fields)}",
+                    "reason": f"缺失必要的元数据字段: {', '.join(missing_fields)}",
                     "metadata": metadata
                 }
                 
@@ -55,7 +55,7 @@ class GovernanceEngine(BaseEngine):
         Args:
             candidate_data: Dict containing 'question', 'answer', 'metadata'
         """
-        self.logger.info("Validating knowledge conflict...")
+        self.logger.info("正在验证知识冲突...")
         
         # In a real implementation, this would query the Knowledge Base (L1/L2) 
         # to see if the new answer contradicts existing knowledge.
@@ -64,7 +64,7 @@ class GovernanceEngine(BaseEngine):
         return {
             "status": "passed", 
             "conflict_score": 0.0,
-            "message": "No obvious conflicts detected (Simulation)."
+            "message": "未检测到明显的知识冲突 (模拟模式)。"
         }
 
     def _extract_metadata(self, content: str) -> Dict[str, str]:

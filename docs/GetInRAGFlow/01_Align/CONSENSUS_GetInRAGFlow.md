@@ -1,44 +1,61 @@
-# CONSENSUS: GetInRAGFlow
+# 阶段1：共识 - GetInRAGFlow
 
-## 1. 需求定义 (Requirement Definition)
-构建一个深度集成于 6A 工作流的 **智能知识治理系统 (Intelligent Knowledge Governance System)**。
-不仅仅是回答问题，更是管理评审过程中知识的流动、验证与沉淀。
+## 1. 需求定义
+构建一个深度集成于 6A 工作流的 **智能知识治理系统**。
+不仅仅是回答问题，更是管理评审过程中知识的流动、验证与沉淀，并确保系统的**可靠性**与**真实性**。
 
-## 2. 核心共识 (Core Consensus)
+## 2. 核心共识
 
-### 2.1 知识分层与隔离 (Knowledge Layering)
+### 2.1 知识分层与隔离
 必须严格遵守以下分层，防止知识污染：
-- **L1 Global (Golden)**: 全企业通用的规范（如安全红线、编码规范）。**[Read-Only for Project]**
-- **L2 Product (Golden)**: 特定产品线的稳定知识（如支付网关接口定义）。**[Read-Only for Project]**
-- **L3 Project (Transient)**: 当前评审项目产生的临时知识。**[Read-Write]**
+- **L1 全局 (金标)**: 全企业通用的规范（如安全红线、编码规范）。**[项目只读]**
+- **L2 产品 (金标)**: 特定产品线的稳定知识（如支付网关接口定义）。**[项目只读]**
+- **L3 项目 (临时)**: 当前评审项目产生的临时知识。**[读写]**
 
-### 2.2 强制技术卡点 (Mandatory Technical Gates)
+### 2.2 强制技术卡点
 系统必须在代码层面强制执行以下检查，**不允许绕过**：
-1.  **Gate 1: Initialization Check**
-    - `init_review` 时，必须检测 `ALIGNMENT` 文档是否存在合法的 YAML Frontmatter (Product/Module)。
-    - **Fail Action**: 报错并拒绝初始化后续文档。
-2.  **Gate 2: Validation Check**
+1.  **卡点 1: 初始化检查**
+    - `init_review` 时，必须检测 `ALIGNMENT` 文档是否存在合法的 YAML 前置元数据 (产品/模块)。
+    - **失败动作**: 报错并拒绝初始化后续文档。
+2.  **卡点 2: 验证检查**
     - `harvest_knowledge` 后，必须自动触发 `GovernanceEngine.validate_conflict`。
-    - **Fail Action**: 标记冲突条目，禁止自动入库。
-3.  **Gate 3: Promotion Check**
+    - **失败动作**: 标记冲突条目，禁止自动入库。
+3.  **卡点 3: 晋升检查**
     - `promote_knowledge` 时，必须检测 `Promotion_Request.md` 是否包含有效的架构师签名 (`[Approved by: ...]`)。
-    - **Fail Action**: 拒绝写入 L1/L2 知识库。
+    - **失败动作**: 拒绝写入 L1/L2 知识库。
+4.  **卡点 4: 真实性检查**
+    - 在生成建议前，必须评估检索内容的置信度。
+    - **失败动作**: 若置信度低于阈值，必须明确输出“未找到相关信息”，严禁编造。
 
-### 2.3 交互规范 (Interaction Specs)
+### 2.3 可靠性与容错策略
+为了应对外部依赖的不确定性，必须实现以下机制：
+1.  **自动重试机制**:
+    - 针对 RAGFlow API 调用和 LLM 推理，实施指数退避 (Exponential Backoff) 重试策略。
+    - 最大重试次数：3次。
+2.  **降级策略 (Fallback)**:
+    - 若 RAG 服务不可用：降级为仅进行本地规则检查，或在文档中标记“服务暂时不可用，请人工查阅”。
+    - 若 LLM 响应超时：跳过当前条目的建议生成，不阻塞整个文档的处理。
+3.  **异常处理**:
+    - 所有模块必须捕获异常，并记录详细日志（包括上下文信息）。
+    - 严禁因单个条目的处理失败导致整个程序崩溃。
+
+### 2.4 交互规范
 - **文档优先**: 所有的输入（问题）和输出（答案、审批单）必须以 Markdown 文档为载体，不依赖即时通讯软件。
 - **独立字段**: AI 生成的内容必须写入 `**AI 参考建议**`，严禁触碰 `**回答**` 字段。
-- **人工最终决策**: 只有 `**回答**` 字段的内容会被 Harvest 进知识库。
+- **人工最终决策**: 只有 `**回答**` 字段的内容会被收割进知识库。
 
-## 3. 技术实现边界 (Technical Boundaries)
+## 3. 技术实现边界
 - **协议**: MCP (Model Context Protocol) over Stdio。
 - **核心依赖**: 
     - RAGFlow API (提供向量检索与 LLM 能力)。
-    - Python 3.10+ (Logic Layer)。
+    - Python 3.10+ (逻辑层)。
 - **交付物**: 
-    - `rag_flow_mcp` (包含 Inference, Governance, Lifecycle 三大引擎)。
-    - 预置的 MCP Tools (`agentic_search`, `check_metadata`, `promote_knowledge` 等)。
+    - `rag_flow_mcp` (包含 推理、治理、生命周期、进化 四大引擎)。
+    - 预置的 MCP 工具 (`agentic_search`, `check_metadata`, `promote_knowledge` 等)。
 
-## 4. 验收标准 (Acceptance Criteria)
+## 4. 验收标准
 1.  **流程阻断测试**: 故意删除元数据，系统应拒绝工作；故意不签名，系统应拒绝晋升。
-2.  **知识隔离测试**: 在 Payment 项目中提问，不应检索到 Logistics 项目的私有知识（除非标记为 Global）。
+2.  **知识隔离测试**: 在 A 项目中提问，不应检索到 B 项目的私有知识（除非标记为全局）。
 3.  **红蓝对抗测试**: 故意录入与旧知识矛盾的结论，系统应发出冲突警报。
+4.  **真实性测试**: 提问一个知识库中不存在的问题，系统应回答“不知道”而非编造。
+5.  **容错性测试**: 模拟 RAG 服务断连，系统应能自动重试并在重试失败后优雅降级，不抛出未捕获异常。

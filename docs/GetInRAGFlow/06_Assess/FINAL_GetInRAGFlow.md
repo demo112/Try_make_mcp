@@ -1,36 +1,25 @@
-# FINAL PROJECT SUMMARY: GetInRAGFlow
+# FINAL PROJECT SUMMARY: GetInRAGFlow v2.1
 
-## 1. 项目概览 (Project Overview)
-**GetInRAGFlow** 是一个基于 MCP (Model Context Protocol) 的智能文档工作流工具，旨在通过 RAG (Retrieval-Augmented Generation) 技术，辅助软件架构设计过程中的**方案澄清**、**文档进化**与**知识沉淀**。
+## 1. 项目概览
+本项目旨在构建一套**深度集成 RAG 的评审工作流 MCP 服务**，通过“澄清-进化-收割”闭环，将评审过程转化为知识沉淀的源头。
 
-它不仅是一个简单的问答助手，更是一个深度集成到 6A 工作流中的**进化引擎**，能够基于人工决策自动迭代设计文档，实现“文档即代码”的持续集成。
+## 2. 核心成就
+- **全链路中文化**: 实现了从代码、文档到交互界面的全面汉化，提升了中文用户的体验。
+- **高可信设计**: 引入 `QualityEvaluator` 和 0.6 置信度阈值，**严禁捏造**，确保 AI 建议的真实性。
+- **高可用架构**: 在推理引擎中植入**指数退避重试** (Max=3) 和**服务降级**策略，确保系统鲁棒性。
+- **四核引擎**: 成功落地 推理(Inference)、进化(Evolution)、治理(Governance)、生命周期(Lifecycle) 四大核心引擎。
 
-## 2. 核心成果 (Key Deliverables)
+## 3. 交付清单
+| 交付物 | 路径 | 说明 |
+| :--- | :--- | :--- |
+| **可执行文件** | `dist/rag_flow_mcp/rag_flow_mcp.exe` | 独立运行的 MCP Server |
+| **发布包** | `dist/rag_flow_mcp_v2.0.0.zip` | 含 EXE 及文档的压缩包 |
+| **源码** | `src/apps/rag_flow_mcp/` | Python 源码 (基于 FastMCP) |
+| **6A 文档** | `docs/GetInRAGFlow/` | 完整的全生命周期文档 |
+| **用户手册** | `docs/GetInRAGFlow/UserManual.md` | 配置与使用指南 |
 
-### 2.1 四核引擎架构
-- **Inference Engine (推理引擎)**: 负责理解评审问题，检索 L1/L2 知识库，提供智能建议。
-- **Evolution Engine (进化引擎)**: **[v2.0 核心]** 负责将澄清后的结论反向合入方案文档，生成 v1.1 版本，实现自我进化。
-- **Governance Engine (治理引擎)**: 负责文档元数据合规检查及红蓝对抗（冲突检测）。
-- **Lifecycle Engine (生命周期引擎)**: 负责从项目中收割新知识，并晋升至企业/产品知识库。
+## 4. 后续规划
+- **L2 知识库建设**: 持续丰富产品族知识库，提高 RAG 命中率。
+- **进化算法优化**: 探索更精准的 Diff/Patch 算法，减少文档进化的幻觉风险。
 
-### 2.2 MCP 工具集
-- `fill_clarification_suggestions`: 自动填充评审问题建议。
-- `evolve_scheme_document`: 自动进化方案文档。
-- `check_metadata_compliance`: 元数据校验。
-- `harvest_knowledge_candidates`: 知识收割。
-- `promote_knowledge`: 知识晋升。
-
-### 2.3 关键特性
-- **任务解耦**: 主线任务（进化）与支线任务（沉淀）分离，互不阻塞。
-- **分层知识**: 支持 L1 (企业级)、L2 (产品族)、L3 (项目级) 知识库隔离与复用。
-- **状态持久化**: 基于 Markdown 的原生状态管理，无需外部数据库。
-
-## 3. 技术栈 (Tech Stack)
-- **Framework**: Python `fastmcp`
-- **LLM/RAG**: RAGFlow (Client Integration)
-- **Format**: Markdown, JSON-RPC
-- **Process**: 6A Workflow (Align -> Assess)
-
-## 4. 后续建议 (Recommendations)
-- 建议在真实 RAGFlow 环境中进行大规模压力测试，优化 Prompt 以提高进化引擎的修改精度。
-- 考虑开发 VS Code 插件，进一步简化 MCP 工具的调用体验。
+**状态**: ✅ 已结项 (Completed)

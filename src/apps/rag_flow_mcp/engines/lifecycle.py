@@ -15,7 +15,7 @@ class LifecycleEngine(BaseEngine):
     """
     
     def initialize(self) -> bool:
-        self.logger.info("Initializing Lifecycle Engine...")
+        self.logger.info("正在初始化生命周期引擎...")
         return True
         
     def harvest_knowledge_candidates(self, doc_path: str) -> List[Dict[str, Any]]:
@@ -24,10 +24,10 @@ class LifecycleEngine(BaseEngine):
         
         Extracts Q&A pairs that have been answered in the clarification doc.
         """
-        self.logger.info(f"Harvesting knowledge from {doc_path}")
+        self.logger.info(f"正在从文档收割知识: {doc_path}")
         
         if not os.path.exists(doc_path):
-            self.logger.error(f"File not found: {doc_path}")
+            self.logger.error(f"文件未找到: {doc_path}")
             return []
             
         with open(doc_path, 'r', encoding='utf-8') as f:
@@ -71,13 +71,13 @@ class LifecycleEngine(BaseEngine):
         Saves the candidate as a JSON or MD file in the target Knowledge Base.
         """
         candidate_id = candidate_data.get("id", "unknown")
-        self.logger.info(f"Promoting candidate {candidate_id} to {target_kb_path}")
+        self.logger.info(f"正在晋升候选知识 {candidate_id} 到 {target_kb_path}")
         
         if not os.path.exists(target_kb_path):
             try:
                 os.makedirs(target_kb_path)
             except Exception as e:
-                return {"status": "error", "message": f"Failed to create KB dir: {e}"}
+                return {"status": "error", "message": f"创建知识库目录失败: {e}"}
         
         # Save as JSON for machine readability
         file_name = f"knowledge_{candidate_id}.json"

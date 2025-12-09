@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from typing import Dict, Any, List, Optional
 from .base import BaseEngine
 from src.apps.rag_flow_mcp.core.rag_client import RAGClient
@@ -12,10 +13,11 @@ class InferenceEngine(BaseEngine):
     职责:
     1. 负责澄清问题的智能回答 (RAG 检索)。
     2. 生成含建议的澄清文档。
+    3. 确保真实性与鲁棒性 (重试/降级)。
     """
     
     def initialize(self) -> bool:
-        self.logger.info("Initializing Inference Engine...")
+        self.logger.info("正在初始化推理引擎...")
         try:
             self.rag_client = RAGClient(
                 self.config.get("RAGFLOW_API_KEY", ""),
@@ -25,7 +27,7 @@ class InferenceEngine(BaseEngine):
             self.evaluator = QualityEvaluator()
             return True
         except Exception as e:
-            self.logger.error(f"Failed to initialize Inference Engine: {e}")
+            self.logger.error(f"推理引擎初始化失败: {e}")
             return False
         
     def fill_clarification_suggestions(self, doc_path: str) -> Dict[str, Any]:
@@ -38,65 +40,107 @@ class InferenceEngine(BaseEngine):
         Returns:
             Dict: 执行结果摘要
         """
-        self.logger.info(f"Starting clarification inference for: {doc_path}")
+        self.logger.info(f"开始处理澄清建议: {doc_path}")
         
         if not os.path.exists(doc_path):
-            return {"status": "error", "message": f"File not found: {doc_path}"}
+            return {"status": "error", "message": f"文件未找到: {doc_path}"}
             
         try:
-            # 1. Read Content
+            # 1. 读取内容
             content = self._read_file(doc_path)
             
-            # 2. Extract Metadata
+            # 2. 提取元数据
             metadata = self._extract_metadata(content)
-            context_str = f"Product: {metadata.get('product')}, Module: {metadata.get('module')}"
+            context_str = f"产品: {metadata.get('product')}, 模块: {metadata.get('module')}"
             
-            # 3. Parse Questions
+            # 3. 解析问题
             questions = self._parse_questions(content)
             if not questions:
-                return {"status": "success", "message": "No questions found.", "processed_count": 0}
+                return {"status": "success", "message": "未发现问题。", "processed_count": 0}
             
             answers_map = {}
             processed_count = 0
             
-            # 4. Process Each Question
+            # 4. 处理每个问题
             for q in questions:
-                # Combine context
+                # 组合上下文
                 combined_context = f"{context_str}\n{q['business_context']}"
                 
-                # Perform Search
-                result = self.rag_client.agentic_search(
-                    global_ctx="", # In a real scenario, we might load global context separately
+                # 执行安全检索 (含重试/降级)
+                result = self._safe_rag_search(
+                    global_ctx="", 
                     local_ctx=combined_context,
                     question=q["description"],
                     dataset_ids=self.config.get("RAG_DATASET_IDS", "")
                 )
                 
-                # Evaluate
-                eval_res = self.evaluator.evaluate(q["description"], result)
+                # 真实性校验
+                is_valid, reason = self._verify_truthfulness(q["description"], result)
                 
-                if eval_res["is_valid"]:
+                if is_valid:
                     answers_map[str(q["id"])] = result
                     processed_count += 1
                 else:
-                    self.logger.info(f"Skipped question {q['id']} due to low quality: {eval_res['reason']}")
+                    self.logger.info(f"跳过问题 {q['id']}，原因: {reason}")
+                    # 可选：如果需要在文档中标记“未找到”，可以在这里处理
+                    # 目前策略是如果不通过，则不填充建议，避免误导
             
-            # 5. Write Back
+            # 5. 回写文档
             if answers_map:
                 new_content = self._inject_ai_answers(content, answers_map)
                 with open(doc_path, 'w', encoding='utf-8') as f:
                     f.write(new_content)
                 return {
                     "status": "success", 
-                    "message": f"Processed {processed_count} questions.", 
+                    "message": f"成功处理 {processed_count} 个问题。", 
                     "processed_count": processed_count
                 }
             else:
-                return {"status": "success", "message": "No valid answers generated.", "processed_count": 0}
+                return {"status": "success", "message": "没有生成有效的建议。", "processed_count": 0}
                 
         except Exception as e:
-            self.logger.error(f"Inference failed: {e}")
+            self.logger.error(f"推理过程失败: {e}")
             return {"status": "error", "message": str(e)}
+
+    def _safe_rag_search(self, global_ctx: str, local_ctx: str, question: str, dataset_ids: str, retries: int = 3) -> Dict[str, Any]:
+        """执行带有自动重试和降级策略的 RAG 检索"""
+        for i in range(retries):
+            try:
+                result = self.rag_client.agentic_search(
+                    global_ctx=global_ctx,
+                    local_ctx=local_ctx,
+                    question=question,
+                    dataset_ids=dataset_ids
+                )
+                return result
+            except Exception as e:
+                wait_time = 2 ** i
+                self.logger.warning(f"RAG 检索失败 (第 {i+1} 次)，{wait_time}秒后重试: {e}")
+                time.sleep(wait_time)
+        
+        # 降级策略
+        self.logger.error("RAG 检索最终失败，执行降级策略。")
+        return {
+            "answer": "❌ **服务暂时不可用**\n> 无法连接到知识库服务，请人工查阅相关文档。",
+            "citation": "System Error",
+            "score": 0.0
+        }
+
+    def _verify_truthfulness(self, question: str, result: Dict[str, Any]) -> tuple[bool, str]:
+        """校验回答的真实性，防止幻觉"""
+        score = result.get("score", 0.0)
+        
+        # 1. 严格的置信度阈值 (用户要求严禁虚假)
+        THRESHOLD = 0.6
+        if score < THRESHOLD:
+            return False, f"置信度过低 ({score:.2f} < {THRESHOLD})"
+            
+        # 2. 拒绝回答检测
+        eval_res = self.evaluator.evaluate(question, result)
+        if not eval_res["is_valid"]:
+            return False, eval_res["reason"]
+            
+        return True, "Pass"
 
     # --- Private Helper Methods (Ported from doc_processor.py) ---
 
