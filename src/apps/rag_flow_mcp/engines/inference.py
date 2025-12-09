@@ -63,19 +63,27 @@ class InferenceEngine(BaseEngine):
             
             # 4. 处理每个问题
             for q in questions:
-                # 组合上下文
+                # 组合上下文 (Product + Module + Business Context)
                 combined_context = f"{context_str}\n{q['business_context']}"
+                
+                # 构建完整的查询内容 (Full Question Content)
+                # 使用整个问题块作为查询输入，确保上下文完整
+                # 移除可能存在的旧 AI 回答，避免干扰
+                clean_block = re.sub(r'\n\*\*AI 参考建议\*\*：.*?(?=\n\*\*回答\*\*|\Z)', '', q['full_block'], flags=re.DOTALL)
                 
                 # 执行安全检索 (含重试/降级)
                 result = self._safe_rag_search(
                     global_ctx="", 
                     local_ctx=combined_context,
-                    question=q["description"],
+                    question=clean_block,  # Use full block instead of just description
                     dataset_ids=self.config.get("RAG_DATASET_IDS", "")
                 )
                 
-                # 真实性校验
-                is_valid, reason = self._verify_truthfulness(q["description"], result)
+                # 真实性校验 (Still verify against the specific description if available, or the full block)
+                # Using description for verification is usually better as it's the core question, 
+                # but if description is empty, use title or block.
+                verify_text = q["description"] if q["description"] else q["title"]
+                is_valid, reason = self._verify_truthfulness(verify_text, result)
                 
                 if is_valid:
                     answers_map[str(q["id"])] = result
@@ -180,50 +188,44 @@ class InferenceEngine(BaseEngine):
         return questions
 
     def _inject_ai_answers(self, content: str, answers_map: Dict[str, Dict]) -> str:
-        # Simple replacement strategy (naive but functional for now)
-        # We need to be careful not to double-inject if run multiple times.
-        # Ideally, we should check if an answer block already exists.
-        
-        # Strategy: Re-parse and reconstruct to be safe, or just insert if missing.
-        # For this version, I'll use a split/join approach based on the blocks logic
-        
-        # Better approach: Iterate over matches again and replace the body
-        
         pattern = re.compile(r'(##\s+(\d+)\.(.+?)\n)(.*?)(?=\n##\s+\d+\.|\Z)', re.DOTALL)
         
         def replacement_func(match):
             header = match.group(1)
             idx = match.group(2)
-            # title = match.group(3)
             body = match.group(4)
             
             if idx in answers_map:
                 ans_data = answers_map[idx]
-                score_str = f"{ans_data.get('score', 0.0) * 100:.0f}%"
-                
-                # Check if AI block already exists to avoid duplication
-                if "**AI 参考建议**" in body:
-                    # Remove existing AI block or skip? 
-                    # Let's replace the existing AI block if possible, or just append if complex.
-                    # For simplicity, if it exists, we skip injection to avoid duplicates
-                    # Or we could strip it.
-                    pass # TODO: Enhanced replacement logic
+                score_val = ans_data.get('score', 0.0)
                 
                 # Construct AI block
                 ai_block = (
                     f"\n**AI 参考建议**：\n"
-                    f"> 🤖 **RAG自动回复** (置信度: {score_str})\n"
+                    f"> 🤖 **AI 解答** (置信度: {score_val:.2f})\n"
+                    f">\n"
                     f"> {ans_data['answer']}\n"
                     f">\n"
-                    f"> *来源: {ans_data.get('citation', 'Unknown')}*\n"
+                    f"> 📚 **来源**:\n"
+                    f"> - `{ans_data.get('citation', 'Unknown')}`\n"
                 )
                 
-                # Insert before **回答** (Decision) if it exists, otherwise append
-                if "**回答**" in body:
-                    parts = body.split("**回答**")
-                    new_body = parts[0] + ai_block + "\n**回答**" + "".join(parts[1:])
+                # Check if AI block already exists and replace it
+                # Match from **AI 参考建议** start until **回答** or end of block
+                existing_ai_pattern = re.compile(r'\n\*\*AI 参考建议\*\*：.*?(?=\n\*\*回答\*\*|\Z)', re.DOTALL)
+                
+                if existing_ai_pattern.search(body):
+                    # Replace existing AI block
+                    new_body = existing_ai_pattern.sub(ai_block, body)
                 else:
-                    new_body = body + ai_block
+                    # Insert before **回答** if it exists, otherwise append
+                    if "**回答**" in body:
+                        parts = body.split("**回答**")
+                        # parts[0] is content before answer, parts[1:] is answer content
+                        # We inject AI block between them
+                        new_body = parts[0] + ai_block + "\n**回答**" + "**回答**".join(parts[1:])
+                    else:
+                        new_body = body + ai_block
                 
                 return header + new_body
             else:

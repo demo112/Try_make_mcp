@@ -39,9 +39,14 @@ class RAGClient:
         # Simple heuristic: Combine Business Context + Question Key Terms
         keywords = f"{local_ctx} {question}"
         
+        # Enforce "Single Question Focus" via prompt engineering (if LLM were used here)
+        # Since we pass 'keywords' to RAG, we append a strict instruction to the query itself
+        # to guide the RAG/LLM backend.
+        strict_query = f"{question}\n\n[System Instruction: You MUST answer ONLY the specific question above. Do NOT merge with other topics. Do NOT hallucinate.]"
+        
         # 2. Search
         # Try specific search first
-        result = self.retrieve_and_answer(keywords, dataset_ids)
+        result = self.retrieve_and_answer(strict_query, dataset_ids)
         
         # 3. Self-Correction / Retry
         if result["score"] < 0.5:
@@ -65,7 +70,7 @@ class RAGClient:
         final_answer = (
             f"{original_answer}"
             f"{conflict_note}"
-            f"\n\n(Context analyzed: Local='{local_ctx}', Global Summary available)"
+            # Removed debug context info to keep output clean as per user request
         )
         
         result["answer"] = final_answer

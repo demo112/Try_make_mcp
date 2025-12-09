@@ -32,6 +32,12 @@
 - **Command**: `python -m src.apps.rag_flow_mcp.server`
 - **Working Directory**: `c:\Users\Administrator\Documents\trae_projects\Try_make_mcp`
 
+### 2.3 独立 EXE 运行
+如果您使用打包好的 EXE 文件 (`dist/rag_flow_mcp_release/rag_flow_mcp.exe`)：
+1. 确保 `.env` 文件与 `.exe` 文件位于**同一目录**。
+2. `.env` 文件内容必须包含 `RAGFLOW_API_KEY` 等配置。
+3. 双击运行或在命令行中启动。
+
 ## 3. 使用场景演练
 
 ### 场景 A: 评审问题澄清 (Main Quest)

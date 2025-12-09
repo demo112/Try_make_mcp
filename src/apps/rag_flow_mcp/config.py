@@ -1,9 +1,25 @@
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 from src.common import load_config as load_common_config
 
-# Explicitly load .env
+# Load .env with priority:
+# 1. Directory of the executable (if frozen/compiled)
+if getattr(sys, 'frozen', False):
+    exe_dir = Path(sys.executable).parent
+    env_path = exe_dir / '.env'
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+
+# 2. Current working directory (standard behavior)
 load_dotenv()
+
+# 3. Directory of this config file (useful for dev/source mode)
+config_dir = Path(__file__).parent
+env_path_local = config_dir / '.env'
+if env_path_local.exists():
+    load_dotenv(dotenv_path=env_path_local)
 
 def load_config():
     """Load configuration for rag_flow_mcp."""
