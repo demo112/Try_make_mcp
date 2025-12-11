@@ -22,47 +22,8 @@ def get_app_version(server_script_path):
         pass
     return "latest"
 
-def build_app(app_name: str, display_name: str = None):
-    root_dir = Path(os.getcwd())
-    app_dir = root_dir / "src" / "apps" / app_name
-    server_script = app_dir / "server.py"
-    dist_dir = root_dir / "dist"
-    build_dir = root_dir / "build"
-    
-    # 获取版本号
-    app_version = get_app_version(server_script)
-    print(f"📌 检测到应用版本: {app_version}")
-    
-    # 如果未提供 display_name，尝试从目录结构推断（这里简化处理，如果不传则需手动处理文档路径）
-    # 为了兼容性，这里尝试去 docs 目录查找匹配的 display_name
-    docs_root = root_dir / "docs"
-    doc_dir = None
-    if display_name:
-        doc_dir = docs_root / display_name
-    
-    if not server_script.exists():
-        print(f"❌ 错误: 找不到应用脚本: {server_script}")
-        return
-
-    print(f"🚀 开始构建应用: {app_name}")
-
-    # 1. 清理旧构建
-    if build_dir.exists():
-        shutil.rmtree(build_dir)
-    
-    specs_dir = root_dir / "specs"
-    if not specs_dir.exists():
-        specs_dir.mkdir(exist_ok=True)
-        
-    # 注意：我们不完全删除 dist，因为可能包含其他应用的构建。
-    # 但我们会删除当前应用的旧 release 文件夹
-    release_dir_name = f"{app_name}_release"
-    release_dir = dist_dir / release_dir_name
-    if release_dir.exists():
-        shutil.rmtree(release_dir)
-
-    # 2. 执行 PyInstaller
-    # 使用 --hidden-import 确保 fastmcp 和 common 被正确打包
+def get_pyinstaller_cmd(app_name: str, root_dir: Path, app_dir: Path, dist_dir: Path, build_dir: Path, specs_dir: Path, server_script: Path):
+    """Generate the PyInstaller command arguments"""
     cmd = [
         "pyinstaller",
         "--name", app_name,
@@ -117,6 +78,49 @@ def build_app(app_name: str, display_name: str = None):
         cmd.extend(["--hidden-import", f"src.apps.{app_name}.config"])
 
     cmd.append(str(server_script))
+    return cmd
+
+def build_app(app_name: str, display_name: str = None):
+    root_dir = Path(os.getcwd())
+    app_dir = root_dir / "src" / "apps" / app_name
+    server_script = app_dir / "server.py"
+    dist_dir = root_dir / "dist"
+    build_dir = root_dir / "build"
+    
+    # 获取版本号
+    app_version = get_app_version(server_script)
+    print(f"📌 检测到应用版本: {app_version}")
+    
+    # 如果未提供 display_name，尝试从目录结构推断（这里简化处理，如果不传则需手动处理文档路径）
+    # 为了兼容性，这里尝试去 docs 目录查找匹配的 display_name
+    docs_root = root_dir / "docs"
+    doc_dir = None
+    if display_name:
+        doc_dir = docs_root / display_name
+    
+    if not server_script.exists():
+        print(f"❌ 错误: 找不到应用脚本: {server_script}")
+        return
+
+    print(f"🚀 开始构建应用: {app_name}")
+
+    # 1. 清理旧构建
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+    
+    specs_dir = root_dir / "specs"
+    if not specs_dir.exists():
+        specs_dir.mkdir(exist_ok=True)
+        
+    # 注意：我们不完全删除 dist，因为可能包含其他应用的构建。
+    # 但我们会删除当前应用的旧 release 文件夹
+    release_dir_name = f"{app_name}_release"
+    release_dir = dist_dir / release_dir_name
+    if release_dir.exists():
+        shutil.rmtree(release_dir)
+
+    # 2. 执行 PyInstaller
+    cmd = get_pyinstaller_cmd(app_name, root_dir, app_dir, dist_dir, build_dir, specs_dir, server_script)
     
     print(f"执行命令: {' '.join(cmd)}")
     try:
@@ -156,6 +160,20 @@ def build_app(app_name: str, display_name: str = None):
             print("  - 已复制 config.json")
         else:
             print("  - (无 config.json，跳过)")
+
+        # 3.2.1 复制 .env (如果存在)
+        # 优先复制真实的 .env (用于内部交付)，如果没有再找 .env.example
+        env_src = app_dir / ".env"
+        env_example_src = app_dir / ".env.example"
+        
+        if env_src.exists():
+            shutil.copy(str(env_src), str(release_dir / ".env"))
+            print("  - 已复制 .env (包含真实配置)")
+        elif env_example_src.exists():
+            shutil.copy(str(env_example_src), str(release_dir / ".env.example"))
+            print("  - 已复制 .env.example (请重命名为 .env 并配置)")
+        else:
+            print("  - (无 .env 或 .env.example，建议创建)")
 
         # 3.3 复制说明文档
         # 优先级: UserManual.md > Readme.md

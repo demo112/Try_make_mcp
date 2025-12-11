@@ -1,19 +1,16 @@
-# 审批清单：MCP生产工厂
+# MCP生产工厂 - 审批清单 (Approve)
 
-## 1. 完整性检查 (Completeness)
-- [x] **结构设计**: Monorepo 结构是否涵盖了所有现有代码？
-    - 是，所有源码都归档到了 `src/apps/` 下。
-- [x] **迁移计划**: 是否考虑了现有 App 的运行环境？
-    - 是，特别是 `ReviewFlow` 的状态文件路径，需要在迁移时特别注意（从当前工作目录读取改为相对路径或固定路径）。
-- [x] **工具功能**: `init_app` 和 `build_app` 是否覆盖了“生产”和“交付”两个核心环节？
-    - 是。
+## 1. 代码质量
+- [ ] 所有 Tool 参数均有 Type Hint 和 Docstring。
+- [ ] 路径操作使用 `pathlib`，兼容 Windows/Linux。
+- [ ] 异常处理完善，不会因为构建失败导致 MCP Server 崩溃。
+- [ ] 日志输出清晰。
 
-## 2. 风险评估 (Risk Assessment)
-- **风险点**: 移动文件后，`ReviewFlow` 的相对路径导入可能会失效。
-    - **对策**: 在迁移代码时，仔细检查 `sys.path` 或相对导入语句，必要时在 `server.py` 头部添加路径修复代码。
-- **风险点**: `PyInstaller` 在新目录结构下的打包配置可能变复杂。
-    - **对策**: `build_app.py` 将动态生成 spec 文件，确保 `datas` 和 `pathex` 参数正确指向 `src` 根目录。
+## 2. 功能完整性
+- [ ] `init_project` 能成功创建新项目。
+- [ ] `build_project` 能成功构建 EXE。
+- [ ] `verify_project` 能正确检测 EXE 状态。
+- [ ] `list_projects` 能列出所有项目。
 
-## 3. 实施确认
-- 确认立即开始执行 **Stage 5: Automate**。
-- 确认按照 TASK 列表顺序执行。
+## 3. 安全性
+- [ ] 不允许操作项目根目录以外的文件。

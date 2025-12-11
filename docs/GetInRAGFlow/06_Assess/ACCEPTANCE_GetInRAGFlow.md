@@ -38,6 +38,12 @@
   - Server 成功响应 `serverInfo`，版本号匹配 (v2.0.0)。
   - `tools/list` 返回所有工具且描述为中文。
 
+### 2.3 连接修复验证 (Connection Fix Verification) - **FIXED**
+- [x] **RAGFlow 连接**:
+  - 修复了本地连接代理干扰问题 (`trust_env=False`)。
+  - 验证了 `rag_client.py` 能正确连接 RAGFlow 服务。
+  - 验证了 `server.py` 配置加载正确，API Key 传递无误。
+
 ## 3. 遗留问题与风险 (Known Issues & Risks)
 - **严格阈值副作用**: 0.6 的真实性阈值可能导致在知识库内容不足时，AI 频繁“保持沉默”（不提供建议）。这符合“严禁捏造”的要求，但可能影响用户体验。
 - **进化精度**: 对于复杂文档的精细修改 (Diff/Patch)，仍依赖 LLM 的指令遵循能力。

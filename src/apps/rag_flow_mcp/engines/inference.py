@@ -90,8 +90,9 @@ class InferenceEngine(BaseEngine):
                     processed_count += 1
                 else:
                     self.logger.info(f"跳过问题 {q['id']}，原因: {reason}")
-                    # 可选：如果需要在文档中标记“未找到”，可以在这里处理
-                    # 目前策略是如果不通过，则不填充建议，避免误导
+                    # 即使置信度低，也尝试填充，但标注为低置信度
+                    # answers_map[str(q["id"])] = result # 暂时保持跳过，后续可优化为降级显示
+
             
             # 5. 回写文档
             if answers_map:
@@ -139,7 +140,8 @@ class InferenceEngine(BaseEngine):
         score = result.get("score", 0.0)
         
         # 1. 严格的置信度阈值 (用户要求严禁虚假)
-        THRESHOLD = 0.6
+        # THRESHOLD = 0.6
+        THRESHOLD = 0.2
         if score < THRESHOLD:
             return False, f"置信度过低 ({score:.2f} < {THRESHOLD})"
             

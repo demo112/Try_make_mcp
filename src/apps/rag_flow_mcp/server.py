@@ -1,18 +1,30 @@
 import os
 import sys
 import json
-from mcp.server.fastmcp import FastMCP
-from src.common import get_app_logger
-
-__version__ = "2.0.0"
+import functools
+import traceback
 
 # Ensure core modules can be imported
+# Must be done BEFORE importing from src or local modules
 if getattr(sys, 'frozen', False):
     # Running in a PyInstaller bundle
     sys.path.append(sys._MEIPASS)
 else:
     # Running in a normal Python environment
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    sys.path.append(current_dir)
+    
+    # Add project root to sys.path to allow 'src' imports
+    # current_dir is .../src/apps/rag_flow_mcp
+    # root is .../ (3 levels up)
+    project_root = os.path.abspath(os.path.join(current_dir, "../../../"))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+from mcp.server.fastmcp import FastMCP
+from src.common import get_app_logger
+
+__version__ = "2.0.0"
 
 try:
     from config import load_config
@@ -28,9 +40,55 @@ from engines import (
 )
 
 # Initialize Configuration and Logger
+# Ensure .env is loaded correctly from CWD if running as script
+from dotenv import load_dotenv
+load_dotenv()
+
 config = load_config()
 logger = get_app_logger("rag_flow_mcp")
+
+# Log loaded configuration (masking sensitive info)
+safe_config = config.copy()
+if "RAGFLOW_API_KEY" in safe_config:
+    safe_config["RAGFLOW_API_KEY"] = "***" + safe_config["RAGFLOW_API_KEY"][-4:] if len(safe_config["RAGFLOW_API_KEY"]) > 4 else "***"
+logger.info(f"Loaded Configuration: {json.dumps(safe_config, ensure_ascii=False)}")
+
 mcp = FastMCP("rag_flow_mcp")
+
+# Logging Decorator
+def log_tool_call(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        tool_name = func.__name__
+        try:
+            # Log input
+            logger.info(f"🔧 Calling Tool [{tool_name}]")
+            if args:
+                logger.info(f"  Args: {args}")
+            if kwargs:
+                logger.info(f"  Kwargs: {json.dumps(kwargs, ensure_ascii=False)}")
+            
+            # Execute
+            result = func(*args, **kwargs)
+            
+            # Log output (truncate if too long)
+            res_str = str(result)
+            if len(res_str) > 500:
+                res_str = res_str[:500] + "... (truncated)"
+            logger.info(f"✅ Tool [{tool_name}] Success: {res_str}")
+            
+            return result
+        except Exception as e:
+            logger.error(f"❌ Tool [{tool_name}] Failed: {e}")
+            logger.error(traceback.format_exc())
+            # Re-raise or return error JSON depending on strategy. 
+            # MCP usually expects tools to return a string result even on error to show to LLM.
+            return json.dumps({
+                "status": "error", 
+                "message": f"Tool execution failed: {str(e)}",
+                "details": traceback.format_exc()
+            }, ensure_ascii=False)
+    return wrapper
 
 # Initialize Engines
 inference_engine = InferenceEngine(config)
@@ -47,6 +105,7 @@ lifecycle_engine.initialize()
 # --- Main Task Tools (Inference & Evolution) ---
 
 @mcp.tool()
+@log_tool_call
 def fill_clarification_suggestions(doc_path: str) -> str:
     """
     [主线任务] 填充澄清建议。
@@ -59,6 +118,7 @@ def fill_clarification_suggestions(doc_path: str) -> str:
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool()
+@log_tool_call
 def evolve_scheme_document(scheme_doc_path: str, clarification_doc_path: str) -> str:
     """
     [主线任务] 基于澄清决策进化方案文档。
@@ -74,6 +134,7 @@ def evolve_scheme_document(scheme_doc_path: str, clarification_doc_path: str) ->
 # --- Governance Tools ---
 
 @mcp.tool()
+@log_tool_call
 def check_metadata_compliance(doc_path: str) -> str:
     """
     [治理管控] 检查文档是否包含必要的元数据 (如 product, module 等)。
@@ -82,6 +143,7 @@ def check_metadata_compliance(doc_path: str) -> str:
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool()
+@log_tool_call
 def validate_knowledge_conflict(candidate_json: str) -> str:
     """
     [治理管控] 验证知识候选是否与现有知识库冲突。
@@ -99,6 +161,7 @@ def validate_knowledge_conflict(candidate_json: str) -> str:
 # --- Lifecycle Tools (Side Task) ---
 
 @mcp.tool()
+@log_tool_call
 def harvest_knowledge_candidates(doc_path: str) -> str:
     """
     [支线任务] 从澄清文档中收割知识候选。
@@ -108,6 +171,7 @@ def harvest_knowledge_candidates(doc_path: str) -> str:
     return json.dumps(candidates, ensure_ascii=False, indent=2)
 
 @mcp.tool()
+@log_tool_call
 def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
     """
     [支线任务] 将知识候选晋升到永久知识库 (L1/L2)。
@@ -122,6 +186,51 @@ def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
         return json.dumps(result, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         return json.dumps({"status": "error", "message": "无效的 JSON 格式"}, ensure_ascii=False)
+
+@mcp.tool()
+@log_tool_call
+def list_knowledge_bases(page: int = 1, page_size: int = 30) -> str:
+    """
+    [知识浏览] 列出所有知识库 (Datasets)。
+    
+    Args:
+        page: 页码 (默认 1)
+        page_size: 每页数量 (默认 30)
+    """
+    result = lifecycle_engine.list_knowledge_bases(page, page_size)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def list_knowledge_base_files(dataset_id: str, page: int = 1, page_size: int = 30, keywords: str = "") -> str:
+    """
+    [知识浏览] 列出指定知识库中的文件。
+    
+    Args:
+        dataset_id: 知识库 ID
+        page: 页码 (默认 1)
+        page_size: 每页数量 (默认 30)
+        keywords: 搜索关键词 (可选)
+    """
+    result = lifecycle_engine.list_knowledge_base_files(dataset_id, page, page_size, keywords)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def retrieve_chunks(dataset_id: str, query: str, page: int = 1, page_size: int = 30, similarity_threshold: float = 0.2) -> str:
+    """
+    [知识检索] 直接检索知识库切片 (不经过 LLM 生成)。
+    适用于只查找相关内容而不进行问答的场景。
+    
+    Args:
+        dataset_id: 知识库 ID
+        query: 检索关键词或问题
+        page: 页码 (默认 1)
+        page_size: 每页数量 (默认 30)
+        similarity_threshold: 相似度阈值 (0.0~1.0, 默认 0.2)
+    """
+    result = lifecycle_engine.retrieve_chunks(dataset_id, query, page, page_size, similarity_threshold)
+    return json.dumps(result, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
     mcp.run()

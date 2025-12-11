@@ -67,12 +67,14 @@ graph TD
 ### 任务 5: 实现生命周期引擎 (Implement Lifecycle Engine)
 
 * **责任人**: 开发者
-* **内容**: 知识收割与晋升。
+* **内容**: 知识收割、晋升与浏览。
 * **位置**: `src/apps/rag_flow_mcp/engines/lifecycle.py`。
-* **目的**: **支线能力**，沉淀知识。
+* **目的**: **支线能力**，沉淀与管理知识。
 * **步骤**:
   1. 实现 `harvest_candidates`: 仅提取 `[x]` 且含 `**回答**` 的条目。
   2. 实现 `promote_to_golden`: 将项目知识晋升到产品/企业知识库。
+  3. 实现 `list_knowledge_bases`: 列出知识库列表。
+  4. 实现 `list_knowledge_base_files`: 列出知识库文件列表。
 
 ### 任务 6: MCP Server 接口适配 (MCP Integration)
 
@@ -86,6 +88,8 @@ graph TD
   4. `harvest_knowledge_candidates` (生命周期: 收割知识候选)
   5. `validate_knowledge_conflict` (治理: 验证知识冲突)
   6. `promote_knowledge` (生命周期: 晋升知识)
+  7. `list_knowledge_bases` (生命周期: 知识库列表)
+  8. `list_knowledge_base_files` (生命周期: 知识库文件)
 
 ### 任务 7: 端到端验证 (E2E Verification)
 

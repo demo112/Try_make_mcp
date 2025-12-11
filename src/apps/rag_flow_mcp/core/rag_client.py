@@ -3,6 +3,8 @@ import logging
 import requests
 import json
 from typing import Dict, Any
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +14,25 @@ class RAGClient:
         self.base_url = base_url.rstrip('/')
         self.chat_id = chat_id
         
+        logger.info(f"RAGClient initialized with Base URL: {self.base_url}, Chat ID: {self.chat_id}")
+
+        # Configure session with retries
+        self.session = requests.Session()
+        # Disable proxy usage to ensure local/LAN connections work reliably
+        self.session.trust_env = False
+        
+        retries = Retry(
+            total=1,
+            backoff_factor=1,
+            status_forcelist=[500, 502, 503, 504],
+            allowed_methods=["GET", "POST"]
+        )
+        self.session.mount('http://', HTTPAdapter(max_retries=retries))
+        self.session.mount('https://', HTTPAdapter(max_retries=retries))
+        
+        # Default timeout
+        self.timeout = 120
+
     def refine_query(self, global_ctx: str, local_ctx: str, question: str) -> str:
         """
         [DEPRECATED] Use agentic_search instead.
@@ -120,10 +141,12 @@ class RAGClient:
             # OR we pass it in payload if documented. 
             # Let's try passing it if provided.
             if dataset_ids:
-                 payload["dataset_ids"] = dataset_ids.split(",")
+                 ids_list = dataset_ids.split(",")
+                 payload["dataset_ids"] = ids_list
+                 logger.info(f"Using dataset_ids: {ids_list}")
 
             logger.info(f"Sending request to RAGFlow: {url}")
-            resp = requests.post(url, headers=headers, json=payload, timeout=60)
+            resp = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
             
             if resp.status_code != 200:
                 logger.error(f"RAGFlow API Error: {resp.status_code} - {resp.text}")
@@ -215,6 +238,131 @@ class RAGClient:
                 "citation": "System Error",
                 "score": 0.0
             }
+
+    def list_datasets(self, page: int = 1, page_size: int = 30) -> Dict[str, Any]:
+        """
+        List all knowledge bases (datasets).
+        API: GET /api/v1/datasets
+        """
+        if self.api_key == "mock_key":
+            return {"data": [{"id": "mock_id", "name": "Mock KB"}], "total": 1}
+
+        try:
+            url = f"{self.base_url}/api/v1/datasets?page={page}&page_size={page_size}"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            
+            logger.info(f"Listing datasets: {url}")
+            resp = self.session.get(url, headers=headers, timeout=self.timeout)
+            
+            if resp.status_code != 200:
+                logger.error(f"RAGFlow List Datasets Error: {resp.status_code} - {resp.text}")
+                return {"error": f"API Error: {resp.status_code}", "details": resp.text}
+                
+            return resp.json()
+            
+        except Exception as e:
+            logger.error(f"List Datasets Connection Error: {e}")
+            return {"error": str(e)}
+
+    def list_documents(self, dataset_id: str, page: int = 1, page_size: int = 30, keywords: str = "") -> Dict[str, Any]:
+        """
+        List documents in a specific knowledge base.
+        API: GET /api/v1/datasets/{dataset_id}/documents
+        """
+        if self.api_key == "mock_key":
+             return {"data": [{"id": "doc1", "name": "test.pdf"}], "total": 1}
+
+        try:
+            url = f"{self.base_url}/api/v1/datasets/{dataset_id}/documents?page={page}&page_size={page_size}&keywords={keywords}"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            
+            logger.info(f"Listing documents for {dataset_id}: {url}")
+            resp = self.session.get(url, headers=headers, timeout=self.timeout)
+            
+            if resp.status_code != 200:
+                logger.error(f"RAGFlow List Documents Error: {resp.status_code} - {resp.text}")
+                return {"error": f"API Error: {resp.status_code}", "details": resp.text}
+                
+            return resp.json()
+            
+        except Exception as e:
+            logger.error(f"List Documents Connection Error: {e}")
+            return {"error": str(e)}
+
+    def upload_document(self, dataset_id: str, file_path: str) -> Dict[str, Any]:
+        """
+        Upload a document to the knowledge base.
+        API: POST /api/v1/datasets/{dataset_id}/documents
+        """
+        if self.api_key == "mock_key":
+            return {"code": 0, "message": "Mock upload success"}
+
+        try:
+            url = f"{self.base_url}/api/v1/datasets/{dataset_id}/documents"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            
+            logger.info(f"Uploading document to {dataset_id}: {file_path}")
+            
+            # Using multipart/form-data for file upload
+            with open(file_path, 'rb') as f:
+                files = {'file': (os.path.basename(file_path), f)}
+                # Note: Do not set Content-Type header when using 'files' param in requests, 
+                # it will be set automatically with boundary.
+                resp = self.session.post(url, headers=headers, files=files, timeout=self.timeout)
+            
+            if resp.status_code != 200:
+                logger.error(f"RAGFlow Upload Error: {resp.status_code} - {resp.text}")
+                return {"error": f"API Error: {resp.status_code}", "details": resp.text}
+                
+            return resp.json()
+            
+        except Exception as e:
+            logger.error(f"Upload Document Connection Error: {e}")
+            return {"error": str(e)}
+
+    def retrieve_chunks(self, dataset_id: str, query: str, page: int = 1, page_size: int = 30, similarity_threshold: float = 0.2) -> Dict[str, Any]:
+        """
+        Retrieve chunks from a dataset without LLM generation.
+        API: POST /api/v1/retrieval
+        """
+        if self.api_key == "mock_key":
+             return {"data": [{"content_with_weight": "Mock content", "similarity": 0.9}], "total": 1}
+
+        try:
+            # Correct Endpoint based on GitHub Issues: POST /api/v1/retrieval
+            url = f"{self.base_url}/api/v1/retrieval"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "question": query,
+                "dataset_ids": [dataset_id],
+                "page": page,
+                "page_size": page_size,
+                "similarity_threshold": similarity_threshold,
+                "vector_similarity_weight": 0.3,
+                "top_k": 1024 
+            }
+            
+            logger.info(f"Retrieving chunks from {dataset_id}: {url}")
+            resp = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            
+            if resp.status_code == 200:
+                json_data = resp.json()
+                # 兼容性修复：某些版本返回 {"code":0, "data": {"chunks": [...]}} 而不是 {"code":0, "data": [...]}
+                if isinstance(json_data.get("data"), dict) and "chunks" in json_data["data"]:
+                     # 转换结构以保持统一
+                     json_data["data"] = json_data["data"]["chunks"]
+                return json_data
+            
+            logger.error(f"RAGFlow Retrieve Chunks Error: {resp.status_code} - {resp.text}")
+            return {"error": f"API Error: {resp.status_code}", "details": resp.text}
+            
+        except Exception as e:
+            logger.error(f"Retrieve Chunks Connection Error: {e}")
+            return {"error": str(e)}
 
     def _mock_response(self, query: str) -> Dict[str, Any]:
         """Generate a mock response for testing."""

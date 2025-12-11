@@ -1,10 +1,9 @@
-# 遗留问题与行动项：MCP生产工厂
+# MCP生产工厂 - 待办事项 (TODO)
 
-## 1. 待办事项
-- [ ] **Common 库增强**: 实现 `load_dotenv` 封装，使新应用默认支持环境变量。
-- [ ] **ReviewFlow 路径优化**: 优化 `review_flow` 的状态文件存储路径，使其不依赖于运行目录（考虑使用 `appdirs` 库）。
-- [ ] **文档补全**: 为迁移后的 `math_time` 和 `review_flow` 补充详细的 6A 文档。
+## 1. 功能增强
+- [x] **日志流式传输**: 已在 `build_project` 中实现，通过 MCP Context 发送实时日志和进度。
+- [ ] **Docker 支持**: 暂不需要。
+- [ ] **模板管理**: 支持选择不同的初始化模板 (e.g., `simple`, `rag`, `agent`)。
 
-## 2. 长期规划
-- [ ] **CI/CD 集成**: 编写 GitHub Actions workflow，在提交时自动运行 `build_app`。
-- [ ] **模板多样化**: 在 `init_app` 中支持多种模板选择（如：基础版、数据库版、Web版）。
+## 2. 配置说明
+- [ ] 需要确保 Client 配置中正确设置了 Python 环境路径，或者直接使用构建好的 `mcp_factory.exe`。

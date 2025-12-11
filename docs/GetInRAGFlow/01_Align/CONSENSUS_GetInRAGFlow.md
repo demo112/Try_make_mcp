@@ -65,7 +65,7 @@
     - Python 3.10+ (逻辑层)。
 - **交付物**: 
     - `rag_flow_mcp` (包含 推理、治理、生命周期、进化 四大引擎)。
-    - 预置的 MCP 工具 (`agentic_search`, `check_metadata`, `promote_knowledge` 等)。
+    - 预置的 MCP 工具 (`fill_clarification_suggestions`, `evolve_scheme_document`, `check_metadata_compliance`, `validate_knowledge_conflict`, `harvest_knowledge_candidates`, `promote_knowledge`, `list_knowledge_bases`, `list_knowledge_base_files`)。
 
 ## 4. 验收标准
 1.  **流程阻断测试**: 故意删除元数据，系统应拒绝工作；故意不签名，系统应拒绝晋升。

@@ -16,8 +16,39 @@ class LifecycleEngine(BaseEngine):
     
     def initialize(self) -> bool:
         self.logger.info("正在初始化生命周期引擎...")
-        return True
+        try:
+            from src.apps.rag_flow_mcp.core.rag_client import RAGClient
+            self.rag_client = RAGClient(
+                self.config.get("RAGFLOW_API_KEY", ""),
+                self.config.get("RAGFLOW_HOST", ""),
+                self.config.get("RAGFLOW_CHAT_ID", "")
+            )
+            return True
+        except Exception as e:
+            self.logger.error(f"生命周期引擎初始化失败: {e}")
+            return False
+
+    def list_knowledge_bases(self, page: int = 1, page_size: int = 30) -> Dict[str, Any]:
+        """
+        列出所有知识库 (List Knowledge Bases)
+        """
+        self.logger.info(f"正在查询知识库列表 (Page: {page})")
+        return self.rag_client.list_datasets(page, page_size)
+
+    def list_knowledge_base_files(self, dataset_id: str, page: int = 1, page_size: int = 30, keywords: str = "") -> Dict[str, Any]:
+        """
+        列出指定知识库的文件 (List Knowledge Base Files)
+        """
+        self.logger.info(f"正在查询知识库文件 (Dataset: {dataset_id}, Keywords: {keywords})")
+        return self.rag_client.list_documents(dataset_id, page, page_size, keywords)
         
+    def retrieve_chunks(self, dataset_id: str, query: str, page: int = 1, page_size: int = 30, similarity_threshold: float = 0.2) -> Dict[str, Any]:
+        """
+        检索知识库切片 (Retrieve Chunks)
+        """
+        self.logger.info(f"正在检索知识切片 (Dataset: {dataset_id}, Query: {query})")
+        return self.rag_client.retrieve_chunks(dataset_id, query, page, page_size, similarity_threshold)
+
     def harvest_knowledge_candidates(self, doc_path: str) -> List[Dict[str, Any]]:
         """
         收割知识候选 (Harvest Knowledge Candidates)

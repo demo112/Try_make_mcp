@@ -34,9 +34,9 @@
 
 ### 2.3 独立 EXE 运行
 如果您使用打包好的 EXE 文件 (`dist/rag_flow_mcp_release/rag_flow_mcp.exe`)：
-1. 确保 `.env` 文件与 `.exe` 文件位于**同一目录**。
-2. `.env` 文件内容必须包含 `RAGFLOW_API_KEY` 等配置。
-3. 双击运行或在命令行中启动。
+1. **配置环境**：将目录下的 `.env.example` 复制并重命名为 `.env`。
+2. **填写参数**：编辑 `.env` 文件，填入您的 `RAGFLOW_API_KEY` 和 `RAGFLOW_HOST` 等信息。
+3. **启动运行**：确保 `.env` 文件与 `.exe` 文件位于**同一目录**，然后双击运行或在命令行中启动。
 
 ## 3. 使用场景演练
 
