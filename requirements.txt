@@ -4,3 +4,6 @@ python-docx
 xhtml2pdf
 openpyxl
 beautifulsoup4
+fastmcp
+litellm
+pandas

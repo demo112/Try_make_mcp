@@ -34,6 +34,7 @@ def get_pyinstaller_cmd(app_name: str, root_dir: Path, app_dir: Path, dist_dir: 
         "--specpath", str(specs_dir),
         "--paths", str(root_dir),
         "--hidden-import", "mcp.server.fastmcp",
+        "--hidden-import", "fastmcp",  # Add explicit fastmcp
         "--hidden-import", "src.common",
         # 添加更多潜在的隐式依赖
         "--hidden-import", "uvicorn",
@@ -54,6 +55,49 @@ def get_pyinstaller_cmd(app_name: str, root_dir: Path, app_dir: Path, dist_dir: 
             "--hidden-import", "docx",
             "--hidden-import", "markdown",
             "--hidden-import", "bs4",
+        ])
+    
+    # Special handling for rag_eval_flow dependencies
+    if app_name == "rag_eval_flow":
+        # 关键修改：将 logic.py 所在目录加入 paths，以便 PyInstaller 能将其作为模块分析
+        # 这样 import logic 就能被解析，并且 logic.py 内部的 import 也能被分析
+        cmd.extend(["--paths", str(app_dir)])
+        
+        # 强制添加 logic.py 作为数据文件，防止模块分析失败
+        logic_file = app_dir / "logic.py"
+        if logic_file.exists():
+            print(f"📦 Forcing inclusion of logic.py from {logic_file}")
+            cmd.extend(["--add-data", f"{logic_file}{os.pathsep}."])
+
+        cmd.extend([
+            # 强制分析 logic 模块，而不是仅仅作为文件复制
+            "--hidden-import", "logic",
+            
+            # 显式依赖
+            "--hidden-import", "pandas",
+            "--hidden-import", "litellm",
+            "--hidden-import", "numpy",
+            "--hidden-import", "pickletools",
+            "--hidden-import", "csv",
+            "--hidden-import", "json",
+            
+            # FastMCP 生态的隐式依赖
+            "--collect-all", "litellm",
+            "--collect-all", "fastmcp",
+            "--collect-all", "diskcache",
+            "--collect-all", "key_value",
+            "--collect-all", "beartype",
+            "--collect-all", "pydantic",
+            "--collect-all", "starlette",
+            "--collect-all", "uvicorn",
+            "--collect-all", "mcp",
+            
+            # Pandas 及其依赖通常需要完整收集
+            "--collect-all", "pandas",
+            
+            # Tiktoken 数据文件 (Litellm 依赖)
+            "--collect-all", "tiktoken",
+            "--collect-all", "tiktoken_ext",
         ])
 
     # Check for 'core' directory in the app and add it as data

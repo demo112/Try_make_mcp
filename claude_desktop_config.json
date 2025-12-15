@@ -1,0 +1,114 @@
+{
+    "mcpServers": {
+        "Puppeteer": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-puppeteer"
+            ],
+            "env": {},
+            "fromGalleryId": "modelcontextprotocol.servers_puppeteer",
+            "disabled": true
+        },
+        "Time": {
+            "command": "python",
+            "args": [
+                "-m",
+                "mcp_server_time"
+            ],
+            "env": {},
+            "fromGalleryId": "modelcontextprotocol.servers_time",
+            "disabled": true
+        },
+        "Memory": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-memory"
+            ],
+            "env": {
+                "MEMORY_FILE_PATH": "memory.json"
+            },
+            "fromGalleryId": "modelcontextprotocol.servers_memory",
+            "disabled": true
+        },
+        "Filesystem": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/path/to/allowed/directory"
+            ],
+            "env": {},
+            "fromGalleryId": "modelcontextprotocol.servers_filesystem",
+            "disabled": true
+        },
+        "Pandoc": {
+            "command": "uvx",
+            "args": [
+                "mcp-pandoc"
+            ],
+            "env": {},
+            "fromGalleryId": "vivekVells.mcp-pandoc",
+            "disabled": true
+        },
+        "Excel": {
+            "command": "npx",
+            "args": [
+                "--yes",
+                "@negokaz/excel-mcp-server"
+            ],
+            "env": {
+                "EXCEL_MCP_PAGING_CELLS_LIMIT": "4000"
+            },
+            "fromGalleryId": "negokaz.excel-mcp-server",
+            "disabled": true
+        },
+        "FFmpeg Video Processor": {
+            "command": "npx",
+            "args": [
+                "--yes",
+                "mcp-ffmpeg"
+            ],
+            "env": {},
+            "fromGalleryId": "bitscorp-mcp.mcp-ffmpeg",
+            "disabled": true
+        },
+        "math-time": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\math_time_server_release\\math-time-server.exe",
+            "disabled": false
+        },
+        "review-flow": {
+            "command": "c:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\review_flow_server_release\\review-flow-server.exe",
+            "args": []
+        },
+        "md-converter": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\md_converter_release\\md_converter.exe",
+            "args": []
+        },
+        "everything2md": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\everything2md_release\\everything2md.exe",
+            "args": []
+        },
+        "review-workflow-mcp": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\review_workflow_mcp_release\\review_workflow_mcp.exe",
+            "args": []
+        },
+        "6a-test-workflow": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\six_a_test_workflow_release\\six_a_test_workflow.exe",
+            "args": []
+        },
+        "rag-flow": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\rag_flow_mcp_release\\rag_flow_mcp.exe",
+            "args": []
+        },
+        "mcp-factory": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\mcp_factory_release\\mcp_factory.exe",
+            "args": []
+        },
+        "rag-eval-flow": {
+            "command": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\dist\\rag_eval_flow_mcp_release\\rag_eval_flow_mcp.exe",
+            "args": []
+        }
+    }
+}
