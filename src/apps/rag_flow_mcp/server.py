@@ -232,5 +232,39 @@ def retrieve_chunks(dataset_id: str, query: str, page: int = 1, page_size: int =
     result = lifecycle_engine.retrieve_chunks(dataset_id, query, page, page_size, similarity_threshold)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
+from src.apps.rag_flow_mcp.tools.visualization import view_last_diff
+from src.apps.rag_flow_mcp.tools.qa_tool import capture_test_case
+
+# --- Visualization Tools ---
+
+@mcp.tool()
+@log_tool_call
+def view_diff(file_path: str) -> str:
+    """
+    [体验优化] 打开 VS Code 对比视图。
+    对比指定文件的当前内容与其最新的影子副本 (Shadow Copy)。
+    
+    Args:
+        file_path: 原文件的绝对路径。
+    """
+    result = view_last_diff(file_path)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+# --- QA Tools ---
+
+@mcp.tool()
+@log_tool_call
+def add_test_case(query: str, expected_keywords: list[str], expected_document: str = "") -> str:
+    """
+    [闭环优化] 捕获测试用例到黄金数据集。
+    
+    Args:
+        query: 问题。
+        expected_keywords: 预期答案中必须包含的关键词列表。
+        expected_document: (可选) 预期来源文档。
+    """
+    result = capture_test_case(query, expected_keywords, expected_document)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
 if __name__ == "__main__":
     mcp.run()

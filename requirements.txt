@@ -10,3 +10,4 @@ pandas
 markdown-it-py
 mdformat
 pytest
+tabulate

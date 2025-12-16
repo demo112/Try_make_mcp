@@ -9,12 +9,16 @@ from urllib3.util.retry import Retry
 logger = logging.getLogger(__name__)
 
 class RAGClient:
-    def __init__(self, api_key: str, base_url: str, chat_id: str = ""):
+    def __init__(self, api_key: str, base_url: str, chat_id: str = "", timeout: int = 120, top_k: int = 10, similarity_threshold: float = 0.2):
         self.api_key = api_key
         self.base_url = base_url.rstrip('/')
         self.chat_id = chat_id
+        self.timeout = timeout
+        self.top_k = top_k
+        self.similarity_threshold = similarity_threshold
         
-        logger.info(f"RAGClient initialized with Base URL: {self.base_url}, Chat ID: {self.chat_id}")
+        logger.info(f"RAGClient initialized with Base URL: {self.base_url}, Chat ID: {self.chat_id}, Timeout: {self.timeout}s")
+        logger.info(f"RAG Params: Top K={self.top_k}, Threshold={self.similarity_threshold}")
 
         # Configure session with retries
         self.session = requests.Session()
@@ -31,7 +35,7 @@ class RAGClient:
         self.session.mount('https://', HTTPAdapter(max_retries=retries))
         
         # Default timeout
-        self.timeout = 120
+        # self.timeout = 120 # Moved to __init__
 
     def refine_query(self, global_ctx: str, local_ctx: str, question: str) -> str:
         """

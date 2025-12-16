@@ -224,12 +224,15 @@ def build_app(app_name: str, display_name: str = None):
         manual_src = None
         if doc_dir and (doc_dir / "UserManual.md").exists():
             manual_src = doc_dir / "UserManual.md"
+            # 显式复制 UserManual.md 以满足工厂规范
+            shutil.copy(str(manual_src), str(release_dir / "UserManual.md"))
+            print(f"  - 已复制文档 (UserManual.md)")
         elif doc_dir and (doc_dir / "Readme.md").exists():
             manual_src = doc_dir / "Readme.md"
         
         if manual_src:
             shutil.copy(str(manual_src), str(release_dir / "README.md"))
-            print(f"  - 已复制文档 ({manual_src.name} -> README.md)")
+            print(f"  - 已生成 README.md (源自 {manual_src.name})")
         else:
             print("⚠️ 警告: 未找到文档 (UserManual.md 或 Readme.md)")
 

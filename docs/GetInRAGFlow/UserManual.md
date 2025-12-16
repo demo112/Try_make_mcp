@@ -20,6 +20,9 @@
       "env": {
         "RAGFLOW_API_KEY": "your_key",
         "RAGFLOW_HOST": "http://your_host",
+        "RAGFLOW_TIMEOUT": "120",
+        "RAGFLOW_TOP_K": "10",
+        "RAGFLOW_SIMILARITY_THRESHOLD": "0.2",
         "PYTHONPATH": "absolute/path/to/Try_make_mcp"
       }
     }
@@ -35,7 +38,7 @@
 ### 2.3 独立 EXE 运行
 如果您使用打包好的 EXE 文件 (`dist/rag_flow_mcp_release/rag_flow_mcp.exe`)：
 1. **配置环境**：将目录下的 `.env.example` 复制并重命名为 `.env`。
-2. **填写参数**：编辑 `.env` 文件，填入您的 `RAGFLOW_API_KEY` 和 `RAGFLOW_HOST` 等信息。
+2. **填写参数**：编辑 `.env` 文件，填入您的 `RAGFLOW_API_KEY`、`RAGFLOW_HOST` 以及可选参数如 `RAGFLOW_TIMEOUT`, `RAGFLOW_TOP_K`, `RAGFLOW_SIMILARITY_THRESHOLD` 等信息。
 3. **启动运行**：确保 `.env` 文件与 `.exe` 文件位于**同一目录**，然后双击运行或在命令行中启动。
 
 ## 3. 使用场景演练

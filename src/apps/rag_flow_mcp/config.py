@@ -30,5 +30,8 @@ def load_config():
         "RAGFLOW_HOST": os.getenv("RAGFLOW_HOST", "http://localhost:9380"),
         "RAGFLOW_CHAT_ID": os.getenv("RAGFLOW_CHAT_ID", ""),
         "RAG_DATASET_IDS": os.getenv("RAG_DATASET_IDS", ""),  # Comma separated
+        "RAGFLOW_TIMEOUT": int(os.getenv("RAGFLOW_TIMEOUT", "120")),
+        "RAGFLOW_TOP_K": int(os.getenv("RAGFLOW_TOP_K", "10")),
+        "RAGFLOW_SIMILARITY_THRESHOLD": float(os.getenv("RAGFLOW_SIMILARITY_THRESHOLD", "0.2")),
         "LOG_LEVEL": common_conf.get("log_level", "INFO")
     }

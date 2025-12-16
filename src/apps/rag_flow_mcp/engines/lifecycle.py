@@ -21,7 +21,10 @@ class LifecycleEngine(BaseEngine):
             self.rag_client = RAGClient(
                 self.config.get("RAGFLOW_API_KEY", ""),
                 self.config.get("RAGFLOW_HOST", ""),
-                self.config.get("RAGFLOW_CHAT_ID", "")
+                self.config.get("RAGFLOW_CHAT_ID", ""),
+                timeout=self.config.get("RAGFLOW_TIMEOUT", 120),
+                top_k=self.config.get("RAGFLOW_TOP_K", 10),
+                similarity_threshold=self.config.get("RAGFLOW_SIMILARITY_THRESHOLD", 0.2)
             )
             return True
         except Exception as e:

@@ -151,6 +151,7 @@
 ### 7.2 交付物整理
 
 * **User Manual**: 确保 `docs/<Display Name>/UserManual.md` 包含 Client 配置示例。
+* **交付包结构**: 所有 MCP 的用户手册 (`UserManual.md`) **必须** 放置在与 EXE 文件相同的目录下，以便用户查阅。
 * **同步**: 更新项目里程碑，同步所有文档状态。
 
 ---

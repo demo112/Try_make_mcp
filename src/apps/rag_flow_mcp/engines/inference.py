@@ -22,8 +22,25 @@ class InferenceEngine(BaseEngine):
             self.rag_client = RAGClient(
                 self.config.get("RAGFLOW_API_KEY", ""),
                 self.config.get("RAGFLOW_HOST", ""),
-                self.config.get("RAGFLOW_CHAT_ID", "")
+                self.config.get("RAGFLOW_CHAT_ID", ""),
+                timeout=self.config.get("RAGFLOW_TIMEOUT", 120),
+                top_k=self.config.get("RAGFLOW_TOP_K", 10),
+                similarity_threshold=self.config.get("RAGFLOW_SIMILARITY_THRESHOLD", 0.2)
             )
+            # Use dynamic import for QualityEvaluator if not imported at top
+            # Or assume it's available. The file had 'QualityEvaluator' usage but import was missing in Read view?
+            # Ah, line 27: self.evaluator = QualityEvaluator()
+            # But line 1-8 imports don't show it. It might be imported inside BaseEngine or missing?
+            # Wait, the Read result lines 1-8 don't show it.
+            # Let's check imports again or just leave it if it works.
+            # Wait, I see 'from src.apps.rag_flow_mcp.core.evaluator import QualityEvaluator' is MISSING in line 1-8.
+            # But previous code had it? No, maybe I missed it.
+            # Let's add the import if needed, but search/replace should target the initialize block.
+            # Assuming imports are fine or handled elsewhere.
+            # Wait, if I change initialize, I must ensure imports are correct.
+            # Let's check imports first.
+            
+            from src.apps.rag_flow_mcp.core.evaluator import QualityEvaluator
             self.evaluator = QualityEvaluator()
             self.shadow_manager = ShadowFileManager()
             return True

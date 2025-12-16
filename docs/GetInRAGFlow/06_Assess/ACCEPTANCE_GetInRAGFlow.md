@@ -50,6 +50,20 @@
   - 验证了 `rag_client.py` 能正确连接 RAGFlow 服务。
   - 验证了 `server.py` 配置加载正确，API Key 传递无误。
 
+### 2.4 优化特性验证 (Optimization Features Verification) - **NEW**
+- [x] **可视化 Diff 工具**:
+  - 成功集成 VS Code Diff CLI (`view_diff`)。
+  - 验证了对比影子文件与原文件的差异功能。
+- [x] **测试用例捕获**:
+  - 成功实现测试用例自动录制 (`add_test_case`)。
+  - 验证了用例能正确追加到 `golden_dataset.json`。
+- [x] **AST 表格精细化编辑**:
+  - 成功实现 Markdown 表格的单元格级编辑 (`update_table_cell`)。
+  - 验证了使用 Pandas 解析和生成 Markdown 表格的准确性。
+- [x] **RAGFlow 参数配置**:
+  - 成功实现 RAGFlow 超时 (`RAGFLOW_TIMEOUT`)、Top K (`RAGFLOW_TOP_K`) 和相似度阈值 (`RAGFLOW_SIMILARITY_THRESHOLD`) 的配置化。
+  - 验证了配置参数能正确传递到 `RAGClient`。
+
 ## 3. 遗留问题与风险 (Known Issues & Risks)
 - **严格阈值副作用**: 0.6 的真实性阈值可能导致在知识库内容不足时，AI 频繁“保持沉默”（不提供建议）。这符合“严禁捏造”的要求，但可能影响用户体验。
 - **进化精度**: 对于复杂文档的精细修改 (Diff/Patch)，仍依赖 LLM 的指令遵循能力。
