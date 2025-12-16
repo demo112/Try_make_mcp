@@ -96,8 +96,43 @@ graph TD
     *   **L3 (项目)**: 项目临时知识 (读写)。
 *   **目的**: 避免知识碎片化，同时支持细微差异管理。
 
-## 4. 模块整合方案
-核心引擎扩展为四个：
+## 5. v2.1 生产环境升级架构设计 (P0)
+
+### 5.1 稳健性架构 (Robustness Architecture)
+*   **核心组件**: `MarkdownASTManager`
+*   **技术选型**: `markdown-it-py` (CommonMark 兼容，插件生态丰富) + `mdformat` (格式化输出)。
+*   **工作流**:
+    1.  **Parse**: 将 Markdown 解析为 Token Stream。
+    2.  **Traverse**: 遍历 Token 寻找目标节点 (如 H2 标题)。
+    3.  **Modify**: 在 AST 层面插入或修改 Token (而非字符串替换)。
+    4.  **Render**: 将 AST 重新渲染为 Markdown，确保表格和 Mermaid 格式完好。
+
+### 5.2 协作架构 (Collaboration Architecture)
+*   **核心组件**: `ShadowFileManager`
+*   **原理**: Copy-on-Write (写时复制)
+*   **流程**:
+    ```mermaid
+    sequenceDiagram
+        participant User
+        participant MCP
+        participant FileSystem
+        
+        User->>MCP: 触发进化/填充
+        MCP->>FileSystem: Read original file
+        MCP->>MCP: Process changes (in memory)
+        MCP->>FileSystem: Write to {file}_ai_revision.md
+        MCP->>FileSystem: Write to {file}_diff_report.md
+        MCP-->>User: Success: 已生成副本，请 Review
+    ```
+
+### 5.3 质量架构 (Quality Architecture)
+*   **核心组件**: `QualityGatekeeper`
+*   **测试数据**: `tests/golden_dataset.json` (JSON Array: `[{q, context, expected_a}]`)
+*   **评估逻辑**:
+    *   使用 `LiteLLM` 调用轻量级模型 (如 Gemini Flash / GPT-4o-mini)。
+    *   **Prompt**: "请判断 AI 回答与标准答案的语义一致性，打分 0.0-1.0"。
+    *   **CI 集成**: 每次 `git push` 前运行。
+
 1.  **推理引擎 (Inference Engine)**: 负责 搜索 & 建议 (含重试/降级/真实性校验)。
 2.  **进化引擎 (Evolution Engine)**: **[NEW]** 负责 方案文档的继承与迭代。
 3.  **治理引擎 (Governance Engine)**: 负责 元数据 & 验证。

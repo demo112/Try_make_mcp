@@ -1,0 +1,12 @@
+[
+  {
+    "query": "什么是 6A 工作流？",
+    "expected_answer_keywords": ["Align", "Architect", "Atomize", "Approve", "Automate", "Assess"],
+    "expected_document": "01_Align/ALIGNMENT_GetInRAGFlow.md"
+  },
+  {
+    "query": "如何进行知识晋升？",
+    "expected_answer_keywords": ["promote_knowledge", "L3", "L1/L2", "审批", "红蓝对抗"],
+    "expected_document": "02_Architect/UNIFIED_DESIGN.md"
+  }
+]

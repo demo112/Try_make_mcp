@@ -7,3 +7,6 @@ beautifulsoup4
 fastmcp
 litellm
 pandas
+markdown-it-py
+mdformat
+pytest

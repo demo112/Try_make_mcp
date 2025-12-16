@@ -5,6 +5,9 @@
 - [x] **真实性校验**: 确认 RAG 检索已包含 `_verify_truthfulness` 逻辑 (Threshold=0.6)，严禁捏造。
 - [x] **鲁棒性设计**: 确认 `_safe_rag_search` 包含指数退避重试 (Max=3) 和服务降级策略。
 - [x] **环境隔离**: 确认敏感配置 (API Keys) 仅通过环境变量/`.env` 加载，无硬编码。
+- [x] **稳健性升级 (P0)**: 确认已引入 Markdown AST 解析，严禁使用正则表达式修改文档结构。
+- [x] **协作升级 (P0)**: 确认已采用 **Shadow Copy (影子副本)** 机制，严禁直接覆盖用户原文件。
+- [x] **质量升级 (P0)**: 确认已规划 Golden Dataset 和推理质量回归测试。
 
 ## 2. 完整性检查 (Completeness)
 - [x] **四核引擎**: `UNIFIED_DESIGN.md` 已包含 **Evolution Engine (进化引擎)** 及其职责定义。

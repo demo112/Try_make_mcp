@@ -97,6 +97,36 @@ graph TD
 * **内容**: 验证主线（澄清->进化）和支线（收割->晋升），以及容错能力。
 * **步骤**:
   1. **场景 1 (主线)**: 生成问题 -> AI 建议 -> 人工确认 -> 方案自动进化。
-  2. **场景 2 (支线)**: 确认问题 -> 知识收割 -> 冲突检测 -> 晋升入库。
+## 3. v2.1 生产环境升级任务 (P0)
+
+### 任务 8: 基础设施升级 (Infrastructure Upgrade)
+*   **依赖安装**: 更新 `requirements.txt`，添加 `markdown-it-py`, `mdformat`, `litellm`。
+*   **测试准备**: 创建 `tests/golden_dataset.json` 和 `tests/test_inference_quality.py`。
+*   **Git 移除**: 移除 Git 相关依赖。
+
+### 任务 9: 实现 AST 管理器 (Implement AST Manager)
+*   **位置**: `src/apps/rag_flow_mcp/core/markdown_ast.py`
+*   **内容**:
+    *   `parse(content) -> tokens`
+    *   `find_header(tokens, header_text) -> index`
+    *   `replace_section(tokens, header_text, new_content)`
+    *   `render(tokens) -> str`
+
+### 任务 10: 实现影子文件管理器 (Implement Shadow File Manager)
+*   **位置**: `src/apps/rag_flow_mcp/core/shadow_file_manager.py`
+*   **内容**:
+    *   `generate_shadow_copy(original_path, new_content) -> (shadow_path, diff_path)`
+    *   `generate_diff_report(old, new) -> str` (使用 difflib)
+
+### 任务 11: 实现质量守门员 (Implement Quality Gatekeeper)
+*   **位置**: `src/apps/rag_flow_mcp/core/evaluator.py` (升级)
+*   **内容**:
+    *   实现 `evaluate_similarity(actual, expected) -> float`。
+    *   集成到 `tests/test_inference_quality.py`。
+
+### 任务 12: 引擎集成 (Engine Integration)
+*   **进化引擎升级**: 修改 `EvolutionEngine`，使用 `MarkdownASTManager` 处理内容，使用 `ShadowFileManager` 保存结果。
+*   **推理引擎升级**: 修改 `InferenceEngine`，使用 `ShadowFileManager` 生成建议填充后的副本。
+
   3. **场景 3 (容错)**: 模拟 RAG 服务断开，验证系统是否触发重试并优雅降级。
   4. **场景 4 (防幻觉)**: 提问无关问题，验证系统是否拒绝编造答案。

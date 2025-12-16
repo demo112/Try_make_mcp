@@ -4,7 +4,7 @@ import time
 from typing import Dict, Any, List, Optional
 from .base import BaseEngine
 from src.apps.rag_flow_mcp.core.rag_client import RAGClient
-from src.apps.rag_flow_mcp.core.evaluator import QualityEvaluator
+from src.apps.rag_flow_mcp.core.shadow_file_manager import ShadowFileManager
 
 class InferenceEngine(BaseEngine):
     """
@@ -25,6 +25,7 @@ class InferenceEngine(BaseEngine):
                 self.config.get("RAGFLOW_CHAT_ID", "")
             )
             self.evaluator = QualityEvaluator()
+            self.shadow_manager = ShadowFileManager()
             return True
         except Exception as e:
             self.logger.error(f"推理引擎初始化失败: {e}")
@@ -94,21 +95,25 @@ class InferenceEngine(BaseEngine):
                     # answers_map[str(q["id"])] = result # 暂时保持跳过，后续可优化为降级显示
 
             
-            # 5. 回写文档
+            # 5. 回写文档 (使用影子副本)
             if answers_map:
                 new_content = self._inject_ai_answers(content, answers_map)
-                with open(doc_path, 'w', encoding='utf-8') as f:
-                    f.write(new_content)
+                
+                # Use ShadowFileManager instead of direct write
+                shadow_path, diff_path = self.shadow_manager.generate_shadow_copy(doc_path, new_content)
+                
                 return {
                     "status": "success", 
-                    "message": f"成功处理 {processed_count} 个问题。", 
-                    "processed_count": processed_count
+                    "processed_count": processed_count,
+                    "shadow_path": shadow_path,
+                    "diff_path": diff_path,
+                    "message": "已生成影子副本，请 Review。"
                 }
-            else:
-                return {"status": "success", "message": "没有生成有效的建议。", "processed_count": 0}
-                
+            
+            return {"status": "success", "message": "无有效建议生成。", "processed_count": 0}
+
         except Exception as e:
-            self.logger.error(f"推理过程失败: {e}")
+            self.logger.error(f"处理澄清建议失败: {e}")
             return {"status": "error", "message": str(e)}
 
     def _safe_rag_search(self, global_ctx: str, local_ctx: str, question: str, dataset_ids: str, retries: int = 3) -> Dict[str, Any]:

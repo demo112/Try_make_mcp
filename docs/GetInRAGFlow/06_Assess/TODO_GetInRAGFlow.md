@@ -1,14 +1,18 @@
-# TODO: GetInRAGFlow
+# 待办事项 (TODO List)
 
-## 待办事项 (Backlog)
+## 1. 环境配置
+- [ ] **API Key 配置**: 请在 `.env` 文件中配置 `RAGFLOW_API_KEY`, `RAGFLOW_HOST`。
+- [ ] **依赖安装**: 运行 `python -m pip install -r requirements.txt` (已完成，请确认)。
 
-### High Priority
-- [ ] **Prompt 调优**: 针对复杂文档结构，优化 `evolution.py` 中的提示词，提高 Markdown 格式保持的稳定性。
-- [ ] **L2 知识库扩容**: 导入更多历史评审记录，构建初始的 L2 知识库，避免“冷启动”时 RAG 效果不佳。
+## 2. 测试运行
+- [x] **运行质量回归测试**:
+  ```powershell
+  python -m pytest tests/test_inference_quality.py
+  ```
+  状态：已验证 (Mock 模式通过)。需在 `.env` 配置真实 Key 后移除 Mock 验证真实效果。
 
-### Medium Priority
-- [ ] **可视化配置**: 为 MCP Server 增加简单的 Web UI 用于配置 API Key 和 RAG Endpoint (目前依赖 .env)。
-- [ ] **流式响应**: 将 RAG 检索过程改为 Streaming 响应，减少用户等待焦虑。
-
-### Low Priority
-- [ ] **多语言支持**: 虽然当前要求全中文，但架构上可预留 i18n 接口，支持未来扩展。
+## 3. 功能体验
+- [ ] **体验影子副本**:
+  1. 准备一个 Markdown 文档。
+  2. 调用 `evolve_scheme_document`。
+  3. 观察生成的 `_ai_revision.md` 和 `_diff_report.md`。

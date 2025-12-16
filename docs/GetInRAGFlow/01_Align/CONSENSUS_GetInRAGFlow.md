@@ -67,10 +67,21 @@
     - `rag_flow_mcp` (包含 推理、治理、生命周期、进化 四大引擎)。
     - 预置的 MCP 工具 (`fill_clarification_suggestions`, `evolve_scheme_document`, `check_metadata_compliance`, `validate_knowledge_conflict`, `harvest_knowledge_candidates`, `promote_knowledge`, `list_knowledge_bases`, `list_knowledge_base_files`)。
 
-## 4. 验收标准
-1.  **流程阻断测试**: 故意删除元数据，系统应拒绝工作；故意不签名，系统应拒绝晋升。
-2.  **知识隔离测试**: 在 A 项目中提问，不应检索到 B 项目的私有知识（除非标记为全局）。
-3.  **红蓝对抗测试**: 故意录入与旧知识矛盾的结论，系统应发出冲突警报。
-4.  **真实性测试**: 提问一个知识库中不存在的问题，系统应回答“不知道”而非编造。
-5.  **容错性测试**: 模拟 RAG 服务断连，系统应能自动重试并在重试失败后优雅降级。
-6.  **格式合规测试**: 检查生成的 Markdown 是否包含机器人标识、置信度和来源引用。
+## 5. 生产环境升级共识 (v2.1 P0)
+### 5.1 稳健性共识
+*   **AST 优先**: 所有的文档修改操作（如进化、填充建议）必须基于 Markdown AST。禁止使用正则或纯字符串替换来处理复杂的文档结构。
+*   **结构保护**: 在修改文档时，必须显式校验修改前后的 DOM 结构差异，确保 H1-H6 层级、表格列数、Mermaid 代码块未被破坏。
+
+### 5.2 协作共识 (轻量化)
+*   **影子副本机制 (Shadow Copy)**:
+    *   MCP **严禁**直接修改原 Markdown 文件（如 `DESIGN.md`）。
+    *   所有的写操作必须输出到 `{filename}_ai_revision.md`。
+    *   同时生成 `{filename}_diff_report.md`，以直观展示修改内容。
+    *   **人工确认**: 用户通过文件对比工具确认无误后，手动执行覆盖或合并。
+
+### 5.3 质量共识
+*   **测试门禁**:
+    *   项目根目录下维护 `tests/golden_dataset.json`。
+    *   CI 或发布前必须运行 `python tests/run_inference_test.py`。
+    *   **通过标准**: 平均语义相似度 score > 0.8 (使用轻量级 LLM 或 Embedding Distance 判定)。
+

@@ -12,6 +12,12 @@
 - [x] **鲁棒性与降级**:
   - 代码审计确认 `_safe_rag_search` 包含 `retry` 循环 (Max=3)。
   - 确认最终失败时返回 "❌ 服务暂时不可用" 的降级响应，不中断流程。
+- [x] **稳健性升级 (P0)**:
+  - 代码审计确认 `MarkdownASTManager` 已实现，支持基于 Token 的结构化替换。
+  - `EvolutionEngine` 已集成 AST 管理器，不再使用危险的全文替换。
+- [x] **协作升级 (P0)**:
+  - 代码审计确认 `ShadowFileManager` 已实现，支持生成 `_ai_revision.md` 和 Diff Report。
+  - 确认 `InferenceEngine` 和 `EvolutionEngine` 均已切换到影子副本模式，严禁覆盖原文件。
 
 ## 2. 功能验证结果 (Verification Results)
 
