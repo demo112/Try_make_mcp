@@ -82,12 +82,12 @@ def log_tool_call(func):
 inference_engine = InferenceEngine(config)
 evolution_engine = EvolutionEngine(config)
 governance_engine = GovernanceEngine(config)
-lifecycle_engine = LifecycleEngine(config)
+# lifecycle_engine = LifecycleEngine(config)
 
 inference_engine.initialize()
 evolution_engine.initialize()
 governance_engine.initialize()
-lifecycle_engine.initialize()
+# lifecycle_engine.initialize()
 
 try:
     from src.apps.rag_flow_mcp.legacy_core.scenario_processor import ScenarioProcessor as LegacyScenarioProcessor
@@ -136,8 +136,9 @@ def check_metadata_compliance(doc_path: str) -> str:
     """
     [治理管控] 检查文档是否包含必要的元数据 (如 product, module 等)。
     """
-    result = governance_engine.check_metadata_compliance(doc_path)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+    return json.dumps({"status": "disabled", "message": "Governance Engine is temporarily disabled."}, ensure_ascii=False)
+    # result = governance_engine.check_metadata_compliance(doc_path)
+    # return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool(name="mcp_rag_flow_validate_knowledge_conflict")
 @log_tool_call
@@ -148,12 +149,13 @@ def validate_knowledge_conflict(candidate_json: str) -> str:
     Args:
         candidate_json: 候选知识的 JSON 字符串。
     """
-    try:
-        candidate_data = json.loads(candidate_json)
-        result = governance_engine.validate_knowledge_conflict(candidate_data)
-    except json.JSONDecodeError as e:
-        return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+    return json.dumps({"status": "disabled", "message": "Governance Engine is temporarily disabled."}, ensure_ascii=False)
+    # try:
+    #     candidate_data = json.loads(candidate_json)
+    #     result = governance_engine.validate_knowledge_conflict(candidate_data)
+    # except json.JSONDecodeError as e:
+    #     return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
+    # return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool(name="mcp_rag_flow_harvest_knowledge_candidates")
 @log_tool_call
@@ -162,8 +164,9 @@ def harvest_knowledge_candidates(doc_path: str) -> str:
     [支线任务] 从澄清文档中收割知识候选。
     仅提取已确认且有答案的条目。
     """
-    result = lifecycle_engine.harvest_knowledge_candidates(doc_path)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+    return json.dumps({"status": "disabled", "message": "Lifecycle Engine is temporarily disabled."}, ensure_ascii=False)
+    # result = lifecycle_engine.harvest_knowledge_candidates(doc_path)
+    # return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool(name="mcp_rag_flow_promote_knowledge")
 @log_tool_call
@@ -175,12 +178,13 @@ def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
         candidate_json: 候选知识的 JSON 字符串。
         target_kb_path: 目标知识库的目录路径。
     """
-    try:
-        candidate_data = json.loads(candidate_json)
-        result = lifecycle_engine.promote_knowledge(candidate_data, target_kb_path)
-    except json.JSONDecodeError as e:
-        return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+    return json.dumps({"status": "disabled", "message": "Lifecycle Engine is temporarily disabled."}, ensure_ascii=False)
+    # try:
+    #     candidate_data = json.loads(candidate_json)
+    #     result = lifecycle_engine.promote_knowledge(candidate_data, target_kb_path)
+    # except json.JSONDecodeError as e:
+    #     return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
+    # return json.dumps(result, ensure_ascii=False, indent=2)
 
 # ==========================================
 # Implementation Tools (mcp_rag_base_*)
@@ -272,6 +276,24 @@ def rewrite_query(query: str, context: str = "") -> str:
         context: Optional context to help with rewriting.
     """
     return base_tools.rewrite_query(query, context)
+
+@mcp.tool(name="mcp_rag_base_read_file")
+@log_tool_call
+def read_file(file_path: str) -> str:
+    """Read content from a local file."""
+    return base_tools.read_file(file_path)
+
+@mcp.tool(name="mcp_rag_base_list_files")
+@log_tool_call
+def list_files(dir_path: str, pattern: str = "*") -> str:
+    """List files in a local directory."""
+    return base_tools.list_files(dir_path, pattern)
+
+@mcp.tool(name="mcp_rag_base_inspect_config")
+@log_tool_call
+def inspect_config() -> str:
+    """[System] Inspect current configuration (sensitive data masked)."""
+    return base_tools.inspect_config()
 
 # --- Atomic / Helper Tools (Also classified as Base/Implementation) ---
 

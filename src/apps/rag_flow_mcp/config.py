@@ -33,5 +33,6 @@ def load_config():
         "RAGFLOW_TIMEOUT": int(os.getenv("RAGFLOW_TIMEOUT", "120")),
         "RAGFLOW_TOP_K": int(os.getenv("RAGFLOW_TOP_K", "10")),
         "RAGFLOW_SIMILARITY_THRESHOLD": float(os.getenv("RAGFLOW_SIMILARITY_THRESHOLD", "0.2")),
+        "RAG_CONFIDENCE_THRESHOLD": float(os.getenv("RAG_CONFIDENCE_THRESHOLD", "0.6")),
         "LOG_LEVEL": common_conf.get("log_level", "INFO")
     }

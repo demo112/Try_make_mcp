@@ -202,8 +202,12 @@ graph TD
 *   **核心工具**: `mcp_rag_base_*`
 *   **逻辑**:
     *   **File Ops**: 直接透传调用 `FileService` 的 `read_text`, `write_text` (慎用), `list_files`。
-    *   **RAG Ops**: 直接透传调用 `RAGClient` 的 `create_dataset`, `upload_document`, `retrieve_chunks` 等 API。
-    *   **无业务逻辑**: 不进行任何复杂的业务判断或流程控制。
+    *   `mcp_rag_base_read_file(file_path)`: 读取本地文件。
+    *   `mcp_rag_base_list_files(dir_path)`: 列出本地文件。
+*   **RAG Ops**: 直接透传调用 `RAGClient` 的 `create_dataset`, `upload_document`, `retrieve_chunks` 等 API。
+*   **System Ops**:
+    *   `mcp_rag_base_inspect_config()`: 查看当前生效配置。
+*   **无业务逻辑**: 不进行任何复杂的业务判断或流程控制。
 
 #### 4.5.1 原子工具 (Atomic Tools)
 *   `mcp_rag_base_fill_clarification_suggestions`

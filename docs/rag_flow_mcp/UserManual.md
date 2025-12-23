@@ -83,14 +83,18 @@
 - `harvest_knowledge_candidates(doc_path)`: 从文档收割知识。
 - `promote_knowledge(candidate_json, target_kb_path)`: 知识入库。
 
-### 4.4 知识库浏览 (Browser)
+### 4.4 知识库与文件管理 (Browser & Files)
 - `list_knowledge_bases(page, page_size)`: 列出知识库。
-- `list_knowledge_base_files(dataset_id, ...)`: 列出文件。
+- `list_knowledge_base_files(dataset_id, ...)`: 列出知识库文件。
 - `retrieve_chunks(dataset_id, query)`: 直接检索切片。
+- `read_file(file_path)`: 读取本地文件内容。
+- `list_files(dir_path)`: 列出本地目录文件。
 
-### 4.5 辅助工具 (Utils)
+### 4.5 辅助与系统工具 (Utils & System)
 - `view_diff(file_path)`: 打开 VS Code 对比视图。
 - `add_test_case(query, expected_keywords)`: 捕获测试用例。
+- `inspect_config()`: 查看当前系统配置（敏感信息已脱敏）。
+- `rewrite_query(query, context)`: 优化检索查询。
 
 ## 5. 常见问题 (FAQ)
 

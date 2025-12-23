@@ -162,6 +162,8 @@ def retrieve_chunks(dataset_id: str, query: str, page: int = 1, page_size: int =
         logger.error(f"Error retrieving chunks: {e}")
         return f"Error: {str(e)}"
 
+import json
+
 def rewrite_query(query: str, context: str = "") -> str:
     """
     [Query Rewrite] Optimize user query for better retrieval.
@@ -174,4 +176,18 @@ def rewrite_query(query: str, context: str = "") -> str:
         return str(result)
     except Exception as e:
         logger.error(f"Error rewriting query: {e}")
+        return f"Error: {str(e)}"
+
+def inspect_config() -> str:
+    """
+    [System] Inspect current configuration (sensitive data masked).
+    """
+    try:
+        safe_config = config.copy()
+        if "RAGFLOW_API_KEY" in safe_config:
+            key = safe_config["RAGFLOW_API_KEY"]
+            safe_config["RAGFLOW_API_KEY"] = f"{key[:4]}***{key[-4:]}" if len(key) > 8 else "***"
+        return json.dumps(safe_config, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Error inspecting config: {e}")
         return f"Error: {str(e)}"

@@ -22,7 +22,9 @@ class InferenceEngine(BaseEngine):
             # rag_client and query_rewriter are initialized in BaseEngine
             
             from src.apps.rag_flow_mcp.core.evaluator import QualityEvaluator
-            self.evaluator = QualityEvaluator()
+            # Use configured threshold
+            self.threshold = self.config.get("RAG_CONFIDENCE_THRESHOLD", 0.6)
+            self.evaluator = QualityEvaluator(threshold=self.threshold)
             # self.shadow_manager = ShadowFileManager() # Removed, using FileService
             return True
         except Exception as e:
@@ -146,10 +148,8 @@ class InferenceEngine(BaseEngine):
         score = result.get("score", 0.0)
         
         # 1. 严格的置信度阈值 (用户要求严禁虚假)
-        # THRESHOLD = 0.6
-        THRESHOLD = 0.2
-        if score < THRESHOLD:
-            return False, f"置信度过低 ({score:.2f} < {THRESHOLD})"
+        if score < self.threshold:
+            return False, f"置信度过低 ({score:.2f} < {self.threshold})"
             
         # 2. 拒绝回答检测
         eval_res = self.evaluator.evaluate(question, result)

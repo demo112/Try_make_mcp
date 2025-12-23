@@ -27,6 +27,18 @@ class EvolutionEngine(BaseEngine):
             self.logger.error(f"进化引擎初始化失败: {e}")
             return False
         
+    def _extract_headers(self, content: str) -> List[str]:
+        """
+        Extract all headers from the document to guide LLM.
+        """
+        headers = []
+        tokens = self.ast_manager.parse(content)
+        for i, token in enumerate(tokens):
+            if token.type == "heading_open":
+                if i + 1 < len(tokens) and tokens[i+1].type == "inline":
+                    headers.append(tokens[i+1].content)
+        return headers
+
     def evolve_scheme_document(self, scheme_doc_path: str, clarification_doc_path: str) -> Dict[str, Any]:
         """
         进化方案文档 (Evolve Scheme Document)
@@ -52,6 +64,10 @@ class EvolutionEngine(BaseEngine):
             # 2. 读取方案文档
             with open(scheme_doc_path, 'r', encoding='utf-8') as f:
                 scheme_content = f.read()
+                
+            # Extract valid headers
+            valid_headers = self._extract_headers(scheme_content)
+            valid_headers_str = "\n".join([f"- {h}" for h in valid_headers])
             
             changes_log = []
             current_content = scheme_content
@@ -65,8 +81,9 @@ class EvolutionEngine(BaseEngine):
                     f"你是一位技术文档撰写专家。"
                     f"请基于以下决策点更新文档。\n\n"
                     f"**决策点**:\n问题: {question}\n回答: {answer}\n\n"
+                    f"**现有章节标题 (Valid Headers)**:\n{valid_headers_str}\n\n"
                     f"**任务**:\n"
-                    f"1. 识别文档中需要修改的一个具体章节标题（Header Text，不含 #）。\n"
+                    f"1. 从上述现有章节标题中选择一个最相关的章节标题（Target Header）。严禁创造不存在的标题。\n"
                     f"2. 重写该章节下的内容以包含决策点。\n"
                     f"3. 严格按以下 JSON 格式返回:\n"
                     f"```json\n"
@@ -106,6 +123,11 @@ class EvolutionEngine(BaseEngine):
                         new_content = result.get("new_content")
                         
                         if target_header and new_content:
+                            # Validation: Check if header is valid
+                            if target_header not in valid_headers:
+                                self.logger.warning(f"Invalid header '{target_header}' returned by LLM. Skipping.")
+                                continue
+                                
                             # Apply AST Replacement
                             current_content = self.ast_manager.replace_section(current_content, target_header, new_content)
                             changes_log.append(f"Updated section '{target_header}' for question: {question[:30]}...")

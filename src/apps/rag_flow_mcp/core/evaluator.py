@@ -6,6 +6,9 @@ import difflib
 logger = logging.getLogger(__name__)
 
 class QualityEvaluator:
+    def __init__(self, threshold: float = 0.6):
+        self.threshold = threshold
+
     def evaluate(self, question: str, rag_result: Dict[str, Any]) -> Dict[str, Any]:
         """
         Evaluate the quality of the RAG answer (Runtime check).
@@ -15,11 +18,11 @@ class QualityEvaluator:
         answer = rag_result.get("answer", "")
         
         # Rule 1: Minimum confidence threshold (Runtime)
-        if score < 0.6: # Increased threshold per P0 requirements
+        if score < self.threshold: # Increased threshold per P0 requirements
             return {
                 "is_valid": False,
                 "score": score,
-                "reason": "Confidence too low (< 0.6)"
+                "reason": f"Confidence too low ({score:.2f} < {self.threshold})"
             }
             
         # Rule 2: Refusal detection
