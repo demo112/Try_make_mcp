@@ -49,8 +49,10 @@ class LifecycleEngine(BaseEngine):
         """
         检索知识库切片 (Retrieve Chunks)
         """
-        self.logger.info(f"正在检索知识切片 (Dataset: {dataset_id}, Query: {query})")
-        return self.rag_client.retrieve_chunks(dataset_id, query, page, page_size, similarity_threshold)
+        # Optimize query before retrieval
+        optimized_query = self.query_rewriter.rewrite(query)
+        self.logger.info(f"正在检索知识切片 (Dataset: {dataset_id}, Query: {optimized_query})")
+        return self.rag_client.retrieve_chunks(dataset_id, optimized_query, page, page_size, similarity_threshold)
 
     def harvest_knowledge_candidates(self, doc_path: str) -> List[Dict[str, Any]]:
         """
@@ -107,11 +109,7 @@ class LifecycleEngine(BaseEngine):
         candidate_id = candidate_data.get("id", "unknown")
         self.logger.info(f"正在晋升候选知识 {candidate_id} 到 {target_kb_path}")
         
-        if not os.path.exists(target_kb_path):
-            try:
-                os.makedirs(target_kb_path)
-            except Exception as e:
-                return {"status": "error", "message": f"创建知识库目录失败: {e}"}
+        self.file_service.ensure_dir(target_kb_path)
         
         # Save as JSON for machine readability
         file_name = f"knowledge_{candidate_id}.json"
@@ -121,8 +119,7 @@ class LifecycleEngine(BaseEngine):
             candidate_data["status"] = "promoted"
             candidate_data["promoted_at"] = datetime.datetime.now().isoformat()
             
-            with open(full_path, 'w', encoding='utf-8') as f:
-                json.dump(candidate_data, f, ensure_ascii=False, indent=2)
+            self.file_service.write_json(full_path, candidate_data)
                 
             return {
                 "status": "success",

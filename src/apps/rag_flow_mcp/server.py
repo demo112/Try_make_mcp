@@ -5,31 +5,25 @@ import functools
 import traceback
 
 # Ensure core modules can be imported
-# Must be done BEFORE importing from src or local modules
 if getattr(sys, 'frozen', False):
-    # Running in a PyInstaller bundle
     sys.path.append(sys._MEIPASS)
 else:
-    # Running in a normal Python environment
     current_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.append(current_dir)
-    
-    # Add project root to sys.path to allow 'src' imports
-    # current_dir is .../src/apps/rag_flow_mcp
-    # root is .../ (3 levels up)
     project_root = os.path.abspath(os.path.join(current_dir, "../../../"))
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
 
 from mcp.server.fastmcp import FastMCP
 from src.common import get_app_logger
+from dotenv import load_dotenv
 
-__version__ = "2.0.0"
+# Load .env
+load_dotenv()
 
 try:
     from config import load_config
 except ImportError:
-    # Try absolute import if relative/implicit fails
     from src.apps.rag_flow_mcp.config import load_config
 
 from engines import (
@@ -39,16 +33,10 @@ from engines import (
     LifecycleEngine
 )
 
-try:
-    from src.apps.rag_flow_mcp.legacy_core.scenario_processor import ScenarioProcessor as LegacyScenarioProcessor
-except ImportError:
-    LegacyScenarioProcessor = None
+# Import Implementation Tools
+from src.apps.rag_flow_mcp.tools import base_tools
 
 # Initialize Configuration and Logger
-# Ensure .env is loaded correctly from CWD if running as script
-from dotenv import load_dotenv
-load_dotenv()
-
 config = load_config()
 logger = get_app_logger("rag_flow_mcp")
 
@@ -66,17 +54,14 @@ def log_tool_call(func):
     def wrapper(*args, **kwargs):
         tool_name = func.__name__
         try:
-            # Log input
             logger.info(f"🔧 Calling Tool [{tool_name}]")
             if args:
                 logger.info(f"  Args: {args}")
             if kwargs:
                 logger.info(f"  Kwargs: {json.dumps(kwargs, ensure_ascii=False)}")
             
-            # Execute
             result = func(*args, **kwargs)
             
-            # Log output (truncate if too long)
             res_str = str(result)
             if len(res_str) > 500:
                 res_str = res_str[:500] + "... (truncated)"
@@ -86,8 +71,6 @@ def log_tool_call(func):
         except Exception as e:
             logger.error(f"❌ Tool [{tool_name}] Failed: {e}")
             logger.error(traceback.format_exc())
-            # Re-raise or return error JSON depending on strategy. 
-            # MCP usually expects tools to return a string result even on error to show to LLM.
             return json.dumps({
                 "status": "error", 
                 "message": f"Tool execution failed: {str(e)}",
@@ -101,20 +84,22 @@ evolution_engine = EvolutionEngine(config)
 governance_engine = GovernanceEngine(config)
 lifecycle_engine = LifecycleEngine(config)
 
-# Initialize them (Connect to RAG, etc.)
 inference_engine.initialize()
 evolution_engine.initialize()
 governance_engine.initialize()
 lifecycle_engine.initialize()
 
-# Initialize Legacy Processor
-legacy_processor = None
-if LegacyScenarioProcessor and hasattr(inference_engine, 'rag_client'):
-    legacy_processor = LegacyScenarioProcessor(inference_engine.rag_client)
+try:
+    from src.apps.rag_flow_mcp.legacy_core.scenario_processor import ScenarioProcessor as LegacyScenarioProcessor
+    legacy_processor = LegacyScenarioProcessor(inference_engine.rag_client) if hasattr(inference_engine, 'rag_client') else None
+except ImportError:
+    legacy_processor = None
 
-# --- Main Task Tools (Inference & Evolution) ---
+# ==========================================
+# Logic Tools (mcp_rag_flow_*)
+# ==========================================
 
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_fill_clarification_suggestions")
 @log_tool_call
 def fill_clarification_suggestions(doc_path: str, dataset_id: str = "") -> str:
     """
@@ -131,101 +116,7 @@ def fill_clarification_suggestions(doc_path: str, dataset_id: str = "") -> str:
         result = inference_engine.fill_clarification_suggestions(doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-@mcp.tool()
-@log_tool_call
-def create_shadow_file(file_path: str) -> str:
-    """
-    Atomic Tool: Create a shadow copy of the document (_ai_revision).
-    Returns the path of the created shadow file.
-    """
-    if legacy_processor:
-        return legacy_processor.create_shadow_file(file_path)
-    return ""
-
-@mcp.tool()
-@log_tool_call
-def extract_questions_from_doc(file_path: str) -> str:
-    """
-    Atomic Tool: Extract questions from a Markdown document (headers).
-    Returns a list of identified questions with line numbers.
-    """
-    if legacy_processor:
-        result = legacy_processor.extract_questions(file_path)
-        return json.dumps(result, ensure_ascii=False, indent=2)
-    return "[]"
-
-@mcp.tool()
-@log_tool_call
-def retrieve_rag_suggestion(query: str, dataset_id: str = "") -> str:
-    """
-    Atomic Tool: Retrieve a single suggestion from RAG.
-    """
-    if legacy_processor:
-        result = legacy_processor.retrieve_rag_suggestion(query, dataset_id)
-        return json.dumps(result, ensure_ascii=False, indent=2)
-    return "{}"
-
-# --- Dataset Tools (Legacy) ---
-
-@mcp.tool()
-@log_tool_call
-def create_dataset(name: str, avatar: str = "", description: str = "") -> str:
-    """Create a new Knowledge Base (Dataset)."""
-    result = inference_engine.rag_client.create_dataset(name, avatar, description)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
-@log_tool_call
-def delete_dataset(id: str) -> str:
-    """Delete a Knowledge Base by ID."""
-    result = inference_engine.rag_client.delete_dataset(id)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
-@log_tool_call
-def update_dataset(id: str, name: str = None, description: str = None) -> str:
-    """Update Knowledge Base metadata."""
-    result = inference_engine.rag_client.update_dataset(id, name, description)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-# --- Document Tools (Legacy) ---
-
-@mcp.tool()
-@log_tool_call
-def upload_document(dataset_id: str, file_path: str) -> str:
-    """Upload a file to a Knowledge Base."""
-    result = inference_engine.rag_client.upload_document(dataset_id, file_path)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
-@log_tool_call
-def delete_document(dataset_id: str, document_id: str) -> str:
-    """Delete a document from a Knowledge Base."""
-    result = inference_engine.rag_client.delete_document(dataset_id, document_id)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
-@log_tool_call
-def update_document(dataset_id: str, document_id: str, name: str = None, enabled: bool = None) -> str:
-    """Update document metadata (rename or enable/disable)."""
-    result = inference_engine.rag_client.update_document(dataset_id, document_id, name, enabled)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
-@log_tool_call
-def get_document_content(dataset_id: str, document_id: str) -> str:
-    """Get parsed chunks of a document."""
-    result = inference_engine.rag_client.get_document_content(dataset_id, document_id)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
-@log_tool_call
-def list_documents(dataset_id: str, page: int = 1, page_size: int = 30, keywords: str = "") -> str:
-    """List documents in a Knowledge Base."""
-    result = inference_engine.rag_client.list_documents(dataset_id, page, page_size, keywords)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_evolve_scheme_document")
 @log_tool_call
 def evolve_scheme_document(scheme_doc_path: str, clarification_doc_path: str) -> str:
     """
@@ -239,9 +130,7 @@ def evolve_scheme_document(scheme_doc_path: str, clarification_doc_path: str) ->
     result = evolution_engine.evolve_scheme_document(scheme_doc_path, clarification_doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-# --- Governance Tools ---
-
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_check_metadata_compliance")
 @log_tool_call
 def check_metadata_compliance(doc_path: str) -> str:
     """
@@ -250,7 +139,7 @@ def check_metadata_compliance(doc_path: str) -> str:
     result = governance_engine.check_metadata_compliance(doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_validate_knowledge_conflict")
 @log_tool_call
 def validate_knowledge_conflict(candidate_json: str) -> str:
     """
@@ -266,9 +155,7 @@ def validate_knowledge_conflict(candidate_json: str) -> str:
         return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-# --- Lifecycle Tools (Side Task) ---
-
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_harvest_knowledge_candidates")
 @log_tool_call
 def harvest_knowledge_candidates(doc_path: str) -> str:
     """
@@ -278,7 +165,7 @@ def harvest_knowledge_candidates(doc_path: str) -> str:
     result = lifecycle_engine.harvest_knowledge_candidates(doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_promote_knowledge")
 @log_tool_call
 def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
     """
@@ -295,33 +182,70 @@ def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
         return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-# Debug/Admin Tools (Kept for development but can be hidden from normal users if needed)
-@mcp.tool()
-@log_tool_call
-def list_knowledge_bases(page: int = 1, page_size: int = 30) -> str:
-    """
-    [调试工具] 列出所有知识库 (Datasets)。
-    """
-    result = lifecycle_engine.list_knowledge_bases(page, page_size)
-    return json.dumps(result, ensure_ascii=False, indent=2)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+# ==========================================
+# Implementation Tools (mcp_rag_base_*)
+# ==========================================
 
-@mcp.tool()
+@mcp.tool(name="mcp_rag_base_create_dataset")
 @log_tool_call
-def list_knowledge_base_files(dataset_id: str, page: int = 1, page_size: int = 30, keywords: str = "") -> str:
+def create_dataset(name: str, avatar: str = "", description: str = "") -> str:
+    """Create a new Knowledge Base (Dataset)."""
+    return base_tools.create_dataset(name, avatar, description)
+
+@mcp.tool(name="mcp_rag_base_delete_dataset")
+@log_tool_call
+def delete_dataset(id: str) -> str:
+    """Delete a Knowledge Base by ID."""
+    return base_tools.delete_dataset(id)
+
+@mcp.tool(name="mcp_rag_base_list_datasets")
+@log_tool_call
+def list_datasets(page: int = 1, page_size: int = 30) -> str:
+    """List all Knowledge Bases."""
+    return base_tools.list_datasets(page, page_size)
+
+@mcp.tool(name="mcp_rag_base_update_dataset")
+@log_tool_call
+def update_dataset(id: str, name: str = None, description: str = None) -> str:
+    """Update Knowledge Base metadata."""
+    return base_tools.update_dataset(id, name, description)
+
+@mcp.tool(name="mcp_rag_base_upload_document")
+@log_tool_call
+def upload_document(dataset_id: str, file_path: str) -> str:
     """
-    [知识浏览] 列出指定知识库中的文件。
-    
+    Upload a file to a Knowledge Base.
     Args:
-        dataset_id: 知识库 ID
-        page: 页码 (默认 1)
-        page_size: 每页数量 (默认 30)
-        keywords: 搜索关键词 (可选)
+        dataset_id: The target Knowledge Base ID.
+        file_path: Absolute path to the local file.
     """
-    result = lifecycle_engine.list_knowledge_base_files(dataset_id, page, page_size, keywords)
-    return json.dumps(result, ensure_ascii=False, indent=2)
+    return base_tools.upload_document(dataset_id, file_path)
 
-@mcp.tool()
+@mcp.tool(name="mcp_rag_base_delete_document")
+@log_tool_call
+def delete_document(dataset_id: str, document_id: str) -> str:
+    """Delete a document from a Knowledge Base."""
+    return base_tools.delete_document(dataset_id, document_id)
+
+@mcp.tool(name="mcp_rag_base_update_document")
+@log_tool_call
+def update_document(dataset_id: str, document_id: str, name: str = None, enabled: bool = None) -> str:
+    """Update document metadata (rename or enable/disable)."""
+    return base_tools.update_document(dataset_id, document_id, name, enabled)
+
+@mcp.tool(name="mcp_rag_base_get_document_content")
+@log_tool_call
+def get_document_content(dataset_id: str, document_id: str) -> str:
+    """Get parsed chunks of a document."""
+    return base_tools.get_document_content(dataset_id, document_id)
+
+@mcp.tool(name="mcp_rag_base_list_documents")
+@log_tool_call
+def list_documents(dataset_id: str, keywords: str = "", page: int = 1, page_size: int = 30) -> str:
+    """List documents in a Knowledge Base."""
+    return base_tools.list_documents(dataset_id, page, page_size, keywords)
+
+@mcp.tool(name="mcp_rag_base_retrieve_chunks")
 @log_tool_call
 def retrieve_chunks(dataset_id: str, query: str, page: int = 1, page_size: int = 30, similarity_threshold: float = 0.2) -> str:
     """
@@ -335,39 +259,127 @@ def retrieve_chunks(dataset_id: str, query: str, page: int = 1, page_size: int =
         page_size: 每页数量 (默认 30)
         similarity_threshold: 相似度阈值 (0.0~1.0, 默认 0.2)
     """
-    result = lifecycle_engine.retrieve_chunks(dataset_id, query, page, page_size, similarity_threshold)
+    return base_tools.retrieve_chunks(dataset_id, query, page, page_size, similarity_threshold)
+
+@mcp.tool(name="mcp_rag_base_rewrite_query")
+@log_tool_call
+def rewrite_query(query: str, context: str = "") -> str:
+    """
+    [Query Rewrite] Optimize user query for better retrieval.
+    
+    Args:
+        query: The original user query.
+        context: Optional context to help with rewriting.
+    """
+    return base_tools.rewrite_query(query, context)
+
+# --- Atomic / Helper Tools (Also classified as Base/Implementation) ---
+
+@mcp.tool(name="mcp_rag_base_fill_clarification_suggestions")
+@log_tool_call
+def fill_clarification_suggestions_controller(doc_path: str, dataset_id: str = "") -> str:
+    """
+    Scenario 1 Controller: Smart Clarification Suggestion Filling.
+    Reads a Markdown file, identifies questions (Headers), retrieves answers from RAG,
+    and fills them into a shadow copy of the file.
+    
+    Args:
+        doc_path: Absolute path to the Markdown file.
+        dataset_id: (Optional) ID of the Knowledge Base to search in. 
+                    Currently uses the configured Chat Assistant's defaults.
+    """
+    # Note: This duplicates functionality of mcp_rag_flow_fill_clarification_suggestions but is kept for compatibility
+    # or as a base controller if the flow tool adds more logic.
+    # For now, let's redirect to the flow tool implementation or logic.
+    if legacy_processor:
+        result = legacy_processor.process_clarification_suggestions(doc_path, dataset_id)
+    else:
+        result = inference_engine.fill_clarification_suggestions(doc_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool(name="mcp_rag_base_create_shadow_file")
+@log_tool_call
+def create_shadow_file(file_path: str) -> str:
+    """
+    Atomic Tool: Create a shadow copy of the document (_ai_revision).
+    Returns the path of the created shadow file.
+    """
+    if legacy_processor:
+        return legacy_processor.create_shadow_file(file_path)
+    return ""
+
+@mcp.tool(name="mcp_rag_base_extract_questions_from_doc")
+@log_tool_call
+def extract_questions_from_doc(file_path: str) -> str:
+    """
+    Atomic Tool: Extract questions from a Markdown document (headers).
+    Returns a list of identified questions with line numbers.
+    """
+    if legacy_processor:
+        result = legacy_processor.extract_questions(file_path)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    return "[]"
+
+@mcp.tool(name="mcp_rag_base_retrieve_rag_suggestion")
+@log_tool_call
+def retrieve_rag_suggestion(query: str, dataset_id: str = "") -> str:
+    """
+    Atomic Tool: Retrieve a single suggestion from RAG.
+    
+    IMPORTANT: This tool expects a clean, well-formulated query.
+    The Client/Agent should perform query rewriting (using its conversational LLM) 
+    BEFORE calling this tool if the original input is messy or ambiguous.
+    
+    Args:
+        query: The user query (optimized).
+        dataset_id: Optional dataset ID.
+    Returns the suggestion content, confidence, and references.
+    """
+    if legacy_processor:
+        result = legacy_processor.retrieve_rag_suggestion(query, dataset_id)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    return "{}"
+
+@mcp.tool(name="mcp_rag_base_apply_suggestions_to_doc")
+@log_tool_call
+def apply_suggestions_to_doc(file_path: str, suggestions_map: str) -> str:
+    """
+    Atomic Tool: Apply suggestions to the document.
+    Args:
+        file_path: Path to the shadow file.
+        suggestions_map: JSON string mapping line index (int) to content (str).
+    """
+    try:
+        suggestions = json.loads(suggestions_map)
+        # Convert keys to int
+        suggestions = {int(k): v for k, v in suggestions.items()}
+        if legacy_processor:
+             result = legacy_processor.apply_suggestions(file_path, suggestions)
+             return str(result)
+        return "Legacy processor not available"
+    except Exception as e:
+        return f"Error: {e}"
+
+# --- Other Tools ---
 
 from src.apps.rag_flow_mcp.tools.visualization import view_last_diff
 from src.apps.rag_flow_mcp.tools.qa_tool import capture_test_case
 
-# --- Visualization Tools ---
-
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_view_diff")
 @log_tool_call
 def view_diff(file_path: str) -> str:
     """
     [体验优化] 打开 VS Code 对比视图。
     对比指定文件的当前内容与其最新的影子副本 (Shadow Copy)。
-    
-    Args:
-        file_path: 原文件的绝对路径。
     """
     result = view_last_diff(file_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
-# --- QA Tools ---
-
-@mcp.tool()
+@mcp.tool(name="mcp_rag_flow_add_test_case")
 @log_tool_call
 def add_test_case(query: str, expected_keywords: list[str], expected_document: str = "") -> str:
     """
     [闭环优化] 捕获测试用例到黄金数据集。
-    
-    Args:
-        query: 问题。
-        expected_keywords: 预期答案中必须包含的关键词列表。
-        expected_document: (可选) 预期来源文档。
     """
     result = capture_test_case(query, expected_keywords, expected_document)
     return json.dumps(result, ensure_ascii=False, indent=2)

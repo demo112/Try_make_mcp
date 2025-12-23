@@ -4,7 +4,7 @@ import time
 from typing import Dict, Any, List, Optional
 from .base import BaseEngine
 from src.apps.rag_flow_mcp.core.rag_client import RAGClient
-from src.apps.rag_flow_mcp.core.shadow_file_manager import ShadowFileManager
+# from src.apps.rag_flow_mcp.core.shadow_file_manager import ShadowFileManager # Removed
 
 class InferenceEngine(BaseEngine):
     """
@@ -19,30 +19,11 @@ class InferenceEngine(BaseEngine):
     def initialize(self) -> bool:
         self.logger.info("正在初始化推理引擎...")
         try:
-            self.rag_client = RAGClient(
-                self.config.get("RAGFLOW_API_KEY", ""),
-                self.config.get("RAGFLOW_HOST", ""),
-                self.config.get("RAGFLOW_CHAT_ID", ""),
-                timeout=self.config.get("RAGFLOW_TIMEOUT", 120),
-                top_k=self.config.get("RAGFLOW_TOP_K", 10),
-                similarity_threshold=self.config.get("RAGFLOW_SIMILARITY_THRESHOLD", 0.2)
-            )
-            # Use dynamic import for QualityEvaluator if not imported at top
-            # Or assume it's available. The file had 'QualityEvaluator' usage but import was missing in Read view?
-            # Ah, line 27: self.evaluator = QualityEvaluator()
-            # But line 1-8 imports don't show it. It might be imported inside BaseEngine or missing?
-            # Wait, the Read result lines 1-8 don't show it.
-            # Let's check imports again or just leave it if it works.
-            # Wait, I see 'from src.apps.rag_flow_mcp.core.evaluator import QualityEvaluator' is MISSING in line 1-8.
-            # But previous code had it? No, maybe I missed it.
-            # Let's add the import if needed, but search/replace should target the initialize block.
-            # Assuming imports are fine or handled elsewhere.
-            # Wait, if I change initialize, I must ensure imports are correct.
-            # Let's check imports first.
+            # rag_client and query_rewriter are initialized in BaseEngine
             
             from src.apps.rag_flow_mcp.core.evaluator import QualityEvaluator
             self.evaluator = QualityEvaluator()
-            self.shadow_manager = ShadowFileManager()
+            # self.shadow_manager = ShadowFileManager() # Removed, using FileService
             return True
         except Exception as e:
             self.logger.error(f"推理引擎初始化失败: {e}")
@@ -60,12 +41,12 @@ class InferenceEngine(BaseEngine):
         """
         self.logger.info(f"开始处理澄清建议: {doc_path}")
         
-        if not os.path.exists(doc_path):
+        if not self.file_service.exists(doc_path):
             return {"status": "error", "message": f"文件未找到: {doc_path}"}
             
         try:
-            # 1. 读取内容
-            content = self._read_file(doc_path)
+            # 1. 读取内容 (Use FileService)
+            content = self.file_service.read_text(doc_path)
             
             # 2. 提取元数据
             metadata = self._extract_metadata(content)
@@ -90,10 +71,13 @@ class InferenceEngine(BaseEngine):
                 clean_block = re.sub(r'\n\*\*AI 参考建议\*\*：.*?(?=\n\*\*回答\*\*|\Z)', '', q['full_block'], flags=re.DOTALL)
                 
                 # 执行安全检索 (含重试/降级)
+                # 使用 QueryRewriter 优化查询
+                optimized_query = self.query_rewriter.rewrite(clean_block, context=combined_context)
+                
                 result = self._safe_rag_search(
                     global_ctx="", 
                     local_ctx=combined_context,
-                    question=clean_block,  # Use full block instead of just description
+                    question=optimized_query,  # Use optimized query
                     dataset_ids=self.config.get("RAG_DATASET_IDS", "")
                 )
                 
@@ -176,9 +160,7 @@ class InferenceEngine(BaseEngine):
 
     # --- Private Helper Methods (Ported from doc_processor.py) ---
 
-    def _read_file(self, file_path: str) -> str:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return f.read()
+    # _read_file is removed as we use FileService
 
     def _extract_metadata(self, content: str) -> Dict[str, str]:
         metadata = {"product": "General", "module": "General"}

@@ -1,4 +1,4 @@
-# ACCEPTANCE: GetInRAGFlow v2.1
+# ACCEPTANCE: RAG Flow MCP v2.1
 
 ## 1. 核心约束验证 (Core Constraints Verification) - **NEW**
 - [x] **全中文环境**:
@@ -63,6 +63,35 @@
 - [x] **RAGFlow 参数配置**:
   - 成功实现 RAGFlow 超时 (`RAGFLOW_TIMEOUT`)、Top K (`RAGFLOW_TOP_K`) 和相似度阈值 (`RAGFLOW_SIMILARITY_THRESHOLD`) 的配置化。
   - 验证了配置参数能正确传递到 `RAGClient`。
+
+### 2.5 基础架构升级验证 (v2.2 Infrastructure Upgrade)
+- [x] **配置管理**:
+  - 验证 `python-dotenv` 成功引入。
+  - 验证 `.env` 文件被正确加载，且优先级符合预期 (Env Vars > .env > Default)。
+- [x] **工具解耦**:
+  - 验证 `server.py` 中工具前缀已统一为 `mcp_rag_base_` 和 `mcp_rag_flow_`。
+  - 验证 `base_tools.py` 独立实现并被正确调用。
+- [x] **CRUD 工具**:
+  - 验证 `create_dataset`, `delete_dataset`, `list_datasets` 等工具已注册且可用。
+  - 验证 `upload_document`, `delete_document` 等文档操作工具已注册且可用。
+
+### 2.6 实施能力抽象验证 (v2.2 Decoupling)
+- [x] **FileService 抽象**:
+  - 验证 `FileService` 类已实现并包含所有基础文件操作。
+  - 验证 `base_tools.py` 已集成 `FileService` 暴露文件操作工具。
+- [x] **Engine 解耦**:
+  - 代码审计确认 `InferenceEngine`, `EvolutionEngine`, `GovernanceEngine`, `LifecycleEngine` 均已移除直接 `open()` 调用。
+  - 确认所有 Engine 均通过注入的 `self.file_service` 进行文件 I/O。
+  - 验证系统初始化正常，无循环依赖或导入错误。
+
+### 2.7 查询优化服务验证 (Query Optimization Service) - **NEW**
+- [x] **查询改写**:
+  - 验证 `QueryRewriter` 类已实现，并包含 Fallback 机制。
+  - 验证 `mcp_rag_base_rewrite_query` 工具已注册。
+  - 验证手动测试脚本 `tests/test_query_rewriter_manual.py` 执行成功 (即使在无真实 Key 环境下也能优雅降级)。
+- [x] **引擎集成**:
+  - 代码审计确认 `BaseEngine` 统一初始化 `QueryRewriter`。
+  - 确认 `InferenceEngine`, `EvolutionEngine`, `GovernanceEngine`, `LifecycleEngine` 均在关键检索点使用了 `query_rewriter.rewrite()`。
 
 ## 3. 遗留问题与风险 (Known Issues & Risks)
 - **严格阈值副作用**: 0.6 的真实性阈值可能导致在知识库内容不足时，AI 频繁“保持沉默”（不提供建议）。这符合“严禁捏造”的要求，但可能影响用户体验。

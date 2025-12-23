@@ -1,4 +1,4 @@
-# 项目总结报告: GetInRAGFlow v2.1 (P0 Upgrade)
+# 项目总结报告: RAG Flow MCP v2.1 (P0 Upgrade)
 
 ## 1. 项目概况
 本项目旨在为 MCP 工厂的评审工作流引入 **RAGFlow** 能力，打造“评审即知识管理”的闭环系统。
@@ -19,3 +19,8 @@ v2.1 P0 升级重点解决了**稳健性**、**协作安全**和**质量门禁**
 *   **AST 增强**: 目前 AST Manager 主要支持 Section 级替换，后续可增强对表格和 Mermaid 的精细化操作。
 *   **Diff 工具集成**: 建议开发 VS Code 插件或使用现有 Diff 工具更直观地展示 Revision 差异。
 *   **Golden Dataset 扩充**: 持续积累真实评审场景的问答对，扩充测试数据集。
+
+## 5. v2.2 基础架构升级 (Infrastructure Upgrade)
+*   **工具解耦**: 成功将工具划分为 **逻辑工具 (mcp_rag_flow_*)** 和 **实施工具 (mcp_rag_base_*)**，架构更加清晰。
+*   **配置管理**: 实现了 `.env` 的全面支持，提升了安全性和可维护性。
+*   **CRUD 能力**: 补齐了对 RAGFlow 知识库和文档的基础增删改查能力，使 MCP Server 具备了更完整的管理视角。

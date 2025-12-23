@@ -1,4 +1,4 @@
-# 阶段1：共识 - GetInRAGFlow v2.2
+# 阶段1：共识 - RAG Flow MCP v2.2
 
 ## 1. 需求定义
 构建一个深度集成于 6A 工作流的 **智能知识治理系统**。
@@ -84,4 +84,31 @@
     *   项目根目录下维护 `tests/golden_dataset.json`。
     *   CI 或发布前必须运行 `python tests/run_inference_test.py`。
     *   **通过标准**: 平均语义相似度 score > 0.8 (使用轻量级 LLM 或 Embedding Distance 判定)。
+
+## 6. 基础架构升级共识 (v2.2)
+
+### 6.1 配置管理共识
+*   **单一事实来源**: 所有环境相关配置必须通过 `.env` 文件加载。
+*   **优先级**: 环境变量 > `.env` 文件 > 默认值。
+*   **敏感信息**: API Key 等敏感信息严禁硬编码，必须通过 `.env` 管理，且 `.env` 必须加入 `.gitignore`。
+*   **打包支持**: 打包为 EXE 时，必须支持从 EXE 同级目录读取 `.env` 文件。
+
+### 6.2 工具分类共识
+必须在代码结构和命名上明确区分两类工具：
+
+1.  **逻辑工具 (Logic Tools)**:
+    *   **前缀**: `mcp_rag_flow_` (保持现有命名或根据模块命名)
+    *   **职责**: 编排多个原子操作，实现特定业务场景（如 Review Flow）。
+    *   **特征**: 有状态、有流程、可能调用多个原子工具或引擎。
+    *   **示例**: `fill_clarification_suggestions`, `evolve_scheme_document`.
+
+2.  **实施工具 (Implementation Tools)**:
+    *   **前缀**: `mcp_rag_base_` (建议新前缀以示区分)
+    *   **职责**: 执行单一、无状态的原子操作。
+    *   **特征**: 输入输出简单直接，不包含复杂业务判断。
+    *   **示例**: `create_dataset`, `upload_document`, `list_datasets`.
+
+### 6.3 知识库管理共识
+*   **CRUD 完备性**: 提供完整的知识库和文档管理能力，允许用户通过 MCP Client 直接维护 RAGFlow 数据。
+*   **操作映射**: 每个工具应直接映射到 RAGFlow API 的一个或一组相关端点。
 

@@ -1,13 +1,16 @@
-# CHECKLIST: GetInRAGFlow v2.1
+# CHECKLIST: RAG Flow MCP v2.1
 
 ## 1. 核心约束检查 (Core Constraints) - **NEW**
-- [x] **全中文环境**: 确认文档、日志、提示词 (Prompts)、注释均为中文。
-- [x] **真实性校验**: 确认 RAG 检索已包含 `_verify_truthfulness` 逻辑 (Threshold=0.6)，严禁捏造。
-- [x] **鲁棒性设计**: 确认 `_safe_rag_search` 包含指数退避重试 (Max=3) 和服务降级策略。
-- [x] **环境隔离**: 确认敏感配置 (API Keys) 仅通过环境变量/`.env` 加载，无硬编码。
-- [x] **稳健性升级 (P0)**: 确认已引入 Markdown AST 解析，严禁使用正则表达式修改文档结构。
-- [x] **协作升级 (P0)**: 确认已采用 **Shadow Copy (影子副本)** 机制，严禁直接覆盖用户原文件。
-- [x] **质量升级 (P0)**: 确认已规划 Golden Dataset 和推理质量回归测试。
+- [ ] **全中文环境**: 确认文档、日志、提示词 (Prompts)、注释均为中文。
+- [ ] **真实性校验**: 确认 RAG 检索已包含 `_verify_truthfulness` 逻辑 (Threshold=0.6)，严禁捏造。
+- [ ] **鲁棒性设计**: 确认 `_safe_rag_search` 包含指数退避重试 (Max=3) 和服务降级策略。
+- [ ] **环境隔离**: 确认敏感配置 (API Keys) 仅通过环境变量/`.env` 加载，无硬编码。
+- [ ] **稳健性升级 (P0)**: 确认已引入 Markdown AST 解析，严禁使用正则表达式修改文档结构。
+- [ ] **协作升级 (P0)**: 确认已采用 **Shadow Copy (影子副本)** 机制，严禁直接覆盖用户原文件。
+- [ ] **质量升级 (P0)**: 确认已规划 Golden Dataset 和推理质量回归测试。
+- [ ] **配置管理 (v2.2)**: 确认已实现 `.env` 加载，并正确处理了打包场景。
+- [ ] **工具解耦 (v2.2)**: 确认工具已正确划分为 `mcp_rag_base_` (实施) 和 `mcp_rag_flow_` (逻辑)。
+- [ ] **CRUD 完备 (v2.2)**: 确认基础工具已覆盖 Dataset/Document 的增删改查。
 
 ## 2. 完整性检查 (Completeness)
 - [x] **四核引擎**: `UNIFIED_DESIGN.md` 已包含 **Evolution Engine (进化引擎)** 及其职责定义。
@@ -17,7 +20,7 @@
 
 ## 3. 一致性检查 (Consistency)
 - [x] **5W1H**: 所有核心节点 (Node) 和原子任务 (Task) 已补充 5W1H 定义。
-- [x] **MCP 接口**: `TASK_GetInRAGFlow.md` 中的 MCP 工具列表已包含 `evolve_scheme_document`。
+- [x] **MCP 接口**: `TASK_RAG Flow MCP.md` 中的 MCP 工具列表已包含 `evolve_scheme_document`。
 - [x] **流程闭环**: 进化引擎输出的 `v1.1` 文档设计为可作为新一轮循环的输入。
 
 ## 4. 可行性检查 (Feasibility)

@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Tuple
 from .base import BaseEngine
 from src.apps.rag_flow_mcp.core.rag_client import RAGClient
 from src.apps.rag_flow_mcp.core.markdown_ast import MarkdownASTManager
-from src.apps.rag_flow_mcp.core.shadow_file_manager import ShadowFileManager
+# from src.apps.rag_flow_mcp.core.shadow_file_manager import ShadowFileManager # Removed
 
 class EvolutionEngine(BaseEngine):
     """
@@ -19,13 +19,9 @@ class EvolutionEngine(BaseEngine):
     def initialize(self) -> bool:
         self.logger.info("正在初始化进化引擎...")
         try:
-            self.rag_client = RAGClient(
-                self.config.get("RAGFLOW_API_KEY", ""),
-                self.config.get("RAGFLOW_HOST", ""),
-                self.config.get("RAGFLOW_CHAT_ID", "")
-            )
+            # rag_client and query_rewriter are initialized in BaseEngine
             self.ast_manager = MarkdownASTManager()
-            self.shadow_manager = ShadowFileManager()
+            # self.shadow_manager = ShadowFileManager() # Removed, using FileService
             return True
         except Exception as e:
             self.logger.error(f"进化引擎初始化失败: {e}")
@@ -85,6 +81,12 @@ class EvolutionEngine(BaseEngine):
                 # Truncate content for context
                 truncated_content = current_content[:8000] 
                 
+                # Use QueryRewriter to optimize the prompt (optional, but good practice)
+                # Here we are asking LLM to generate JSON, so maybe rewrite is not needed for the prompt itself,
+                # but we can use it to "Search" for relevant sections if we were doing RAG first.
+                # In this specific flow, we are using 'agentic_search' which calls LLM.
+                # Let's keep it direct for now, but we can rewrite the 'question' part of the prompt if needed.
+                
                 response = self.rag_client.agentic_search(
                     global_ctx=truncated_content,
                     local_ctx="",
@@ -118,7 +120,7 @@ class EvolutionEngine(BaseEngine):
                 revision_log = "\n\n## 修订记录 (Auto-generated)\n" + "\n".join([f"- {log}" for log in changes_log])
                 current_content += revision_log
                 
-                shadow_path, diff_path = self.shadow_manager.generate_shadow_copy(scheme_doc_path, current_content)
+                shadow_path, diff_path = self.file_service.create_shadow_copy(scheme_doc_path, current_content)
                 
                 return {
                     "status": "success",
@@ -138,8 +140,7 @@ class EvolutionEngine(BaseEngine):
         """
         解析评审问题记录，提取已决策的条目
         """
-        with open(doc_path, 'r', encoding='utf-8') as f:
-            content = f.read()
+        content = self.file_service.read_text(doc_path)
             
         decisions = []
         # Match ## [index].[title] blocks, same as InferenceEngine

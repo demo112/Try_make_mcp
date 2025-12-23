@@ -1,8 +1,8 @@
-# GetInRAGFlow MCP Server
+# RAG Flow MCP MCP Server
 
 > **v2.0 - Evolutionary Documentation Assistant**
 
-GetInRAGFlow 是一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 构建的智能文档工作流服务。它深度集成了 RAGFlow 知识库能力，不仅能够辅助回答技术评审中的待澄清问题，更能基于决策结果**自动进化设计文档**，实现“文档即代码”的持续迭代闭环。
+RAG Flow MCP 是一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 构建的智能文档工作流服务。它深度集成了 RAGFlow 知识库能力，不仅能够辅助回答技术评审中的待澄清问题，更能基于决策结果**自动进化设计文档**，实现“文档即代码”的持续迭代闭环。
 
 ---
 

@@ -1,4 +1,4 @@
-# 任务清单：GetInRAGFlow (统一版 v2.1)
+# 任务清单：RAG Flow MCP (统一版 v2.2)
 
 ## 1. 任务依赖图
 
@@ -13,6 +13,16 @@ graph TD
     T4 --> T6
     T5 --> T6
     T6 --> T7["任务7: 端到端验证"]
+    T8["任务8: 基础设施升级"] --> T9["任务9: AST管理器"]
+    T8 --> T10["任务10: 影子文件管理器"]
+    T8 --> T11["任务11: 质量守门员"]
+    T9 --> T12["任务12: 引擎集成"]
+    T10 --> T12
+    T11 --> T12
+    T13["任务13: 配置管理"] --> T14["任务14: 实施工具"]
+    T14 --> T15["任务15: 工具注册"]
+    T16["任务16: 查询改写服务"] --> T17["任务17: 查询改写引擎集成"]
+    T17 --> T18["任务18: 查询改写工具注册"]
 ```
 
 ## 2. 原子任务清单 (5W1H)
@@ -97,6 +107,9 @@ graph TD
 * **内容**: 验证主线（澄清->进化）和支线（收割->晋升），以及容错能力。
 * **步骤**:
   1. **场景 1 (主线)**: 生成问题 -> AI 建议 -> 人工确认 -> 方案自动进化。
+  2. **场景 3 (容错)**: 模拟 RAG 服务断开，验证系统是否触发重试并优雅降级。
+  3. **场景 4 (防幻觉)**: 提问无关问题，验证系统是否拒绝编造答案。
+
 ## 3. v2.1 生产环境升级任务 (P0)
 
 ### 任务 8: 基础设施升级 (Infrastructure Upgrade)
@@ -128,5 +141,55 @@ graph TD
 *   **进化引擎升级**: 修改 `EvolutionEngine`，使用 `MarkdownASTManager` 处理内容，使用 `ShadowFileManager` 保存结果。
 *   **推理引擎升级**: 修改 `InferenceEngine`，使用 `ShadowFileManager` 生成建议填充后的副本。
 
-  3. **场景 3 (容错)**: 模拟 RAG 服务断开，验证系统是否触发重试并优雅降级。
-  4. **场景 4 (防幻觉)**: 提问无关问题，验证系统是否拒绝编造答案。
+## 4. v2.2 基础架构升级任务
+
+### 任务 13: 实施配置管理 (Implement Config Management)
+*   **责任人**: 开发者
+*   **文件**: `src/apps/rag_flow_mcp/config.py`, `src/apps/rag_flow_mcp/.env`
+*   **内容**:
+    1.  引入 `python-dotenv`。
+    2.  重构 `Config` 类，优先读取环境变量。
+    3.  创建 `.env.example`。
+    4.  更新 `.gitignore` 忽略 `.env`。
+    5.  更新 `src/factory/build_app.py` 确保打包时正确处理 .env 加载逻辑（如需要）。
+
+### 任务 14: 实现实施工具 (Implement Implementation Tools)
+*   **责任人**: 开发者
+*   **文件**: `src/apps/rag_flow_mcp/tools/base_tools.py` (新文件)
+*   **内容**:
+    *   实现 Dataset CRUD: `create_dataset`, `delete_dataset`, `list_datasets`.
+    *   实现 Document CRUD: `upload_document`, `update_document`, `delete_document`, `get_document_content`.
+    *   确保每个函数都包含完整的 Type Hints 和 Docstrings。
+
+### 任务 15: 工具注册与解耦 (Tool Registration & Decoupling)
+*   **责任人**: 开发者
+*   **文件**: `src/apps/rag_flow_mcp/server.py`
+*   **内容**:
+    1.  重构 `mcp.tool` 注册逻辑。
+    2.  导入并注册 `base_tools` 中的所有工具，前缀统一为 `mcp_rag_base_`。
+    3.  重命名现有逻辑工具的前缀为 `mcp_rag_flow_` (如果尚未统一)。
+    4.  更新 `UserManual.md` 反映新的工具列表。
+
+### 任务 16: 实现查询改写服务 (Implement Query Rewriter) **[NEW]**
+*   **责任人**: 开发者
+*   **文件**: `src/apps/rag_flow_mcp/core/query_rewriter.py`
+*   **内容**:
+    *   创建 `QueryRewriter` 类。
+    *   实现 `rewrite(query, context) -> str` 方法，调用 RAG 模型的 LLM 接口优化查询。
+    *   处理 RAG 客户端未初始化的情况（Fallback）。
+
+### 任务 17: 查询改写引擎集成 (Engine Integration for Query Rewriter) **[NEW]**
+*   **责任人**: 开发者
+*   **文件**: 
+    *   `src/apps/rag_flow_mcp/engines/base.py`: 统一初始化 `QueryRewriter`。
+    *   `inference.py`: 优化检索查询。
+    *   `evolution.py`: 优化进化过程中的检索。
+    *   `governance.py`: 优化冲突检测查询。
+    *   `lifecycle.py`: 优化知识切片检索。
+
+### 任务 18: 查询改写工具注册 (Register Query Rewrite Tool) **[NEW]**
+*   **责任人**: 开发者
+*   **文件**: `src/apps/rag_flow_mcp/server.py`, `src/apps/rag_flow_mcp/tools/base_tools.py`
+*   **内容**:
+    *   在 `base_tools.py` 中暴露 `rewrite_query` 函数。
+    *   在 `server.py` 中注册 `mcp_rag_base_rewrite_query` 工具。

@@ -1,21 +1,33 @@
+import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
-from src.common import get_app_logger
+from typing import Dict, Any
 
-logger = get_app_logger("rag_flow_mcp.engines")
+from src.apps.rag_flow_mcp.core.file_service import FileService
+from src.apps.rag_flow_mcp.core.rag_client import RAGClient
+from src.apps.rag_flow_mcp.core.query_rewriter import QueryRewriter
 
 class BaseEngine(ABC):
     """
-    所有引擎的基类 (Base Class for All Engines)
-    
-    定义了核心组件的通用接口和日志记录能力。
+    Base class for all business engines.
     """
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.logger = logger
+        self.logger = logging.getLogger(f"rag_flow_mcp.engines.{self.__class__.__name__}")
+        self.file_service = FileService()
+        
+        # Initialize RAGClient here to be shared
+        self.rag_client = RAGClient(
+            self.config.get("RAGFLOW_API_KEY", ""),
+            self.config.get("RAGFLOW_HOST", ""),
+            self.config.get("RAGFLOW_CHAT_ID", ""),
+            timeout=self.config.get("RAGFLOW_TIMEOUT", 120),
+            top_k=self.config.get("RAGFLOW_TOP_K", 10),
+            similarity_threshold=self.config.get("RAGFLOW_SIMILARITY_THRESHOLD", 0.2)
+        )
+        self.query_rewriter = QueryRewriter(self.rag_client)
         
     @abstractmethod
     def initialize(self) -> bool:
-        """初始化引擎资源 (Initialize Engine Resources)"""
+        """Initialize engine resources."""
         pass

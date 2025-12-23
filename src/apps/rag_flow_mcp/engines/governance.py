@@ -21,8 +21,7 @@ class GovernanceEngine(BaseEngine):
         """
         self.logger.info(f"检查文档元数据: {doc_path}")
         try:
-            with open(doc_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            content = self.file_service.read_text(doc_path)
                 
             metadata = self._extract_metadata(content)
             
@@ -57,6 +56,12 @@ class GovernanceEngine(BaseEngine):
         """
         self.logger.info("正在验证知识冲突...")
         
+        # Use QueryRewriter to form a verification query
+        query = f"{candidate_data.get('question')} {candidate_data.get('answer')}"
+        verification_query = self.query_rewriter.rewrite(query, context="验证该陈述是否与现有知识库冲突")
+        
+        self.logger.info(f"生成的验证查询: {verification_query}")
+        
         # In a real implementation, this would query the Knowledge Base (L1/L2) 
         # to see if the new answer contradicts existing knowledge.
         # Here we simulate a pass.
@@ -64,6 +69,7 @@ class GovernanceEngine(BaseEngine):
         return {
             "status": "passed", 
             "conflict_score": 0.0,
+            "verification_query": verification_query,
             "message": "未检测到明显的知识冲突 (模拟模式)。"
         }
 
