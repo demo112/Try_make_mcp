@@ -4,8 +4,30 @@
 
 ## 核心文档
 
-*   **[MCP 工厂工作流规范 (Rules)](docs/MCP_FACTORY_RULES.md)**: 详细的开发指南，包含从需求分析到交付的完整 6A 工作流。
-*   **[6A 评审工作流](6a.md)**: 测试用例评审工作流规范。
+*   **[MCP 工厂工作流规范 (Rules)](.trae/rules/project_rules.md)**: 详细的开发指南，包含从需求分析到交付的完整 6A 工作流。
+*   **[项目编年史](docs/PROJECT_CHRONICLE.md)**: 项目演进历史与变更日志。
+
+## 项目索引 (Project Index)
+
+### 核心应用 (Core Apps)
+
+| 应用名称 (App Name) | 源码目录 (Source) | 文档入口 (Docs) | 描述 |
+| :--- | :--- | :--- | :--- |
+| **mcp_factory** | `src/apps/mcp_factory` | [docs/mcp_factory](docs/mcp_factory/01_Align/ALIGNMENT_MCP生产工厂.md) | 生产 MCP 的 MCP，提供项目初始化、构建和验证能力。 |
+| **everything2md** | `src/apps/everything2md` | [docs/everything2md](docs/everything2md/Readme.md) | 强大的文档转换工具，支持 PDF/Office/OCR 转 Markdown。 |
+| **rag_flow_mcp** | `src/apps/rag_flow_mcp` | [docs/rag_flow_mcp](docs/rag_flow_mcp/Readme.md) | 集成 RAGFlow 的知识检索与管理服务。 |
+| **rag_eval_flow** | `src/apps/rag_eval_flow` | [docs/rag_eval_flow](docs/rag_eval_flow/01_Align/ALIGNMENT_RAG评估工作流.md) | RAG 效果评估与测试数据集生成工具。 |
+| **md_converter** | `src/apps/md_converter` | [docs/md_converter](docs/md_converter/01_Align/ALIGNMENT_MD转多格式MCP.md) | Markdown 转多格式 (Word/PDF/Excel) 工具。 |
+| **test_auto_generated_app** | `src/apps/test_auto_generated_app` | [docs/test_auto_generated_app](docs/test_auto_generated_app/Readme.md) | 自动化测试生成的示例应用。 |
+
+### 任务与归档 (Tasks & Archive)
+
+*   **[Git 推送修复](docs/tasks/Git_Push_Fix)**: 解决 Git SSL/TLS 连接问题。
+*   **[项目维护](docs/tasks/项目维护)**: 项目结构清理与维护记录。
+*   **[测试体系建设](docs/tasks/测试体系建设)**: 工厂与应用测试框架的设计与实施。
+*   **[教程：构建 MCP 服务](docs/tutorials/构建MCP服务)**: MCP 开发入门教程。
+
+---
 
 ## 快速开始
 
@@ -35,11 +57,11 @@ python -m src.factory.init_app my_tool "我的工具"
 
 这将自动创建：
 - `src/apps/my_tool/`: 源码目录（包含示例代码）。
-- `docs/我的工具/`: 标准化的文档结构。
+- `docs/my_tool/`: 标准化的文档结构（与 App 名称一致）。
 
 ### 3. 开发与验证
 
-请参考 [MCP 工厂工作流规范](docs/MCP_FACTORY_RULES.md) 进行开发。
+请参考 [MCP 工厂工作流规范](.trae/rules/project_rules.md) 进行开发。
 
 验证源码：
 ```powershell
@@ -60,10 +82,4 @@ python -m src.factory.build_app my_tool
 - `src/apps/`: 所有 MCP 服务的源代码。
 - `src/factory/`: 工厂工具链（初始化、构建、验证脚本）。
 - `src/common/`: 公共库（日志、配置等）。
-- `docs/`: 项目文档。
-
-## 现有应用示例
-
-- **math_time**: 简单的加法和时间查询服务。
-- **everything2md**: 多格式转 Markdown 服务。
-- **review_flow**: 代码审查流服务。
+- `docs/`: 项目文档，一级目录与 `src/apps/` 保持同名。
