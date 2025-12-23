@@ -1,3 +1,6 @@
+---
+alwaysApply: true
+---
 # MCP 工厂工作流规范 (MCP Factory Rules)
 
 本文档定义了使用 MCP 工厂模式开发 Model Context Protocol (MCP) 服务的标准工作流。本规范深度融合 **6A 工作流** 理念，确保从需求到交付的每个环节都具备高质量、高可靠性和可维护性。

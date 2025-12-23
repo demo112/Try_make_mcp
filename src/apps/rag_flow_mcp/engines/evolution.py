@@ -137,20 +137,20 @@ class EvolutionEngine(BaseEngine):
     def _parse_decisions(self, doc_path: str) -> List[Tuple[str, str]]:
         """
         解析评审问题记录，提取已决策的条目
-        (Simplified implementation using Regex for MVP)
         """
         with open(doc_path, 'r', encoding='utf-8') as f:
             content = f.read()
             
-        # Match pattern: **问题**: ... **回答**: ...
-        # This is a simple approximation. A robust parser would use AST or block splitting.
         decisions = []
+        # Match ## [index].[title] blocks, same as InferenceEngine
+        pattern = re.compile(r'(##\s+(\d+)\.(.+?)\n)(.*?)(?=\n##\s+\d+\.|\Z)', re.DOTALL)
+        matches = pattern.findall(content)
         
-        # Split by question blocks (assuming standard format)
-        blocks = content.split("### 问题")
-        for block in blocks[1:]:
-            q_match = re.search(r'\*\*描述\*\*：(.*?)\n', block)
-            a_match = re.search(r'\*\*回答\*\*：(.*?)\n', block)
+        for header, idx, title, body in matches:
+            # Look for Question Description and Answer
+            # Support both English and Chinese colons
+            q_match = re.search(r'\*\*问题描述\*\*[:：](.*?)\n', body) or re.search(r'\*\*描述\*\*[:：](.*?)\n', body)
+            a_match = re.search(r'\*\*回答\*\*[:：](.*?)\n', body)
             
             if q_match and a_match:
                 q_text = q_match.group(1).strip()

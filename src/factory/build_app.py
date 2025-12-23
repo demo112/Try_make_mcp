@@ -121,6 +121,17 @@ def get_pyinstaller_cmd(app_name: str, root_dir: Path, app_dir: Path, dist_dir: 
         print(f"📦 Including 'config' module from {config_file}")
         cmd.extend(["--hidden-import", f"src.apps.{app_name}.config"])
 
+    # Special handling for rag_flow_mcp dependencies
+    if app_name == "rag_flow_mcp":
+        cmd.extend([
+            "--hidden-import", "src.apps.rag_flow_mcp.core.evaluator",
+            "--hidden-import", "markdown_it",
+            "--hidden-import", "pandas",
+            "--hidden-import", "requests",
+            "--collect-all", "markdown_it",
+            "--collect-all", "pandas"
+        ])
+
     cmd.append(str(server_script))
     return cmd
 
@@ -161,7 +172,21 @@ def build_app(app_name: str, display_name: str = None):
     release_dir_name = f"{app_name}_release"
     release_dir = dist_dir / release_dir_name
     if release_dir.exists():
-        shutil.rmtree(release_dir)
+        try:
+            shutil.rmtree(release_dir)
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to clean release dir: {e}")
+            # Try to clean contents at least
+            for item in release_dir.iterdir():
+                try:
+                    if item.is_dir():
+                        shutil.rmtree(item)
+                    else:
+                        item.unlink()
+                except Exception:
+                    pass
+
+    release_dir.mkdir(parents=True, exist_ok=True)
 
     # 2. 执行 PyInstaller
     cmd = get_pyinstaller_cmd(app_name, root_dir, app_dir, dist_dir, build_dir, specs_dir, server_script)

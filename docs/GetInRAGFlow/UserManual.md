@@ -5,41 +5,46 @@
 
 ## 2. 客户端配置
 
-### 2.1 Claude Desktop 配置
-在 `claude_desktop_config.json` 中添加以下配置：
+### 2.1 Claude Desktop / Trae 配置 (推荐)
+
+我们强烈建议使用构建好的 EXE 文件运行 MCP 服务，配置最简单且无需 Python 环境。
+
+在 `claude_desktop_config.json` 或 Trae 的 MCP 设置中添加：
 
 ```json
 {
   "mcpServers": {
     "get-in-rag-flow": {
-      "command": "python",
-      "args": [
-        "-m",
-        "src.apps.rag_flow_mcp.server"
-      ],
-      "env": {
-        "RAGFLOW_API_KEY": "your_key",
-        "RAGFLOW_HOST": "http://your_host",
-        "RAGFLOW_TIMEOUT": "120",
-        "RAGFLOW_TOP_K": "10",
-        "RAGFLOW_SIMILARITY_THRESHOLD": "0.2",
-        "PYTHONPATH": "absolute/path/to/Try_make_mcp"
-      }
+      "command": "c:\\path\\to\\rag_flow_mcp.exe",
+      "args": []
     }
   }
 }
 ```
 
-### 2.2 Trae/Cursor 配置
-通常支持直接导入 MCP Server。请指向项目根目录并指定启动命令：
-- **Command**: `python -m src.apps.rag_flow_mcp.server`
-- **Working Directory**: `c:\Users\Administrator\Documents\trae_projects\Try_make_mcp`
+**关键步骤**:
+1. 确保 `.env` 文件与 `rag_flow_mcp.exe` 位于**同一目录**。
+2. 在 `.env` 文件中配置所有环境变量（如 `RAGFLOW_API_KEY` 等）。
 
-### 2.3 独立 EXE 运行
-如果您使用打包好的 EXE 文件 (`dist/rag_flow_mcp_release/rag_flow_mcp.exe`)：
-1. **配置环境**：将目录下的 `.env.example` 复制并重命名为 `.env`。
-2. **填写参数**：编辑 `.env` 文件，填入您的 `RAGFLOW_API_KEY`、`RAGFLOW_HOST` 以及可选参数如 `RAGFLOW_TIMEOUT`, `RAGFLOW_TOP_K`, `RAGFLOW_SIMILARITY_THRESHOLD` 等信息。
-3. **启动运行**：确保 `.env` 文件与 `.exe` 文件位于**同一目录**，然后双击运行或在命令行中启动。
+### 2.2 源码运行 (仅限开发)
+如果您需要调试源码，请确保已激活虚拟环境：
+
+```json
+{
+  "mcpServers": {
+    "get-in-rag-flow-dev": {
+      "command": "python",
+      "args": ["-m", "src.apps.rag_flow_mcp.server"],
+      "cwd": "c:\\path\\to\\Try_make_mcp"
+    }
+  }
+}
+```
+*注意：源码运行时，请确保项目根目录存在 `.env` 文件。*
+
+### 2.3 环境变量配置
+无论使用哪种方式，请在 `.env` 文件中配置以下参数，**不要**直接写在 MCP 配置文件中：
+
 
 ## 3. 使用场景演练
 

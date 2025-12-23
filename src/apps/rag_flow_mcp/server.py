@@ -108,7 +108,7 @@ lifecycle_engine.initialize()
 @log_tool_call
 def fill_clarification_suggestions(doc_path: str) -> str:
     """
-    [主线任务] 填充澄清建议。
+    [主线任务] 填充澄清建议 (P0 - 核心功能)。
     读取评审问题记录文档，调用 RAG 检索知识库，并将带有置信度的建议填入文档。
     
     Args:
@@ -154,9 +154,9 @@ def validate_knowledge_conflict(candidate_json: str) -> str:
     try:
         candidate_data = json.loads(candidate_json)
         result = governance_engine.validate_knowledge_conflict(candidate_data)
-        return json.dumps(result, ensure_ascii=False, indent=2)
-    except json.JSONDecodeError:
-        return json.dumps({"status": "error", "message": "无效的 JSON 格式"}, ensure_ascii=False)
+    except json.JSONDecodeError as e:
+        return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
+    return json.dumps(result, ensure_ascii=False, indent=2)
 
 # --- Lifecycle Tools (Side Task) ---
 
@@ -167,8 +167,8 @@ def harvest_knowledge_candidates(doc_path: str) -> str:
     [支线任务] 从澄清文档中收割知识候选。
     仅提取已确认且有答案的条目。
     """
-    candidates = lifecycle_engine.harvest_knowledge_candidates(doc_path)
-    return json.dumps(candidates, ensure_ascii=False, indent=2)
+    result = lifecycle_engine.harvest_knowledge_candidates(doc_path)
+    return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool()
 @log_tool_call
@@ -183,21 +183,19 @@ def promote_knowledge(candidate_json: str, target_kb_path: str) -> str:
     try:
         candidate_data = json.loads(candidate_json)
         result = lifecycle_engine.promote_knowledge(candidate_data, target_kb_path)
-        return json.dumps(result, ensure_ascii=False, indent=2)
-    except json.JSONDecodeError:
-        return json.dumps({"status": "error", "message": "无效的 JSON 格式"}, ensure_ascii=False)
+    except json.JSONDecodeError as e:
+        return json.dumps({"status": "error", "message": f"Invalid JSON format: {e}"}, ensure_ascii=False)
+    return json.dumps(result, ensure_ascii=False, indent=2)
 
+# Debug/Admin Tools (Kept for development but can be hidden from normal users if needed)
 @mcp.tool()
 @log_tool_call
 def list_knowledge_bases(page: int = 1, page_size: int = 30) -> str:
     """
-    [知识浏览] 列出所有知识库 (Datasets)。
-    
-    Args:
-        page: 页码 (默认 1)
-        page_size: 每页数量 (默认 30)
+    [调试工具] 列出所有知识库 (Datasets)。
     """
     result = lifecycle_engine.list_knowledge_bases(page, page_size)
+    return json.dumps(result, ensure_ascii=False, indent=2)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool()
