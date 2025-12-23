@@ -39,6 +39,11 @@ from engines import (
     LifecycleEngine
 )
 
+try:
+    from src.apps.rag_flow_mcp.legacy_core.scenario_processor import ScenarioProcessor as LegacyScenarioProcessor
+except ImportError:
+    LegacyScenarioProcessor = None
+
 # Initialize Configuration and Logger
 # Ensure .env is loaded correctly from CWD if running as script
 from dotenv import load_dotenv
@@ -102,19 +107,122 @@ evolution_engine.initialize()
 governance_engine.initialize()
 lifecycle_engine.initialize()
 
+# Initialize Legacy Processor
+legacy_processor = None
+if LegacyScenarioProcessor and hasattr(inference_engine, 'rag_client'):
+    legacy_processor = LegacyScenarioProcessor(inference_engine.rag_client)
+
 # --- Main Task Tools (Inference & Evolution) ---
 
 @mcp.tool()
 @log_tool_call
-def fill_clarification_suggestions(doc_path: str) -> str:
+def fill_clarification_suggestions(doc_path: str, dataset_id: str = "") -> str:
     """
-    [主线任务] 填充澄清建议 (P0 - 核心功能)。
+    [主线任务] 填充澄清建议 (Hybrid: Prefer Legacy Logic).
     读取评审问题记录文档，调用 RAG 检索知识库，并将带有置信度的建议填入文档。
     
     Args:
         doc_path: '04_评审问题记录.md' 的绝对路径。
+        dataset_id: (Optional) ID of the Knowledge Base to search in.
     """
-    result = inference_engine.fill_clarification_suggestions(doc_path)
+    if legacy_processor:
+        result = legacy_processor.process_clarification_suggestions(doc_path, dataset_id)
+    else:
+        result = inference_engine.fill_clarification_suggestions(doc_path)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def create_shadow_file(file_path: str) -> str:
+    """
+    Atomic Tool: Create a shadow copy of the document (_ai_revision).
+    Returns the path of the created shadow file.
+    """
+    if legacy_processor:
+        return legacy_processor.create_shadow_file(file_path)
+    return ""
+
+@mcp.tool()
+@log_tool_call
+def extract_questions_from_doc(file_path: str) -> str:
+    """
+    Atomic Tool: Extract questions from a Markdown document (headers).
+    Returns a list of identified questions with line numbers.
+    """
+    if legacy_processor:
+        result = legacy_processor.extract_questions(file_path)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    return "[]"
+
+@mcp.tool()
+@log_tool_call
+def retrieve_rag_suggestion(query: str, dataset_id: str = "") -> str:
+    """
+    Atomic Tool: Retrieve a single suggestion from RAG.
+    """
+    if legacy_processor:
+        result = legacy_processor.retrieve_rag_suggestion(query, dataset_id)
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    return "{}"
+
+# --- Dataset Tools (Legacy) ---
+
+@mcp.tool()
+@log_tool_call
+def create_dataset(name: str, avatar: str = "", description: str = "") -> str:
+    """Create a new Knowledge Base (Dataset)."""
+    result = inference_engine.rag_client.create_dataset(name, avatar, description)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def delete_dataset(id: str) -> str:
+    """Delete a Knowledge Base by ID."""
+    result = inference_engine.rag_client.delete_dataset(id)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def update_dataset(id: str, name: str = None, description: str = None) -> str:
+    """Update Knowledge Base metadata."""
+    result = inference_engine.rag_client.update_dataset(id, name, description)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+# --- Document Tools (Legacy) ---
+
+@mcp.tool()
+@log_tool_call
+def upload_document(dataset_id: str, file_path: str) -> str:
+    """Upload a file to a Knowledge Base."""
+    result = inference_engine.rag_client.upload_document(dataset_id, file_path)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def delete_document(dataset_id: str, document_id: str) -> str:
+    """Delete a document from a Knowledge Base."""
+    result = inference_engine.rag_client.delete_document(dataset_id, document_id)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def update_document(dataset_id: str, document_id: str, name: str = None, enabled: bool = None) -> str:
+    """Update document metadata (rename or enable/disable)."""
+    result = inference_engine.rag_client.update_document(dataset_id, document_id, name, enabled)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def get_document_content(dataset_id: str, document_id: str) -> str:
+    """Get parsed chunks of a document."""
+    result = inference_engine.rag_client.get_document_content(dataset_id, document_id)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+@mcp.tool()
+@log_tool_call
+def list_documents(dataset_id: str, page: int = 1, page_size: int = 30, keywords: str = "") -> str:
+    """List documents in a Knowledge Base."""
+    result = inference_engine.rag_client.list_documents(dataset_id, page, page_size, keywords)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 @mcp.tool()

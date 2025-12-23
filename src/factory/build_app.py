@@ -42,7 +42,11 @@ def get_pyinstaller_cmd(app_name: str, root_dir: Path, app_dir: Path, dist_dir: 
         "--hidden-import", "sse_starlette",
         "--hidden-import", "pydantic",
         "--hidden-import", "anyio",
+        "--hidden-import", "beartype",
+        "--collect-all", "beartype",
+        "--hidden-import", "pickletools",
     ]
+
 
     # Special handling for everything2md dependencies
     if app_name == "everything2md" or app_name == "md_converter":

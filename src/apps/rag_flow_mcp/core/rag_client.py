@@ -37,6 +37,122 @@ class RAGClient:
         # Default timeout
         # self.timeout = 120 # Moved to __init__
 
+    def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
+        try:
+            data = response.json()
+            if response.status_code >= 400 or data.get("code", 0) != 0:
+                logger.error(f"RAGFlow API Error: {response.status_code} - {data}")
+                return {"status": "error", "message": data.get("message", "Unknown error"), "code": data.get("code")}
+            return {"status": "success", "data": data.get("data", data)}
+        except Exception as e:
+            logger.error(f"Failed to parse response: {e}, Content: {response.text}")
+            return {"status": "error", "message": f"Response parsing failed: {str(e)}"}
+
+    # --- Dataset Operations (Legacy Support) ---
+
+    def create_dataset(self, name: str, avatar: str = "", description: str = "") -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/datasets"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        payload = {
+            "name": name,
+            "avatar": avatar,
+            "description": description,
+            "permission": "me",
+            "document_count": 0,
+            "chunk_count": 0,
+            "parse_method": "general"
+        }
+        logger.info(f"Creating dataset: {name}")
+        resp = self.session.post(url, headers=headers, json=payload)
+        return self._handle_response(resp)
+
+    def delete_dataset(self, dataset_id: str) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/datasets/{dataset_id}"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        logger.info(f"Deleting dataset: {dataset_id}")
+        resp = self.session.delete(url, headers=headers)
+        return self._handle_response(resp)
+
+    def update_dataset(self, dataset_id: str, name: str = None, description: str = None) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/datasets/{dataset_id}"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        payload = {}
+        if name: payload["name"] = name
+        if description: payload["description"] = description
+        
+        logger.info(f"Updating dataset: {dataset_id}")
+        resp = self.session.put(url, headers=headers, json=payload)
+        return self._handle_response(resp)
+
+    # --- Document Operations (Legacy Support) ---
+
+    def delete_document(self, dataset_id: str, document_id: str) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/datasets/{dataset_id}/documents/{document_id}"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        logger.info(f"Deleting document: {document_id}")
+        resp = self.session.delete(url, headers=headers)
+        return self._handle_response(resp)
+        
+    def update_document(self, dataset_id: str, document_id: str, name: str = None, enabled: bool = None) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/datasets/{dataset_id}/documents/{document_id}"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        payload = {}
+        if name: payload["name"] = name
+        if enabled is not None: payload["run_status"] = "1" if enabled else "0"
+        
+        logger.info(f"Updating document {document_id}: {payload}")
+        resp = self.session.put(url, headers=headers, json=payload)
+        return self._handle_response(resp)
+
+    def get_document_content(self, dataset_id: str, document_id: str) -> Dict[str, Any]:
+        url = f"{self.base_url}/api/v1/datasets/{dataset_id}/documents/{document_id}/chunks"
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        logger.info(f"Getting chunks for {document_id}")
+        resp = self.session.get(url, headers=headers)
+        return self._handle_response(resp)
+
+    # --- LLM Operations ---
+
+    def call_llm(self, system_prompt: str, user_prompt: str) -> str:
+        """
+        Call LLM using RAGFlow Chat API (Simulating LLM call).
+        """
+        if not self.chat_id:
+            logger.warning("RAGFLOW_CHAT_ID not configured. Cannot call LLM.")
+            return ""
+
+        url = f"{self.base_url}/api/v1/chats_openai/{self.chat_id}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # Combine prompts or use messages
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": user_prompt})
+        
+        payload = {
+            "model": "ragflow",
+            "messages": messages,
+            "stream": False,
+            "quote": False # We just want generation
+        }
+        
+        try:
+            logger.info(f"Calling LLM...")
+            resp = self.session.post(url, headers=headers, json=payload, timeout=self.timeout)
+            if resp.status_code == 200:
+                data = resp.json()
+                if "choices" in data and len(data["choices"]) > 0:
+                    return data["choices"][0].get("message", {}).get("content", "")
+            logger.error(f"LLM Call Failed: {resp.status_code} - {resp.text}")
+            return ""
+        except Exception as e:
+            logger.error(f"LLM Connection Error: {e}")
+            return ""
+
     def refine_query(self, global_ctx: str, local_ctx: str, question: str) -> str:
         """
         [DEPRECATED] Use agentic_search instead.

@@ -69,10 +69,39 @@
     > "将这些知识晋升到 L2 产品知识库。"
 4.  **结果**: Agent 调用 `promote_knowledge`，将 JSON 文件存入指定目录。
 
-## 4. 常见问题 (FAQ)
+## 4. 工具列表详情 (Tool Reference)
+
+### 4.1 主线任务 (Main Quest)
+- `fill_clarification_suggestions(doc_path)`: [推理] 读取评审问题记录，自动填充 RAG 建议。
+- `evolve_scheme_document(scheme_doc_path, clarification_doc_path)`: [进化] 基于澄清决策进化方案文档。
+
+### 4.2 治理管控 (Governance)
+- `check_metadata_compliance(doc_path)`: 检查文档元数据 (Product, Module)。
+- `validate_knowledge_conflict(candidate_json)`: 验证知识冲突 (规划中)。
+
+### 4.3 知识全生命周期 (Lifecycle)
+- `harvest_knowledge_candidates(doc_path)`: 从文档收割知识。
+- `promote_knowledge(candidate_json, target_kb_path)`: 知识入库。
+
+### 4.4 知识库浏览 (Browser)
+- `list_knowledge_bases(page, page_size)`: 列出知识库。
+- `list_knowledge_base_files(dataset_id, ...)`: 列出文件。
+- `retrieve_chunks(dataset_id, query)`: 直接检索切片。
+
+### 4.5 辅助工具 (Utils)
+- `view_diff(file_path)`: 打开 VS Code 对比视图。
+- `add_test_case(query, expected_keywords)`: 捕获测试用例。
+
+## 5. 常见问题 (FAQ)
 
 **Q: 为什么进化引擎没有修改文档？**
 A: 请检查 `04_评审问题记录.md` 中是否包含了标准的 `**回答**：...` 格式。引擎仅针对已由人工确认的问题进行进化。
 
 **Q: 如何区分不同产品的知识？**
 A: 通过文档头部的 YAML Frontmatter (`product: ...`)。引擎会自动识别并关联到对应的知识空间。
+
+**Q: API 404 错误?**
+A: 检查 `RAGFLOW_HOST` 是否正确，是否需要包含 `/api` 后缀（本系统默认会自动拼接 `/api/v1`）。
+
+**Q: 无法生成建议?**
+A: 检查日志，确认 `RAGFLOW_CHAT_ID` 是否配置，以及检索置信度是否过低 (默认阈值 0.2)。
