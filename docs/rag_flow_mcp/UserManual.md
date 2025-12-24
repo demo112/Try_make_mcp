@@ -61,36 +61,19 @@
     > "根据评审记录的结论，请帮我更新方案文档 `docs/MyProject/02_Architect/MyScheme_v1.0.md`。"
 3.  **结果确认**: Agent 会调用 `evolve_scheme_document`，生成 `MyScheme_v1.1.md`，并在其中包含新的设计变更。
 
-### 场景 C: 知识沉淀 (Side Quest)
-1.  **调用工具**: 输入：
-    > "请将评审记录中已解决的问题收割为知识资产。"
-2.  **结果确认**: Agent 调用 `harvest_knowledge_candidates` 提取问答对。
-3.  **晋升入库**: 输入：
-    > "将这些知识晋升到 L2 产品知识库。"
-4.  **结果**: Agent 调用 `promote_knowledge`，将 JSON 文件存入指定目录。
-
 ## 4. 工具列表详情 (Tool Reference)
 
 ### 4.1 主线任务 (Main Quest)
 - `fill_clarification_suggestions(doc_path)`: [推理] 读取评审问题记录，自动填充 RAG 建议。
 - `evolve_scheme_document(scheme_doc_path, clarification_doc_path)`: [进化] 基于澄清决策进化方案文档。
 
-### 4.2 治理管控 (Governance)
-- `check_metadata_compliance(doc_path)`: 检查文档元数据 (Product, Module)。
-- `validate_knowledge_conflict(candidate_json)`: 验证知识冲突 (规划中)。
-
-### 4.3 知识全生命周期 (Lifecycle)
-- `harvest_knowledge_candidates(doc_path)`: 从文档收割知识。
-- `promote_knowledge(candidate_json, target_kb_path)`: 知识入库。
-
-### 4.4 知识库与文件管理 (Browser & Files)
-- `list_knowledge_bases(page, page_size)`: 列出知识库。
-- `list_knowledge_base_files(dataset_id, ...)`: 列出知识库文件。
+### 4.2 知识库与文件管理 (Browser & Files)
+- `dataset_manage(action, ...)`: 知识库管理聚合工具。支持 create, delete, update, list 操作。
+- `document_manage(action, ...)`: 文档管理聚合工具。支持 upload, delete, update, list, get_content 操作。
+- `file_manage(action, ...)`: 本地文件管理聚合工具。支持 read, list 操作。
 - `retrieve_chunks(dataset_id, query)`: 直接检索切片。
-- `read_file(file_path)`: 读取本地文件内容。
-- `list_files(dir_path)`: 列出本地目录文件。
 
-### 4.5 辅助与系统工具 (Utils & System)
+### 4.3 辅助与系统工具 (Utils & System)
 - `view_diff(file_path)`: 打开 VS Code 对比视图。
 - `add_test_case(query, expected_keywords)`: 捕获测试用例。
 - `inspect_config()`: 查看当前系统配置（敏感信息已脱敏）。

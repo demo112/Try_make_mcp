@@ -150,13 +150,24 @@ def build_app(app_name: str, display_name: str = None):
     app_version = get_app_version(server_script)
     print(f"📌 检测到应用版本: {app_version}")
     
-    # 如果未提供 display_name，尝试从目录结构推断（这里简化处理，如果不传则需手动处理文档路径）
-    # 为了兼容性，这里尝试去 docs 目录查找匹配的 display_name
+    # 确定文档目录 (doc_dir)
     docs_root = root_dir / "docs"
     doc_dir = None
+    
     if display_name:
         doc_dir = docs_root / display_name
+    else:
+        # 尝试自动推断: 
+        # 1. 检查是否存在 docs/<app_name>
+        if (docs_root / app_name).exists():
+            doc_dir = docs_root / app_name
+        # 2. (可选) 可以在这里添加更复杂的逻辑，比如遍历 docs 子目录寻找匹配的配置文件
     
+    if doc_dir and doc_dir.exists():
+        print(f"📂 定位到文档目录: {doc_dir}")
+    else:
+        print(f"⚠️ 警告: 未能自动定位到文档目录 (docs/{display_name or app_name})，交付物将仅保存在 dist 目录。")
+
     if not server_script.exists():
         print(f"❌ 错误: 找不到应用脚本: {server_script}")
         return
@@ -171,10 +182,11 @@ def build_app(app_name: str, display_name: str = None):
     if not specs_dir.exists():
         specs_dir.mkdir(exist_ok=True)
         
-    # 注意：我们不完全删除 dist，因为可能包含其他应用的构建。
-    # 但我们会删除当前应用的旧 release 文件夹
-    release_dir_name = f"{app_name}_release"
-    release_dir = dist_dir / release_dir_name
+    # 确定发布目录 (release_dir)
+    # 规则变更: 必须归档在 dist/<app_name>_release/ 目录下
+    release_dir = dist_dir / f"{app_name}_release"
+
+    # 清理旧 release
     if release_dir.exists():
         try:
             shutil.rmtree(release_dir)
@@ -193,6 +205,7 @@ def build_app(app_name: str, display_name: str = None):
     release_dir.mkdir(parents=True, exist_ok=True)
 
     # 2. 执行 PyInstaller
+    # PyInstaller 依然输出到 root/dist 作为中间产物，后续再复制到 release_dir
     cmd = get_pyinstaller_cmd(app_name, root_dir, app_dir, dist_dir, build_dir, specs_dir, server_script)
     
     print(f"执行命令: {' '.join(cmd)}")

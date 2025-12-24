@@ -42,3 +42,13 @@ graph LR
 ## 4. 快速链接
 - [用户手册 (User Manual)](UserManual.md)
 - [待办事项 (TODO)](06_Assess/TODO_RAG Flow MCP.md)
+
+## 5. 构建与打包
+
+使用以下命令构建可执行文件 (EXE)：
+
+```powershell
+python -m src.factory.build_app rag_flow_mcp
+```
+
+构建产物位于 `dist/rag_flow_mcp/` 目录。

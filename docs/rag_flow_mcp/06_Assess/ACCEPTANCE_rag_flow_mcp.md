@@ -93,6 +93,17 @@
   - 代码审计确认 `BaseEngine` 统一初始化 `QueryRewriter`。
   - 确认 `InferenceEngine`, `EvolutionEngine`, `GovernanceEngine`, `LifecycleEngine` 均在关键检索点使用了 `query_rewriter.rewrite()`。
 
+### 2.8 构建与打包验证 (Build & Packaging) - **VERIFIED**
+- [x] **EXE 构建**:
+  - 成功执行 `src.factory.build_app rag_flow_mcp`。
+  - 生成 `rag_flow_mcp.exe`，版本 v1.22.0。
+- [x] **交付包完整性**:
+  - 验证 `dist/rag_flow_mcp_release` 目录结构。
+  - 确认包含 `rag_flow_mcp.exe`。
+  - 确认包含 `.env` (含真实配置)。
+  - 确认包含 `UserManual.md` (已复制并重命名为 README.md)。
+  - 确认生成了 `rag_flow_mcp_vlatest.zip`。
+
 ## 3. 遗留问题与风险 (Known Issues & Risks)
 - **严格阈值副作用**: 0.6 的真实性阈值可能导致在知识库内容不足时，AI 频繁“保持沉默”（不提供建议）。这符合“严禁捏造”的要求，但可能影响用户体验。
 - **进化精度**: 对于复杂文档的精细修改 (Diff/Patch)，仍依赖 LLM 的指令遵循能力。
