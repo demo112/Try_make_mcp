@@ -14,11 +14,11 @@
 
 ### 核心功能 (MVP)
 1.  **Tool: `generate_test_case_template(feature_name)`**
-    - 根据功能名称，生成标准的测试用例模板（包含前置条件、步骤、预期结果）。
+    - 根据功能名称，生成标准的测试用例templates（包含前置条件、步骤、预期结果）。
 2.  **Tool: `recommend_boundary_values(data_type)`**
     - 根据数据类型（如年龄、金额、手机号），推荐测试边界值。
 3.  **Resource: `cases://template/standard`**
-    - 提供团队统一的用例编写规范/模板文本。
+    - 提供团队统一的用例编写规范/templates文本。
 
 ## 4. 关键约束
 - **离线运行**：必须能够打包成 `.exe` 独立运行。

@@ -6,14 +6,14 @@
 **核心解读**：
 用户要求升级“MCP生产工厂”的交付标准。原标准仅关注 EXE 的生成，新标准要求交付物必须是一个包含以下内容的“发布包”：
 1.  **可执行文件**: `{app_name}.exe`
-2.  **配置文件**: `config.json` 或 `.env` (含默认配置/模板)
+2.  **配置文件**: `config.json` 或 `.env` (含默认配置/templates)
 3.  **说明文档**: `README.md` 或 `Manual.md` (含使用说明)
 
 ## 2. 影响范围分析
 *   **`src/factory/init_app.py`**:
     *   需要生成 `config_template.json` (或类似) 到应用源码目录。
     *   需要生成 `UserManual.md` 到文档目录，并准备好被打包脚本引用。
-    *   代码模板 (`server.py`) 可能需要更新，以演示如何读取外部配置文件。
+    *   代码templates (`server.py`) 可能需要更新，以演示如何读取外部配置文件。
 *   **`src/factory/build_app.py`**:
     *   构建完成后，不能只输出 exe。
     *   需要创建一个发布文件夹 `dist/{app_name}_release/`。

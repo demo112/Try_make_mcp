@@ -25,7 +25,7 @@ def get_app_version(server_script_path):
 def get_pyinstaller_cmd(app_name: str, root_dir: Path, app_dir: Path, dist_dir: Path, build_dir: Path, specs_dir: Path, server_script: Path):
     """Generate the PyInstaller command arguments"""
     cmd = [
-        "pyinstaller",
+        sys.executable, "-m", "PyInstaller",
         "--name", app_name,
         "--onefile",
         "--clean",
@@ -183,7 +183,7 @@ def build_app(app_name: str, display_name: str = None):
         specs_dir.mkdir(exist_ok=True)
         
     # 确定发布目录 (release_dir)
-    # 规则变更: 必须归档在 dist/<app_name>_release/ 目录下
+    # 规则变更: 必须archives在 dist/<app_name>_release/ 目录下
     release_dir = dist_dir / f"{app_name}_release"
 
     # 清理旧 release

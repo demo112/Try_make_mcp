@@ -5,7 +5,7 @@
 
 ## 2. 核心功能
 *   **list_projects**: 列出当前工厂中已有的所有 MCP 项目。
-*   **init_project**: 初始化一个新的 MCP 项目，生成符合 6A 标准的目录结构和文档模板。
+*   **init_project**: 初始化一个新的 MCP 项目，生成符合 6A 标准的目录结构和文档templates。
 *   **build_project**: 将指定的 Python MCP 项目打包为独立的 EXE 文件。
 *   **verify_project**: 对构建好的 EXE 进行冒烟测试。
 

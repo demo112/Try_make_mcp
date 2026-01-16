@@ -2,7 +2,7 @@
 
 ```mermaid
 graph TD
-    T1[依赖更新] --> T2[配置模板]
+    T1[依赖更新] --> T2[配置templates]
     T2 --> T3[代码实现]
     T3 --> T4[验证测试]
 ```
@@ -14,7 +14,7 @@ graph TD
 - **动作**: 添加 `python-dotenv`
 - **输出**: 更新后的 `requirements.txt`
 
-### 2. 配置模板 (config_example)
+### 2. 配置templates (config_example)
 - **输入**: 无
 - **动作**: 创建 `src/apps/everything2md/.env.example`
 - **内容**: 包含 `LIBREOFFICE_PATH` 和 `PANDOC_PATH` 的注释示例

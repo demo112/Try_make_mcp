@@ -75,7 +75,7 @@ alwaysApply: true
 * 在 `docs/<Display Name>/02_Architect/DESIGN_<名称>.md` 中定义：
   * **Tools 定义**: 函数名、参数 Schema、返回格式。
   * **Resources 定义**: URI Scheme (e.g., `file://`, `postgres://`)。
-  * **Prompts 定义**: 预设的 Prompt 模板。
+  * **Prompts 定义**: 预设的 Prompt templates。
   * **Mermaid 图**: 使用 `<br/>` 替代 `\n` 以确保兼容性。
 
 ### 3.2 系统设计
@@ -154,7 +154,7 @@ alwaysApply: true
 ### 7.2 交付物整理
 
 * **User Manual**: 确保 `docs/<Display Name>/UserManual.md` 包含 Client 配置示例。
-* **交付包结构**: 所有 MCP 的交付物（EXE, 配置文件, 手册等）**必须** 归档在 `dist/<app_name>_release/` 目录下，以便统一管理和查阅。
+* **交付包结构**: 所有 MCP 的交付物（EXE, 配置文件, 手册等）**必须** archives在 `dist/<app_name>_release/` 目录下，以便统一管理和查阅。
 * **同步**: 更新项目里程碑，同步所有文档状态。
 
 ---

@@ -20,7 +20,7 @@
 | **md_converter** | `src/apps/md_converter` | [docs/md_converter](docs/md_converter/01_Align/ALIGNMENT_MD转多格式MCP.md) | Markdown 转多格式 (Word/PDF/Excel) 工具。 |
 | **test_auto_generated_app** | `src/apps/test_auto_generated_app` | [docs/test_auto_generated_app](docs/test_auto_generated_app/Readme.md) | 自动化测试生成的示例应用。 |
 
-### 任务与归档 (Tasks & Archive)
+### 任务与archives (Tasks & Archive)
 
 *   **[Git 推送修复](docs/tasks/Git_Push_Fix)**: 解决 Git SSL/TLS 连接问题。
 *   **[项目维护](docs/tasks/项目维护)**: 项目结构清理与维护记录。

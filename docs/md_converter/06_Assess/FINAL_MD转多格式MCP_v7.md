@@ -34,4 +34,4 @@
 - **版本追踪**:
   - 查阅 `CHANGELOG.md` 可清晰看到项目演进路线。
 
-请使用最新生成的 `dist\md_converter_v1.1.0.zip` 进行归档或分发。
+请使用最新生成的 `dist\md_converter_v1.1.0.zip` 进行archives或分发。

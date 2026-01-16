@@ -4,7 +4,7 @@
 
 ```mermaid
 graph TD
-    T1[Common: Config模块] --> T2[Init: 更新模板]
+    T1[Common: Config模块] --> T2[Init: 更新templates]
     T2 --> T3[Init: 更新生成逻辑]
     T1 --> T4[Build: 更新打包逻辑]
     T3 --> T5[验证: 创建新应用]

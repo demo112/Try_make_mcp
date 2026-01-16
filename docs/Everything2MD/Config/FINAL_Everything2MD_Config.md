@@ -12,7 +12,7 @@
 ## 2. 交付物清单
 - `src/apps/everything2md/requirements.txt`: 新增 `python-dotenv`
 - `src/apps/everything2md/server.py`: 更新路径查找逻辑
-- `src/apps/everything2md/.env.example`: 配置模板
+- `src/apps/everything2md/.env.example`: 配置templates
 - `src/apps/everything2md/verify_config.py`: 验证脚本
 
 ## 3. 后续建议

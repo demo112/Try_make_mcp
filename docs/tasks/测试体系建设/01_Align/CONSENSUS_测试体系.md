@@ -13,7 +13,7 @@
 1.  **代码**：
     *   `src/testing/`: 包含 `client.py` (测试客户端) 和 `fixtures.py` (Pytest 夹具)。
     *   `tests/factory/`: 工厂自身的测试用例。
-    *   `src/factory/init_app.py`: 更新后的模板，包含 `tests/` 目录生成逻辑。
+    *   `src/factory/init_app.py`: 更新后的templates，包含 `tests/` 目录生成逻辑。
 2.  **文档**：
     *   更新 `MCP_FACTORY_MANUAL.md`，增加“测试指南”章节。
 

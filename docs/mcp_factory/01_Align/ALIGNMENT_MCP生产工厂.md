@@ -13,7 +13,7 @@
 1.  **初始化项目 (`init_project`)**:
     *   创建符合 6A 标准的项目结构。
     *   生成代码骨架 (`server.py`, `config.json`)。
-    *   生成文档模板 (`ALIGNMENT`, `DESIGN`, `TASK` 等)。
+    *   生成文档templates (`ALIGNMENT`, `DESIGN`, `TASK` 等)。
 2.  **构建项目 (`build_project`)**:
     *   调用 PyInstaller 将 Python 代码打包为独立 EXE。
     *   自动处理依赖和隐藏导入。

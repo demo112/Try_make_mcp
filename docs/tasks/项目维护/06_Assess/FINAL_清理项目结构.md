@@ -5,7 +5,7 @@
 
 ## 主要变更
 1.  **构建脚本优化**: 修改了 `src/factory/build_app.py`，将 PyInstaller 生成的 spec 文件重定向至 `specs/` 目录。
-2.  **文件归档**:
+2.  **文件archives**:
     *   移除了根目录下的所有 `.spec` 文件。
     *   将 `check_env.py` 移动至 `scripts/debug_env.py`。
 3.  **目录结构更新**:

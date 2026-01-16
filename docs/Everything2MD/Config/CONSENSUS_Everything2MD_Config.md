@@ -24,7 +24,7 @@
 - 增加 `validate_custom_path` 逻辑。
 
 ### 2.3 配置文件
-- 新增 `.env.example` 模板文件，包含注释说明。
+- 新增 `.env.example` templates文件，包含注释说明。
 
 ## 3. 边界条件
 - 仅支持绝对路径配置。

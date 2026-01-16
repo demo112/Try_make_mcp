@@ -83,12 +83,12 @@ def mcp_server(request):
     *   创建一个临时目录。
     *   调用 `create_app`。
     *   断言文件结构 (`server.py`, `tests/`, `docs/`) 是否存在。
-    *   断言 `server.py` 内容是否包含模板代码。
+    *   断言 `server.py` 内容是否包含templates代码。
 *   `test_verify.py`:
     *   Mock 一个 subprocess。
     *   验证 `verify_mcp` 的逻辑。
 
-## 3. 模板更新 (`init_app.py`)
+## 3. templates更新 (`init_app.py`)
 需要更新 `SERVER_TEMPLATE` 之外，新增 `TEST_TEMPLATE`。
 
 ```python

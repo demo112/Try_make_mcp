@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import json
 
-# 定义模板
+# 定义templates
 SERVER_TEMPLATE = """from mcp.server.fastmcp import FastMCP
 from src.common import get_app_logger, load_config
 import logging
@@ -120,7 +120,7 @@ MANUAL_TEMPLATE = """# {display_name} 使用手册
 如果应用无法启动，请尝试在命令行中运行 EXE，查看输出日志。
 """
 
-# 6A 文档模板
+# 6A 文档templates
 ALIGNMENT_TEMPLATE = """# {display_name} - 需求对齐 (Align)
 
 ## 1. 项目背景
@@ -298,7 +298,7 @@ def create_app(app_name: str, display_name: str):
             "04_Approve": [
                 (f"CHECKLIST_{display_name}.md", CHECKLIST_TEMPLATE)
             ],
-            "05_Automate": [], # 自动化阶段通常是产出代码，暂无特定文档模板
+            "05_Automate": [], # 自动化阶段通常是产出代码，暂无特定文档templates
             "06_Assess": [
                 (f"ACCEPTANCE_{display_name}.md", ACCEPTANCE_TEMPLATE)
             ]
