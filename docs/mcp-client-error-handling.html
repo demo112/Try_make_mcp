@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Client Error Handling Best Practices 2026 - Complete Guide with Code Examples</title>
+    <meta name="description" content="Learn how to handle JSON-RPC errors, connection failures, timeouts, rate limits, and payment errors in MCP clients. Production-ready code examples for Claude Desktop, Cursor, and custom MCP clients.">
+    <meta name="keywords" content="MCP error handling, MCP client errors, JSON-RPC error codes, MCP -32042, MCP timeout, MCP reconnection, MCP client best practices, Claude MCP errors, Cursor MCP errors">
+    <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/mcp-client-error-handling.html">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; color: #1a1a2e; background: #fafbff; }
+        .container { max-width: 860px; margin: 0 auto; padding: 40px 24px; }
+        .breadcrumb { font-size: 14px; color: #666; margin-bottom: 24px; }
+        .breadcrumb a { color: #4f46e5; text-decoration: none; }
+        h1 { font-size: 2.2em; color: #1a1a2e; margin-bottom: 12px; line-height: 1.3; }
+        .meta { color: #6b7280; margin-bottom: 32px; font-size: 15px; }
+        h2 { font-size: 1.6em; color: #1a1a2e; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+        h3 { font-size: 1.25em; color: #374151; margin: 32px 0 12px; }
+        p { margin-bottom: 16px; color: #374151; }
+        pre { background: #1e1e2e; color: #cdd6f4; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 20px 0; font-size: 14px; line-height: 1.5; }
+        code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        p code, li code { background: #f1f5f9; color: #e11d48; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .error-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .error-table th, .error-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        .error-table th { background: #f8fafc; color: #1e293b; font-weight: 600; }
+        .error-table tr:hover { background: #f8fafc; }
+        .error-code { font-family: monospace; color: #e11d48; font-weight: 600; }
+        .severity-critical { color: #dc2626; font-weight: 600; }
+        .severity-warning { color: #d97706; font-weight: 600; }
+        .severity-info { color: #2563eb; font-weight: 600; }
+        .callout { padding: 16px 20px; border-radius: 8px; margin: 20px 0; }
+        .callout-do { background: #f0fdf4; border-left: 4px solid #22c55e; }
+        .callout-dont { background: #fef2f2; border-left: 4px solid #ef4444; }
+        .callout-tip { background: #eff6ff; border-left: 4px solid #3b82f6; }
+        .callout-warn { background: #fffbeb; border-left: 4px solid #f59e0b; }
+        .toc { background: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0 40px; }
+        .toc h3 { margin-top: 0; color: #1e293b; }
+        .toc ol { margin-left: 20px; }
+        .toc li { margin: 6px 0; }
+        .toc a { color: #4f46e5; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .flowchart { background: #f8fafc; padding: 24px; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .pattern-box { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin: 20px 0; }
+        .pattern-box h4 { color: #1e293b; margin-bottom: 12px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+        .tag-new { background: #dbeafe; color: #1d4ed8; }
+        .tag-important { background: #fee2e2; color: #dc2626; }
+        .tag-tip { background: #d1fae5; color: #065f46; }
+        @media (max-width: 640px) {
+            .container { padding: 20px 16px; }
+            h1 { font-size: 1.6em; }
+            pre { font-size: 12px; padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb"><a href="index.html">← Back to MCP Factory</a></div>
+        
+        <h1>MCP Client Error Handling Best Practices 2026</h1>
+        <p class="meta">8 min read · Updated May 2026 · JSON-RPC 2.0 spec compliant</p>
+        <p>The #1 reason MCP integrations fail in production isn't bad code — it's missing error handling. This guide covers every JSON-RPC error code, connection failure pattern, and recovery strategy you need to build bulletproof MCP clients.</p>
+
+        <div class="toc">
+            <h3>📑 Table of Contents</h3>
+            <ol>
+                <li><a href="#json-rpc-error-codes">Complete JSON-RPC Error Code Reference</a></li>
+                <li><a href="#mcp-specific-errors">MCP-Specific Error Codes</a></li>
+                <li><a href="#connection-failures">Connection Failure Patterns</a></li>
+                <li><a href="#timeout-handling">Timeout & Retry Strategies</a></li>
+                <li><a href="#payment-errors">Payment & Rate Limit Errors (-32042)</a></li>
+                <li><a href="#typescript-implementation">Production TypeScript Implementation</a></li>
+                <li><a href="#python-implementation">Production Python Implementation</a></li>
+                <li><a href="#claude-desktop">Claude Desktop Specific Errors</a></li>
+                <li><a href="#cursor-errors">Cursor IDE Specific Errors</a></li>
+                <li><a href="#checklist">Production Readiness Checklist</a></li>
+            </ol>
+        </div>
+
+        <h2 id="json-rpc-error-codes">1. Complete JSON-RPC 2.0 Error Code Reference</h2>
+        <p>Every MCP server uses JSON-RPC 2.0 under the hood. These standard error codes apply to <em>all</em> MCP implementations:</p>
+
+        <table class="error-table">
+            <thead>
+                <tr><th>Code</th><th>Name</th><th>MCP Meaning</th><th>Recovery</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="error-code">-32700</td>
+                    <td>Parse Error</td>
+                    <td>Invalid JSON in request</td>
+                    <td>Log payload, fix serialization</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32600</td>
+                    <td>Invalid Request</td>
+                    <td>Malformed request object (missing id/method/params)</td>
+                    <td>Validate request schema before sending</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32601</td>
+                    <td>Method Not Found</td>
+                    <td>Tool or resource name doesn't exist on server</td>
+                    <td>Check server capabilities via list_tools()</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32602</td>
+                    <td>Invalid Params</td>
+                    <td>Tool arguments don't match server schema</td>
+                    <td>Validate params against tool schema before call</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32603</td>
+                    <td>Internal Error</td>
+                    <td>Server crashed or unhandled exception</td>
+                    <td>Retry with backoff, alert server operator</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="mcp-specific-errors">2. MCP-Specific Error Codes</h2>
+        <p>Beyond standard JSON-RPC, the MCP ecosystem uses custom error codes in the <code>-32000</code> to <code>-32099</code> range:</p>
+
+        <table class="error-table">
+            <thead>
+                <tr><th>Code</th><th>Name</th><th>Severity</th><th>When It Happens</th><th>What To Do</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="error-code">-32001</td>
+                    <td>Server Not Initialized</td>
+                    <td><span class="severity-critical">Critical</span></td>
+                    <td>Calling tools before initialize handshake</td>
+                    <td>Send initialize request first</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32002</td>
+                    <td>Unknown Method</td>
+                    <td><span class="severity-warning">Warning</span></td>
+                    <td>Server doesn't support requested method</td>
+                    <td>Refresh server capabilities</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32042</td>
+                    <td>Payment Required</td>
+                    <td><span class="severity-critical">Critical</span></td>
+                    <td>Free tier exhausted, API key invalid/missing</td>
+                    <td>Redirect to subscribe URL in error data</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32043</td>
+                    <td>Rate Limited</td>
+                    <td><span class="severity-warning">Warning</span></td>
+                    <td>Too many requests in time window</td>
+                    <td>Wait for reset time, implement backoff</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32044</td>
+                    <td>Resource Not Found</td>
+                    <td><span class="severity-warning">Warning</span></td>
+                    <td>Requested URI doesn't exist on server</td>
+                    <td>Update resource list, handle gracefully</td>
+                </tr>
+                <tr>
+                    <td class="error-code">-32045</td>
+                    <td>Auth Required</td>
+                    <td><span class="severity-critical">Critical</span></td>
+                    <td>Server requires authentication</td>
+                    <td>Provide API key or OAuth token</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout callout-tip">
+            <strong>💡 Key Insight:</strong> Custom error codes have no universal meaning across MCP servers. Always read the <code>error.data</code> field for server-specific recovery instructions. A well-designed MCP server includes a <code>recoveryHint</code> and/or <code>subscribeUrl</code> in the error data.
+        </div>
+
+        <h2 id="connection-failures">3. Connection Failure Patterns</h2>
+        <p>Before you even get JSON-RPC errors, the connection itself can fail. Here are the 5 most common patterns:</p>
+
+        <div class="pattern-box">
+            <h4>Pattern 1: Server Startup Race Condition</h4>
+            <p>The client connects before the MCP server has finished initializing. This is the <strong>most common error</strong> in stdio-based MCP servers (Claude Desktop, Cursor).</p>
+            <pre><code># What happens:
+Client → stdio: {"jsonrpc":"2.0","id":1,"method":"initialize",...}
+Server → stderr: "Loading plugin..."
+Client ← (timeout after 5s, no response)
+Server → stderr: "Plugin loaded."
+Server → stdout: {"jsonrpc":"2.0","id":1,"result":{...}}  # Too late!</code></pre>
+            <p><strong>Fix:</strong> Implement a readiness check. Wait for the server's first stdout message before sending initialize.</p>
+        </div>
+
+        <div class="pattern-box">
+            <h4>Pattern 2: SSE Connection Drops (HTTP Transport)</h4>
+            <p>Server-Sent Events connections silently drop after 30-60 seconds of inactivity. Many Cloudflare-based MCP servers hit this.</p>
+            <pre><code># Symptom: Connection appears open but no responses
+# Fix: Send periodic heartbeat or re-connect on 15s idle
+setInterval(() => {
+  if (Date.now() - lastMessage > 15000) reconnect();
+}, 5000);</code></pre>
+        </div>
+
+        <div class="pattern-box">
+            <h4>Pattern 3: Streamable HTTP Transport Errors</h4>
+            <p>The newer Streamable HTTP transport (MCP spec 2025-03) uses POST for all communication. Failed POSTs return HTTP status codes:</p>
+            <table class="error-table">
+                <thead><tr><th>HTTP Status</th><th>MCP Meaning</th><th>Action</th></tr></thead>
+                <tbody>
+                    <tr><td><code>200</code></td><td>Success</td><td>Process response</td></tr>
+                    <tr><td><code>202</code></td><td>Accepted (streaming)</td><td>Read SSE stream</td></tr>
+                    <tr><td><code>400</code></td><td>Bad Request</td><td>Fix JSON-RPC format</td></tr>
+                    <tr><td><code>401</code></td><td>Unauthorized</td><td>Add auth header</td></tr>
+                    <tr><td><code>402</code></td><td>Payment Required</td><td>Check API key / subscribe</td></tr>
+                    <tr><td><code>405</code></td><td>Method Not Allowed</td><td>Server doesn't support this transport</td></tr>
+                    <tr><td><code>408</code></td><td>Request Timeout</td><td>Retry with exponential backoff</td></tr>
+                    <tr><td><code>500</code></td><td>Server Error</td><td>Retry, then fail gracefully</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 id="timeout-handling">4. Timeout & Retry Strategies</h2>
+        <p>Not all errors should be retried. Here's when to retry and when to fail fast:</p>
+
+        <div class="callout callout-do">
+            <strong>✅ Safe to Retry (with backoff):</strong>
+            <ul>
+                <li><code>-32603</code> Internal Error (server may have recovered)</li>
+                <li><code>-32043</code> Rate Limited (wait for reset time)</li>
+                <li>Connection timeout / network error</li>
+                <li>HTTP 408 Request Timeout</li>
+                <li>HTTP 500 Server Error</li>
+            </ul>
+        </div>
+
+        <div class="callout callout-dont">
+            <strong>❌ Do NOT Retry (fail immediately):</strong>
+            <ul>
+                <li><code>-32600</code> Invalid Request (your bug, retrying won't help)</li>
+                <li><code>-32601</code> Method Not Found (server capability mismatch)</li>
+                <li><code>-32602</code> Invalid Params (fix your arguments)</li>
+                <li><code>-32001</code> Server Not Initialized (fix your handshake order)</li>
+                <li><code>-32045</code> Auth Required (retrying without credentials is useless)</li>
+                <li><code>-32042</code> Payment Required (retrying won't give you money)</li>
+                <li>HTTP 400 Bad Request, HTTP 401 Unauthorized</li>
+            </ul>
+        </div>
+
+        <h3>Exponential Backoff Implementation</h3>
+        <pre><code>function withRetry&lt;T&gt;(
+  fn: () =&gt; Promise&lt;T&gt;,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise&lt;T&gt; {
+  return fn().catch(err =&gt; {
+    const code = err?.jsonrpc?.error?.code;
+    // Only retry retryable errors
+    if (maxRetries === 0 || !isRetryable(code, err?.statusCode)) {
+      throw err;
+    }
+    const delay = baseDelay * Math.pow(2, maxRetries - 1) + Math.random() * 500;
+    return new Promise(resolve =&gt; setTimeout(resolve, delay))
+      .then(() =&gt; withRetry(fn, maxRetries - 1, baseDelay));
+  });
+}
+
+function isRetryable(code: number, httpStatus?: number): boolean {
+  const retryableCodes = [-32603, -32043];
+  const retryableHttp = [408, 500, 502, 503, 504];
+  if (retryableCodes.includes(code)) return true;
+  if (httpStatus && retryableHttp.includes(httpStatus)) return true;
+  if (!code && !httpStatus) return true; // Network error
+  return false;
+}</code></pre>
+
+        <h2 id="payment-errors">5. Payment & Rate Limit Errors (-32042)</h2>
+        <p>As MCP servers adopt freemium models (BGPT MCP, APIbase.pro), the <code>-32042 Payment Required</code> error is becoming critical. Here's how to handle it properly:</p>
+
+        <pre><code>// Error structure from a freemium MCP server:
+{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "error": {
+    "code": -32042,
+    "message": "Payment required: daily free limit exceeded",
+    "data": {
+      "freeLimit": 10,
+      "usedToday": 10,
+      "resetAt": "2026-05-14T00:00:00Z",
+      "subscribeUrl": "https://checkout.stripe.com/pay-link#...",
+      "recoveryHint": "Add your API key to the 'api_key' tool parameter, or visit subscribeUrl"
+    }
+  }
+}</code></pre>
+
+        <h3>Best Practice: Graceful Degradation</h3>
+        <pre><code>async function callToolWithPaymentHandling(server, toolName, args) {
+  try {
+    return await server.callTool(toolName, args);
+  } catch (err) {
+    if (err.code === -32042) {
+      // 1. Log for analytics
+      logger.warn('MCP payment required', { server: server.name, tool: toolName });
+
+      // 2. Check if user has API key configured
+      if (!config.getApiKey(server.name)) {
+        return {
+          content: [{
+            type: "text",
+            text: `⚠️ Free limit reached for ${server.name}.\n\n` +
+                  `Options:\n` +
+                  `1. Get an API key: ${err.data.subscribeUrl}\n` +
+                  `2. Wait for reset: ${new Date(err.data.resetAt).toLocaleString()}\n` +
+                  `3. Try again tomorrow (${err.data.freeLimit} free calls/day)`
+          }],
+          isError: true
+        };
+      }
+
+      // 3. If API key exists but failed, report configuration issue
+      throw new McpConfigError(
+        `API key invalid for ${server.name}. Check: ${err.data.subscribeUrl}`,
+        { subscribeUrl: err.data.subscribeUrl }
+      );
+    }
+    throw err;
+  }
+}</code></pre>
+
+        <div class="callout callout-warn">
+            <strong>⚠️ Critical:</strong> Never silently swallow <code>-32042</code> errors. The user needs to know the tool requires payment. Always surface the <code>subscribeUrl</code> and <code>resetAt</code> from error data.
+        </div>
+
+        <h2 id="typescript-implementation">6. Production TypeScript Implementation</h2>
+        <p>A complete, typed error handler for any MCP client:</p>
+
+        <pre><code>import type { JSONRPCError, McpErrorData } from './types';
+
+enum McpErrorCode {
+  SERVER_NOT_INITIALIZED = -32001,
+  UNKNOWN_METHOD = -32002,
+  PAYMENT_REQUIRED = -32042,
+  RATE_LIMITED = -32043,
+  RESOURCE_NOT_FOUND = -32044,
+  AUTH_REQUIRED = -32045,
+}
+
+type ErrorSeverity = 'critical' | 'recoverable' | 'warn' | 'info';
+
+interface ErrorStrategy {
+  severity: ErrorSeverity;
+  retryable: boolean;
+  userMessage: string;
+  action?: string;
+}
+
+const ERROR_STRATEGIES: Record&lt;number, ErrorStrategy&gt; = {
+  [-32700]: { severity: 'critical', retryable: false,
+    userMessage: 'Failed to communicate with MCP server.', action: 'Check server logs.' },
+  [-32600]: { severity: 'critical', retryable: false,
+    userMessage: 'Invalid request sent to MCP server.', action: 'Report this bug.' },
+  [-32601]: { severity: 'warn', retryable: false,
+    userMessage: 'Tool not available on this server.', action: 'Run list_tools() to see available tools.' },
+  [-32602]: { severity: 'critical', retryable: false,
+    userMessage: 'Invalid arguments for tool call.', action: 'Check tool schema.' },
+  [-32603]: { severity: 'recoverable', retryable: true,
+    userMessage: 'MCP server encountered an error.', action: 'Retrying...' },
+  [McpErrorCode.SERVER_NOT_INITIALIZED]: { severity: 'critical', retryable: false,
+    userMessage: 'MCP server not initialized.', action: 'Restart the connection.' },
+  [McpErrorCode.PAYMENT_REQUIRED]: { severity: 'critical', retryable: false,
+    userMessage: 'Payment required.', action: 'Check error.data.subscribeUrl' },
+  [McpErrorCode.RATE_LIMITED]: { severity: 'recoverable', retryable: true,
+    userMessage: 'Rate limited by MCP server.', action: 'Waiting and retrying...' },
+  [McpErrorCode.AUTH_REQUIRED]: { severity: 'critical', retryable: false,
+    userMessage: 'Authentication required.', action: 'Configure API key.' },
+};
+
+function handleMcpError(error: JSONRPCError): ErrorStrategy {
+  const code = error.error?.code ?? error.statusCode ?? 0;
+  const strategy = ERROR_STRATEGIES[code];
+
+  if (strategy) {
+    // Enrich payment errors with subscribe URL
+    if (code === McpErrorCode.PAYMENT_REQUIRED && error.error?.data?.subscribeUrl) {
+      strategy.action = `Subscribe at: ${error.error.data.subscribeUrl}`;
+    }
+    return strategy;
+  }
+
+  // Unknown error — be cautious
+  return {
+    severity: 'warn',
+    retryable: false,
+    userMessage: `Unknown MCP error: ${code}`,
+    action: 'Check server documentation.',
+  };
+}
+
+// Usage in your MCP client loop:
+async function safeToolCall(server, toolName, args, retries = 3) {
+  try {
+    const result = await server.callTool(toolName, args);
+    return result;
+  } catch (error) {
+    const strategy = handleMcpError(error);
+
+    // Log with appropriate level
+    const logger = strategy.severity === 'critical' ? console.error :
+                   strategy.severity === 'warn' ? console.warn : console.info;
+    logger(`[MCP ${strategy.severity}] ${strategy.userMessage}`, {
+      code: error.error?.code,
+      server: server.name,
+      tool: toolName,
+    });
+
+    // Retry or fail
+    if (strategy.retryable && retries > 0) {
+      const delay = 1000 * Math.pow(2, 3 - retries);
+      await new Promise(r =&gt; setTimeout(r, delay));
+      return safeToolCall(server, toolName, args, retries - 1);
+    }
+
+    // Return error result for agent consumption
+    return {
+      content: [{ type: 'text', text: `${strategy.userMessage}\n${strategy.action || ''}` }],
+      isError: true,
+    };
+  }
+}</code></pre>
+
+        <h2 id="python-implementation">7. Production Python Implementation</h2>
+        <pre><code>from dataclasses import dataclass
+from enum import Enum
+import asyncio
+import logging
+
+class Severity(Enum):
+    CRITICAL = "critical"
+    RECOVERABLE = "recoverable"
+    WARN = "warn"
+    INFO = "info"
+
+@dataclass
+class ErrorStrategy:
+    severity: Severity
+    retryable: bool
+    user_message: str
+    action: str = ""
+
+# Error strategy lookup
+STRATEGIES = {
+    -32700: ErrorStrategy(Severity.CRITICAL, False, "Parse error", "Check JSON encoding"),
+    -32600: ErrorStrategy(Severity.CRITICAL, False, "Invalid request", "Fix request format"),
+    -32601: ErrorStrategy(Severity.WARN, False, "Method not found", "Check available tools"),
+    -32602: ErrorStrategy(Severity.CRITICAL, False, "Invalid params", "Validate arguments"),
+    -32603: ErrorStrategy(Severity.RECOVERABLE, True, "Server error", "Retrying..."),
+    -32001: ErrorStrategy(Severity.CRITICAL, False, "Not initialized", "Restart connection"),
+    -32042: ErrorStrategy(Severity.CRITICAL, False, "Payment required", "Check subscribe URL"),
+    -32043: ErrorStrategy(Severity.RECOVERABLE, True, "Rate limited", "Wait and retry"),
+    -32045: ErrorStrategy(Severity.CRITICAL, False, "Auth required", "Configure API key"),
+}
+
+async def safe_tool_call(server, tool_name: str, args: dict, max_retries: int = 3):
+    """Call an MCP tool with full error handling and retry logic."""
+    for attempt in range(max_retries + 1):
+        try:
+            return await server.call_tool(tool_name, args)
+        except McpError as e:
+            strategy = STRATEGIES.get(e.code)
+
+            if strategy is None:
+                logging.warning(f"Unknown MCP error: {e.code}")
+                raise
+
+            logging.log(
+                logging.ERROR if strategy.severity == Severity.CRITICAL else logging.WARNING,
+                f"[MCP {strategy.severity.value}] {strategy.user_message}"
+            )
+
+            if strategy.retryable and attempt < max_retries:
+                delay = 1.0 * (2 ** attempt)
+                logging.info(f"Retry {attempt + 1}/{max_retries} in {delay}s...")
+                await asyncio.sleep(delay)
+                continue
+
+            # Payment required special handling
+            if e.code == -32042 and e.data.get("subscribeUrl"):
+                return {
+                    "content": [{
+                        "type": "text",
+                        "text": f"Payment required.\nSubscribe: {e.data['subscribeUrl']}\n"
+                                f"Free limit resets: {e.data.get('resetAt', 'unknown')}"
+                    }],
+                    "isError": True
+                }
+
+            raise McpHandledError(strategy.user_message, strategy.action)
+
+    raise RuntimeError("Max retries exceeded")</code></pre>
+
+        <h2 id="claude-desktop">8. Claude Desktop Specific Errors</h2>
+        <p>Claude Desktop runs MCP servers as stdio subprocesses. Common failure patterns:</p>
+
+        <div class="pattern-box">
+            <h4>Error: "Failed to connect to MCP server"</h4>
+            <pre><code># claude_desktop_config.json issues:
+# 1. Wrong path to server executable
+# 2. Missing dependencies (Node.js, Python)
+# 3. Server exits immediately with error code
+
+# Debug: Run the server manually to see stderr
+/Users/youruser/.claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "node",
+      "args": ["/path/to/server/index.js"],
+      "env": { "API_KEY": "sk-..." }
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="pattern-box">
+            <h4>Error: "Server timed out during initialization"</h4>
+            <p>Claude Desktop has a 10-second startup timeout. If your server takes longer:</p>
+            <pre><code># Solutions:
+# 1. Lazy-load heavy dependencies
+# 2. Reduce startup logging
+# 3. Use --max-old-space-size if Node.js is OOM
+"command": "node",
+"args": ["--max-old-space-size=4096", "/path/to/server/index.js"]</code></pre>
+        </div>
+
+        <h2 id="cursor-errors">9. Cursor IDE Specific Errors</h2>
+        <p>Cursor uses the same stdio transport but with different timeout defaults:</p>
+
+        <table class="error-table">
+            <thead>
+                <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>"MCP server disconnected unexpectedly"</td>
+                    <td>Server process crashed</td>
+                    <td>Check <code>~/.cursor/logs/mcp*.log</code></td>
+                </tr>
+                <tr>
+                    <td>"Tool execution timed out"</td>
+                    <td>Cursor's 30s tool call timeout</td>
+                    <td>Optimize tool performance or increase timeout</td>
+                </tr>
+                <tr>
+                    <td>"Invalid tool response format"</td>
+                    <td>Server returns non-conforming result</td>
+                    <td>Ensure content is <code>{type, text}</code> array</td>
+                </tr>
+                <tr>
+                    <td>"Permission denied" on server start</td>
+                    <td>File permission issue</td>
+                    <td><code>chmod +x</code> the server entry point</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="checklist">10. Production Readiness Checklist</h2>
+        <p>Before shipping your MCP client (or debugging someone else's), verify these items:</p>
+
+        <div class="callout callout-do">
+            <strong>✅ Error Handling Checklist:</strong>
+            <ol>
+                <li>✅ Handle all 5 standard JSON-RPC error codes (-32700 to -32603)</li>
+                <li>✅ Handle MCP-specific codes (-32001, -32042, -32043, -32045)</li>
+                <li>✅ Implement exponential backoff for retryable errors only</li>
+                <li>✅ Surface <code>error.data</code> fields to end users (subscribeUrl, resetAt)</li>
+                <li>✅ Never retry client errors (-32600, -32602, -32042, -32045)</li>
+                <li>✅ Add connection timeout with automatic reconnection</li>
+                <li>✅ Validate tool params against server schema before calling</li>
+                <li>✅ Implement graceful degradation for payment errors</li>
+                <li>✅ Log all errors with severity level and context</li>
+                <li>✅ Handle HTTP-level errors (400, 401, 402, 408, 500)</li>
+                <li>✅ Test with a server that returns -32042 Payment Required</li>
+                <li>✅ Add health check / heartbeat for long-lived connections</li>
+            </ol>
+        </div>
+
+        <div class="callout callout-dont">
+            <strong>❌ Anti-Patterns to Avoid:</strong>
+            <ul>
+                <li>❌ Catching all errors with a generic <code>catch(e) { console.log(e) }</code></li>
+                <li>❌ Retrying -32602 Invalid Params (it's a client bug!)</li>
+                <li>❌ Hiding payment errors from the user</li>
+                <li>❌ Using fixed retry delays (always jitter!)</li>
+                <li>❌ Ignoring <code>error.data</code> — it often contains recovery info</li>
+            </ul>
+        </div>
+
+        <hr style="margin: 48px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 14px;">Part of the <a href="index.html" style="color: #4f46e5;">MCP Factory</a> guide series. Built with real-world data from BGPT MCP, APIbase.pro, and Claude Desktop error reports.</p>
+    </div>
+</body>
+</html>
