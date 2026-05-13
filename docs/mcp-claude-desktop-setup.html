@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP with Claude Desktop: Complete Setup Guide (2026) | Try_make_mcp</title>
+    <meta name="description" content="Learn how to set up MCP servers with Claude Desktop in 2026. Step-by-step guide for Windows, macOS, and Linux. Connect Claude to custom tools, databases, and APIs using the Model Context Protocol.">
+    <meta name="keywords" content="Claude Desktop MCP, Claude MCP setup, Model Context Protocol Claude, Claude AI tools, MCP server Claude Desktop, Claude Desktop configuration, Claude AI extensions">
+    <meta property="og:title" content="MCP with Claude Desktop: Complete Setup Guide (2026)">
+    <meta property="og:description" content="Step-by-step guide to connecting MCP servers with Claude Desktop. Windows, macOS, Linux support.">
+    <meta property="og:type" content="article">
+    <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/docs/mcp-claude-desktop-setup.html">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-purple: #a371f7; --accent-orange: #f0883e; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        header { padding: 2rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+        .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        .breadcrumb span { margin: 0 0.4rem; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3; }
+        .meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+        .meta-item { display: flex; align-items: center; gap: 0.3rem; }
+        .meta-item::before { content: '⏱'; margin-right: 0.3rem; }
+        h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+        h3 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; color: var(--accent-green); }
+        p { margin-bottom: 1rem; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code { background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.15rem 0.4rem; font-family: 'SF Mono', Consolas, monospace; font-size: 0.88em; color: var(--accent-green); }
+        pre { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; overflow-x: auto; margin: 1.25rem 0; }
+        pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 0.9rem; }
+        .callout { background: var(--card-bg); border-left: 4px solid var(--accent); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+        .callout.warning { border-left-color: var(--accent-orange); }
+        .callout.tip { border-left-color: var(--accent-green); }
+        .callout-title { font-weight: 700; margin-bottom: 0.5rem; }
+        .callout.warning .callout-title { color: var(--accent-orange); }
+        .callout.tip .callout-title { color: var(--accent-green); }
+        ul, ol { margin: 1rem 0 1rem 1.5rem; }
+        li { margin-bottom: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+        th, td { border: 1px solid var(--border); padding: 0.75rem 1rem; text-align: left; font-size: 0.9rem; }
+        th { background: var(--card-bg); color: var(--accent); font-weight: 600; }
+        tr:nth-child(even) td { background: rgba(22, 27, 34, 0.5); }
+        .nav-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem; margin: 2.5rem 0; }
+        .nav-box h3 { margin-top: 0; }
+        .nav-links { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .nav-link { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem 1rem; text-decoration: none; color: var(--text); display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; transition: border-color 0.2s; }
+        .nav-link:hover { border-color: var(--accent); text-decoration: none; color: var(--accent); }
+        .nav-link::before { content: '📄'; }
+        .cta-box { background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(163, 113, 247, 0.1)); border: 1px solid var(--accent); border-radius: 8px; padding: 1.5rem; margin: 2rem 0; text-align: center; }
+        .cta-box h3 { color: var(--accent); margin-top: 0; }
+        .cta-btn { display: inline-block; background: var(--accent); color: #fff; padding: 0.6rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 0.75rem; }
+        .cta-btn:hover { background: #4c9aed; text-decoration: none; }
+        footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        @media (max-width: 600px) { h1 { font-size: 1.6rem; } .nav-links { grid-template-columns: 1fr; } .container { padding: 1.5rem 1rem; } }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+    <div class="breadcrumb"><a href="https://demo112.github.io/Try_make_mcp/">Home</a><span>›</span><a href="https://demo112.github.io/Try_make_mcp/docs/index.html">Blog</a><span>›</span>Claude Desktop MCP Setup</div>
+    <h1>MCP with Claude Desktop: Complete Setup Guide (2026)</h1>
+    <div class="meta">
+        <span class="meta-item">Reading time: 12 min</span>
+        <span class="meta-item">Updated: 2026-05</span>
+        <span class="meta-item">Level: Beginner to Advanced</span>
+    </div>
+</header>
+
+<article>
+
+<p>The <strong>Model Context Protocol (MCP)</strong> is revolutionizing how AI assistants like Claude interact with external tools and data sources. This guide walks you through setting up MCP servers with <strong>Claude Desktop</strong> on Windows, macOS, and Linux — from zero to a fully operational setup in under 30 minutes.</p>
+
+<h2>What is Claude Desktop MCP Integration?</h2>
+
+<p><strong>Claude Desktop</strong> is Anthropic's desktop application that brings Claude AI to your local environment. By integrating MCP servers, you can extend Claude's capabilities to:</p>
+
+<ul>
+    <li>Read and write local files with custom permissions</li>
+    <li>Query databases (PostgreSQL, SQLite, MySQL)</li>
+    <li>Search codebases and execute terminal commands</li>
+    <li>Connect to cloud APIs (GitHub, Slack, Notion, Figma)</li>
+    <li>Run custom AI-powered workflows built with <strong>Try_make_mcp</strong></li>
+</ul>
+
+<div class="callout tip">
+    <div class="callout-title">💡 Pro Tip</div>
+    MCP acts as a standardized bridge between Claude and your tools. Instead of writing custom integrations for every tool, MCP provides a universal protocol — similar to how USB-C works for hardware connections.
+</div>
+
+<h2>Prerequisites</h2>
+
+<p>Before starting, ensure you have:</p>
+
+<ul>
+    <li><strong>Claude Desktop</strong> installed (download from <a href="https://claude.ai/desktop">claude.ai/desktop</a>)</li>
+    <li><strong>Node.js</strong> v18+ (for running TypeScript MCP servers)</li>
+    <li><strong>Python</strong> 3.9+ (for Python-based MCP servers)</li>
+    <li><strong>Git</strong> installed and configured</li>
+</ul>
+
+<h2>Step 1: Install Claude Desktop</h2>
+
+<p>Download and install Claude Desktop from the official website:</p>
+
+<pre><code># macOS — Download from https://claude.ai/desktop
+# Or use Homebrew:
+brew install --cask claude
+
+# Windows — Download installer from claude.ai/desktop
+# Linux (Debian/Ubuntu):
+curl -fsSL https://downloads.anthropic.com/desktop/linux-install.sh | sh</code></pre>
+
+<div class="callout">
+    <div class="callout-title">Note</div>
+    Claude Desktop is separate from the web interface. The MCP integration only works with the desktop application, as it requires local process communication.
+</div>
+
+<h2>Step 2: Locate the Claude Desktop Configuration File</h2>
+
+<p>Claude Desktop uses a JSON configuration file to manage MCP server connections. You need to edit this file to add new servers.</p>
+
+<pre><code># macOS/Linux
+~/Library/Application Support/Claude/claude_desktop_config.json
+
+# Windows
+%APPDATA%\Claude\claude_desktop_config.json</code></pre>
+
+<div class="callout warning">
+    <div class="callout-title">⚠️ Backup First</div>
+    Always make a backup of your config file before editing: <code>cp claude_desktop_config.json claude_desktop_config.json.bak</code>
+</div>
+
+<h2>Step 3: Configure Your First MCP Server</h2>
+
+<p>Open the configuration file in your preferred editor. The structure looks like this:</p>
+
+<pre><code>{
+  "mcpServers": {
+    "server-name": {
+      "command": "npx",
+      "args": ["-y", "@some/mcp-server-package"]
+    }
+  }
+}</code></pre>
+
+<h3>Example 1: Filesystem MCP Server</h3>
+
+<p>Connect Claude to your local filesystem with controlled access:</p>
+
+<pre><code>{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "env": {
+        "allowedDirectories": ["~/Documents", "~/Desktop"]
+      }
+    }
+  }
+}</code></pre>
+
+<h3>Example 2: GitHub MCP Server</h3>
+
+<p>Give Claude access to your GitHub repositories:</p>
+
+<pre><code>{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-token-here"
+      }
+    }
+  }
+}</code></pre>
+
+<div class="callout warning">
+    <div class="callout-title">🔐 Security</div>
+    MCP servers run with the permissions granted in the configuration. Only enable servers for tools you trust. Review the <a href="mcp-authentication-security.html">MCP Authentication & Security Guide</a> before connecting sensitive services.
+</div>
+
+<h3>Example 3: Try_make_mcp Custom MCP Server</h3>
+
+<p>Build and connect your own MCP server using Try_make_mcp:</p>
+
+<pre><code>{
+  "mcpServers": {
+    "try-make-mcp-factory": {
+      "command": "python",
+      "args": ["/path/to/Try_make_mcp/src/mcp_factory/run.py"]
+    },
+    "document-converter": {
+      "command": "python",
+      "args": ["/path/to/Try_make_mcp/src/md_converter/run.py"]
+    }
+  }
+}</code></pre>
+
+<h2>Step 4: Using MCP Servers in Claude Desktop</h2>
+
+<p>After saving your configuration, <strong>restart Claude Desktop</strong>. The MCP servers will appear in the tool selection panel.</p>
+
+<h3>Checking Available MCP Tools</h3>
+
+<p>Once connected, you can ask Claude:</p>
+
+<ul>
+    <li><em>"What tools do you have access to?"</em></li>
+    <li><em>"Read the README.md file from my project"</em></li>
+    <li><em>"Search for all Python files containing 'MCP' in my Documents folder"</em></li>
+    <li><em>"Create a GitHub issue for this repository"</em></li>
+</ul>
+
+<h2>Popular MCP Servers for Claude Desktop</h2>
+
+<table>
+    <thead>
+        <tr><th>MCP Server</th><th>Use Case</th><th>Install Command</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>filesystem</td><td>Local file access</td><td><code>npx -y @modelcontextprotocol/server-filesystem</code></td></tr>
+        <tr><td>github</td><td>GitHub API integration</td><td><code>npx -y @modelcontextprotocol/server-github</code></td></tr>
+        <tr><td>postgres</td><td>PostgreSQL database queries</td><td><code>npx -y @modelcontextprotocol/server-postgres</code></td></tr>
+        <tr><td>brave-search</td><td>Web search</td><td><code>npx -y @modelcontextprotocol/server-brave-search</code></td></tr>
+        <tr><td>slack</td><td>Slack messaging</td><td><code>npx -y @modelcontextprotocol/server-slack</code></td></tr>
+        <tr><td>everart</td><td>AI image generation</td><td><code>npx -y @modelcontextprotocol/server-everart</code></td></tr>
+        <tr><td>Try_make_mcp</td><td>Build custom MCP servers</td><td>Clone from GitHub and configure</td></tr>
+    </tbody>
+</table>
+
+<h2>Step 5: Build Custom MCP Servers with Try_make_mcp</h2>
+
+<p>While pre-built MCP servers cover many use cases, you'll often need custom functionality. <strong>Try_make_mcp</strong> provides a production-ready framework for building and deploying MCP servers.</p>
+
+<pre><code># Clone the Try_make_mcp repository
+git clone https://github.com/demo112/Try_make_mcp.git
+cd Try_make_mcp
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Build your first MCP server using the factory
+python src/mcp_factory/run.py</code></pre>
+
+<div class="cta-box">
+    <h3>Build Your Own MCP Server in 5 Minutes</h3>
+    <p>Try_make_mcp provides 8 built-in applications, standardized templates, and automated testing. Jump-start your MCP development today.</p>
+    <a class="cta-btn" href="https://github.com/demo112/Try_make_mcp">View on GitHub →</a>
+</div>
+
+<h2>Advanced Configuration</h2>
+
+<h3>Running MCP Servers via Docker</h3>
+
+<p>For isolated, reproducible environments, run MCP servers inside Docker containers:</p>
+
+<pre><code>{
+  "mcpServers": {
+    "document-converter": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "--mount", "type=bind,src=/path/to/docs,dst=/app/docs,ro",
+        "ghcr.io/demo112/md-converter:latest"
+      ]
+    }
+  }
+}</code></pre>
+
+<h3>Environment Variables for MCP Servers</h3>
+
+<pre><code>{
+  "mcpServers": {
+    "custom-api": {
+      "command": "python",
+      "args": ["/path/to/mcp_server.py"],
+      "env": {
+        "API_KEY": "your-api-key",
+        "API_URL": "https://api.example.com",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}</code></pre>
+
+<h3>Multi-Server Configuration</h3>
+
+<p>You can run multiple MCP servers simultaneously:</p>
+
+<pre><code>{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "env": { "allowedDirectories": ["~/Projects"] }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxx" }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "postgresql://user:pass@localhost:5432/mydb"
+      }
+    }
+  }
+}</code></pre>
+
+<h2>Troubleshooting Common Issues</h2>
+
+<h3>Issue: MCP server not starting</h3>
+
+<p>Check the Claude Desktop logs for errors:</p>
+
+<pre><code># macOS
+~/Library/Logs/Claude/claude_desktop.log
+
+# Windows
+%APPDATA%\Claude\logs\</code></pre>
+
+<div class="callout warning">
+    <div class="callout-title">Debug Tip</div>
+    Run the MCP server command directly in your terminal first to verify it works outside of Claude Desktop. This helps identify if the issue is with the server itself or the Claude integration.
+</div>
+
+<h3>Issue: "Command not found" errors</h3>
+
+<ul>
+    <li>Ensure <code>npx</code> is in your PATH</li>
+    <li>For Python servers, use the full path: <code>"command": "/usr/local/bin/python3"</code></li>
+    <li>For Docker, ensure Docker Desktop is running</li>
+</ul>
+
+<h3>Issue: Permission denied on macOS</h3>
+
+<pre><code># Allow Node.js to run unsigned scripts
+sudo xattr -rd com.apple.quarantine /path/to/npx</code></pre>
+
+<h2>Comparing MCP Desktop Integrations</h2>
+
+<table>
+    <thead>
+        <tr><th>Feature</th><th>Claude Desktop</th><th>Cursor</th><th>VS Code (Cline)</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>MCP Protocol Support</td><td>✅ Native</td><td>✅ Native</td><td>✅ Via extension</td></tr>
+        <tr><td>Config Location</td><td>JSON file</td><td>UI + JSON</td><td>VS Code settings</td></tr>
+        <tr><td>Docker Support</td><td>✅ Yes</td><td>✅ Yes</td><td>✅ Yes</td></tr>
+        <tr><td>Python MCP Servers</td><td>✅ Yes</td><td>✅ Yes</td><td>✅ Yes</td></tr>
+        <tr><td>Local File Access</td><td>✅ Via filesystem MCP</td><td>✅ Built-in</td><td>✅ Via extension</td></tr>
+        <tr><td>GitHub Integration</td><td>✅ Via MCP</td><td>✅ Built-in + MCP</td><td>✅ Via GitLens</td></tr>
+    </tbody>
+</table>
+
+<h2>Best Practices for Claude Desktop MCP Setup</h2>
+
+<ol>
+    <li><strong>Start with minimal permissions</strong> — Only grant access to directories and resources you actually need</li>
+    <li><strong>Use environment variables</strong> — Never hardcode API keys in config; use env vars or a secrets manager</li>
+    <li><strong>Test outside Claude first</strong> — Verify MCP servers work independently before connecting to Claude</li>
+    <li><strong>Keep servers updated</strong> — Run <code>npx -y @package-name@latest</code> periodically</li>
+    <li><strong>Monitor logs</strong> — Regularly check Claude Desktop logs for any unexpected behavior</li>
+    <li><strong>Use Docker for isolation</strong> — Containerize MCP servers to avoid dependency conflicts</li>
+</ol>
+
+<div class="nav-box">
+    <h3>📚 Continue Reading</h3>
+    <div class="nav-links">
+        <a class="nav-link" href="tutorial-mcp-factory-quickstart.html">MCP Factory 5-Minute Quickstart</a>
+        <a class="nav-link" href="building-first-mcp-server-2026.html">Build Your First MCP Server</a>
+        <a class="nav-link" href="mcp-authentication-security.html">MCP Authentication & Security</a>
+        <a class="nav-link" href="dockerize-mcp-server.html">Dockerize MCP Server Guide</a>
+        <a class="nav-link" href="mcp-server-patterns.html">10 MCP Patterns for Production</a>
+        <a class="nav-link" href="mcp-client-libraries-2026.html">MCP Client Libraries Guide</a>
+    </div>
+</div>
+
+</article>
+
+<footer>
+    <p>Built with ⚡ by <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> · <a href="https://github.com/punkpeye/awesome-mcp-servers">Awesome MCP Servers</a></p>
+    <p style="margin-top: 0.5rem;">MCP Protocol · Claude Desktop · 2026 · MIT License</p>
+</footer>
+
+</div>
+</body>
+</html>
