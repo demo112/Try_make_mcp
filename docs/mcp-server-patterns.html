@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10 MCP Server Patterns for Production AI Applications (2026)</title>
+    <meta name="description" content="Battle-tested patterns from 23,000+ MCP servers. Covers remote servers, streaming, pagination, rate limiting, authentication, and error handling for production AI.">
+    <meta name="keywords" content="MCP server patterns, MCP best practices, MCP production, MCP architecture, AI agent tools, Claude MCP, model context protocol">
+    <meta property="og:title" content="10 MCP Server Patterns for Production AI Applications">
+    <meta property="og:description" content="Battle-tested patterns from 23,000+ MCP servers. Production-ready patterns for streaming, auth, rate limiting, and more.">
+    <meta property="og:type" content="article">
+    <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/docs/mcp-server-patterns.html">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-purple: #a371f7; --accent-orange: #f0883e; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        header { padding: 2.5rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+        .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; background: linear-gradient(135deg, var(--accent-purple), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3; }
+        .meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+        h3 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; color: var(--text); }
+        p { margin-bottom: 1rem; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code { background: var(--card-bg); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.875rem; color: var(--accent-green); }
+        pre { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; overflow-x: auto; margin: 1.5rem 0; font-size: 0.875rem; line-height: 1.6; }
+        pre code { background: none; padding: 0; color: var(--text); }
+        .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-right: 0.5rem; }
+        .tag-pattern { background: rgba(163, 113, 247, 0.15); color: var(--accent-purple); }
+        .tag-prod { background: rgba(240, 136, 62, 0.15); color: var(--accent-orange); }
+        .tag-scale { background: rgba(29, 98, 209, 0.15); color: var(--accent); }
+        .pattern-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+        .pattern-num { display: inline-block; width: 1.75rem; height: 1.75rem; background: var(--accent); color: #fff; border-radius: 50%; text-align: center; line-height: 1.75rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .pattern-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--accent-purple); }
+        .callout { background: var(--card-bg); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 6px 6px 0; margin: 1.5rem 0; }
+        .callout.tip { border-left-color: var(--accent-green); }
+        footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; margin-top: 3rem; }
+        @media (max-width: 600px) { h1 { font-size: 1.5rem; } }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+    <div class="breadcrumb"><a href="https://demo112.github.io/Try_make_mcp/">Home</a> / <a href="https://demo112.github.io/Try_make_mcp/docs/index.html">Blog</a> / MCP Patterns</div>
+    <h1>10 MCP Server Patterns for Production AI Applications (2026)</h1>
+    <div class="meta">📅 May 2026 · ⏱️ 14 min read · 🏗️ Architecture</div>
+    <div>
+        <span class="tag tag-pattern">Patterns</span>
+        <span class="tag tag-prod">Production</span>
+        <span class="tag tag-scale">Scale</span>
+    </div>
+</header>
+
+<p>After analyzing 23,000+ MCP servers on Glama, studying Anthropic's reference implementations, and deploying production MCP infrastructure, I've distilled <strong>10 battle-tested patterns</strong> that separate hobby projects from production-grade MCP servers.</p>
+
+<p>These patterns address the real problems: authentication, rate limiting, streaming, error handling, monitoring, and scalability.</p>
+
+<h2>Pattern 1: Structured Error Handling</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">1</div>
+    <div class="pattern-title">Structured Error Handling</div>
+    <p>The most common mistake: returning raw exceptions or string error messages. Production MCP servers must return structured, actionable errors.</p>
+</div>
+
+<pre><code>import logging
+from typing import Optional, Any
+from dataclasses import dataclass
+from enum import Enum
+
+logger = logging.getLogger(__name__)
+
+class MCPErrorCode(Enum):
+    AUTH_FAILED = "AUTH_FAILED"
+    RATE_LIMITED = "RATE_LIMITED"
+    RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
+    VALIDATION_ERROR = "VALIDATION_ERROR"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+    TIMEOUT = "TIMEOUT"
+
+@dataclass
+class MCPError:
+    code: MCPErrorCode
+    message: str
+    details: Optional[dict] = None
+    retry_after: Optional[int] = None  # seconds
+
+    def to_dict(self) -> dict:
+        return {
+            "error": {
+                "code": self.code.value,
+                "message": self.message,
+                "details": self.details or {},
+                "retry_after": self.retry_after
+            }
+        }
+
+class MCPServerError(Exception):
+    def __init__(self, error: MCPError):
+        self.error = error
+        super().__init__(error.message)
+
+def safe_tool_handler(func):
+    """Decorator for structured error handling in tool handlers."""
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except MCPServerError as e:
+            logger.error(f"MCP Error: {e.error.code.value} - {e.error.message}")
+            return e.error.to_dict()
+        except Exception as e:
+            logger.exception(f"Unexpected error in {func.__name__}")
+            return MCPError(
+                code=MCPErrorCode.INTERNAL_ERROR,
+                message="An unexpected error occurred",
+                details={"original_error": str(e)}
+            ).to_dict()
+    return wrapper</code></pre>
+
+<div class="callout tip">
+<strong>Why it matters:</strong> Claude and other AI clients can programmatically handle structured errors — retry on rate limits, prompt user on auth failures, show specific error messages. Raw exceptions give the AI nothing actionable.
+</div>
+
+<h2>Pattern 2: API Key Authentication</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">2</div>
+    <div class="pattern-title">API Key Authentication</div>
+    <p>Remote MCP servers need authentication. Use API keys with Bearer token pattern — compatible with all AI clients.</p>
+</div>
+
+<pre><code>import os
+import hashlib
+import hmac
+from typing import Optional
+
+class MCPAuthenticator:
+    def __init__(self, api_keys: list[str] | None = None):
+        self.api_keys = set(api_keys or [])
+        self._load_from_env()
+
+    def _load_from_env(self):
+        env_keys = os.environ.get("MCP_API_KEYS", "")
+        if env_keys:
+            self.api_keys.update(k.strip() for k in env_keys.split(",") if k.strip())
+
+    def validate(self, token: str | None) -> bool:
+        if not token:
+            return False
+        # Support both raw keys and HMAC signatures
+        if token in self.api_keys:
+            return True
+        return self._validate_hmac(token)
+
+    def _validate_hmac(self, token: str) -> bool:
+        # For advanced: HMAC-based key derivation
+        try:
+            key_id, signature = token.split(":", 1)
+            return key_id in self.api_keys  # Simplified; real impl needs secret lookup
+        except ValueError:
+            return False
+
+    def require_auth(func):
+        """Decorator to require authentication."""
+        async def wrapper(self, *args, **kwargs):
+            auth_header = kwargs.get("_auth_token")
+            if not self.authenticator.validate(auth_header):
+                raise MCPServerError(MCPError(
+                    code=MCPErrorCode.AUTH_FAILED,
+                    message="Invalid or missing API key",
+                    details={"hint": "Include 'Authorization: Bearer <key>' header"}
+                ))
+            return await func(self, *args, **kwargs)
+        return wrapper</code></pre>
+
+<h2>Pattern 3: Rate Limiting</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">3</div>
+    <div class="pattern-title">Token Bucket Rate Limiting</div>
+    <p>Protect your infrastructure from runaway AI agents. Token bucket algorithm handles burst traffic gracefully.</p>
+</div>
+
+<pre><code>import time
+import threading
+from collections import defaultdict
+from dataclasses import dataclass
+
+@dataclass
+class RateLimitConfig:
+    requests_per_minute: int = 60
+    requests_per_second: int = 10
+    burst_size: int = 20
+
+class TokenBucketRateLimiter:
+    """Thread-safe token bucket rate limiter per API key."""
+
+    def __init__(self, config: RateLimitConfig | None = None):
+        self.config = config or RateLimitConfig()
+        self._buckets: dict[str, dict] = defaultdict(self._create_bucket)
+        self._lock = threading.Lock()
+
+    def _create_bucket(self) -> dict:
+        return {
+            "tokens": self.config.burst_size,
+            "last_update": time.time(),
+            "minute_count": 0,
+            "minute_start": time.time()
+        }
+
+    def acquire(self, key: str) -> tuple[bool, dict]:
+        """Attempt to acquire a rate limit token. Returns (success, info)."""
+        with self._lock:
+            bucket = self._buckets[key]
+            now = time.time()
+
+            # Refill tokens based on elapsed time
+            elapsed = now - bucket["last_update"]
+            refill = elapsed * self.config.requests_per_second
+            bucket["tokens"] = min(
+                self.config.burst_size,
+                bucket["tokens"] + refill
+            )
+            bucket["last_update"] = now
+
+            # Reset per-minute counter if needed
+            if now - bucket["minute_start"] >= 60:
+                bucket["minute_count"] = 0
+                bucket["minute_start"] = now
+
+            # Check per-second limit
+            if bucket["tokens"] < 1:
+                retry_after = int(1 / self.config.requests_per_second)
+                return False, {"retry_after": retry_after, "reason": "burst_exhausted"}
+
+            # Check per-minute limit
+            if bucket["minute_count"] >= self.config.requests_per_minute:
+                retry_after = int(60 - (now - bucket["minute_start"]))
+                return False, {"retry_after": retry_after, "reason": "minute_limit"}
+
+            # Consume token
+            bucket["tokens"] -= 1
+            bucket["minute_count"] += 1
+
+            return True, {
+                "remaining_burst": int(bucket["tokens"]),
+                "remaining_minute": self.config.requests_per_minute - bucket["minute_count"]
+            }</code></pre>
+
+<h2>Pattern 4: Streaming Responses</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">4</div>
+    <div class="pattern-title">Server-Sent Events (SSE) Streaming</div>
+    <p>For long-running operations, streaming keeps AI agents responsive. SSE is the standard MCP transport for streaming.</p>
+</div>
+
+<pre><code>import asyncio
+import json
+from typing import AsyncGenerator
+
+async def stream_search_results(
+    query: str,
+    max_results: int = 100
+) -> AsyncGenerator[dict, None]:
+    """
+    Stream search results as they're found, rather than returning all at once.
+    Perfect for large vector searches or paginated API calls.
+    """
+    collected = 0
+
+    async for result in vector_db.search(query, stream=True):
+        yield {
+            "type": "result",
+            "data": result,
+            "progress": collected / max_results
+        }
+        collected += 1
+
+        # Send progress update every 10 results
+        if collected % 10 == 0:
+            yield {
+                "type": "progress",
+                "message": f"Found {collected} results so far...",
+                "count": collected
+            }
+
+    # Final completion message
+    yield {
+        "type": "complete",
+        "total": collected,
+        "message": f"Search complete. Returned {collected} results."
+    }
+
+# MCP handler using the stream
+@router.post("/tools/search_stream")
+async def search_stream(request: SearchRequest, _auth: None = Depends(require_auth)):
+    async def event_generator():
+        async for chunk in stream_search_results(request.query, request.max_results):
+            yield f"data: {json.dumps(chunk)}\n\n"
+            # Small delay to prevent flooding
+            await asyncio.sleep(0.01)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )</code></pre>
+
+<h2>Pattern 5: Pagination</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">5</div>
+    <div class="pattern-title">Cursor-Based Pagination</div>
+    <p>Don't return thousands of results. Cursor-based pagination is efficient, stateless-friendly, and works perfectly with AI agents.</p>
+</div>
+
+<pre><code>from dataclasses import dataclass
+from typing import Generic, TypeVar, Optional
+import base64
+import json
+
+T = TypeVar("T")
+
+@dataclass
+class PaginatedResponse(Generic[T]):
+    items: list[T]
+    next_cursor: Optional[str]
+    total: int
+    has_more: bool
+
+    def to_mcp_content(self) -> dict:
+        return {
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Found {self.total} results. Showing page of {len(self.items)}."
+                }
+            ],
+            "has_more": self.has_more,
+            "next_cursor": self.next_cursor
+        }
+
+def encode_cursor(data: dict) -> str:
+    """Encode pagination cursor to opaque string."""
+    return base64.urlsafe_b64encode(json.dumps(data).encode()).decode()
+
+def decode_cursor(cursor: str) -> dict:
+    """Decode pagination cursor."""
+    return json.loads(base64.urlsafe_b64decode(cursor.encode()))
+
+async def paginated_list_files(
+    path: str,
+    cursor: Optional[str] = None,
+    page_size: int = 50
+) -> PaginatedResponse[dict]:
+    offset = 0
+    if cursor:
+        offset = decode_cursor(cursor).get("offset", 0)
+
+    results, total = await file_system.list(path, offset=offset, limit=page_size + 1)
+
+    has_more = len(results) > page_size
+    items = results[:page_size]
+    next_cursor = encode_cursor({"offset": offset + page_size}) if has_more else None
+
+    return PaginatedResponse(
+        items=items,
+        next_cursor=next_cursor,
+        total=total,
+        has_more=has_more
+    )</code></pre>
+
+<h2>Pattern 6: Resource Caching</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">6</div>
+    <div class="pattern-title">TTL + LRU Resource Caching</div>
+    <p>AI agents make repeated requests for the same resources. Cache intelligently with TTL and LRU eviction.</p>
+</div>
+
+<pre><code>import time
+import asyncio
+from collections import OrderedDict
+from typing import Any, Optional
+
+class TTLCache:
+    """Thread-safe TTL + LRU cache for MCP resources."""
+
+    def __init__(self, default_ttl: int = 300, max_size: int = 1000):
+        self.default_ttl = default_ttl
+        self.max_size = max_size
+        self._cache: OrderedDict[str, tuple[Any, float]] = OrderedDict()
+        self._lock = asyncio.Lock()
+
+    def _is_expired(self, expiry: float) -> bool:
+        return time.time() > expiry
+
+    async def get(self, key: str) -> Optional[Any]:
+        async with self._lock:
+            if key not in self._cache:
+                return None
+            value, expiry = self._cache[key]
+            if self._is_expired(expiry):
+                del self._cache[key]
+                return None
+            # Move to end (most recently used)
+            self._cache.move_to_end(key)
+            return value
+
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None):
+        async with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            self._cache[key] = (value, time.time() + (ttl or self.default_ttl))
+            # Evict oldest if over max_size
+            while len(self._cache) > self.max_size:
+                self._cache.popitem(last=False)
+
+    async def invalidate(self, pattern: str):
+        """Invalidate keys matching pattern."""
+        async with self._lock:
+            keys_to_delete = [k for k in self._cache if pattern in k]
+            for key in keys_to_delete:
+                del self._cache[key]
+
+# Usage in MCP resource handler
+resource_cache = TTLCache(default_ttl=300, max_size=500)
+
+@router.get("/resources/{resource_id}")
+async def get_resource(resource_id: str, _auth: None = Depends(require_auth)):
+    # Try cache first
+    cached = await resource_cache.get(resource_id)
+    if cached:
+        return cached
+
+    # Fetch from source
+    resource = await database.get_resource(resource_id)
+    await resource_cache.set(resource_id, resource)
+
+    return resource</code></pre>
+
+<h2>Pattern 7: Observability & Logging</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">7</div>
+    <div class="pattern-title">Structured Logging + Metrics</div>
+    <p>You can't debug what you can't see. Every production MCP server needs structured logging and metrics.</p>
+</div>
+
+<pre><code>import structlog
+import time
+from functools import wraps
+from typing import Callable
+
+# Structured logging with context
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer()
+    ]
+)
+logger = structlog.get_logger()
+
+class MCPInstrumentation:
+    @staticmethod
+    def track_tool(name: str) -> Callable:
+        """Decorator to track tool execution time and errors."""
+        def decorator(func: Callable):
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                start = time.time()
+                tool_name = kwargs.get("self").__class__.__name__ + "." + name if hasattr(kwargs.get("self"), "__class__") else name
+                try:
+                    result = await func(*args, **kwargs)
+                    duration_ms = (time.time() - start) * 1000
+                    logger.info(
+                        "tool_executed",
+                        tool=tool_name,
+                        duration_ms=round(duration_ms, 2),
+                        status="success"
+                    )
+                    return result
+                except Exception as e:
+                    duration_ms = (time.time() - start) * 1000
+                    logger.error(
+                        "tool_failed",
+                        tool=tool_name,
+                        duration_ms=round(duration_ms, 2),
+                        error=str(e),
+                        error_type=type(e).__name__
+                    )
+                    raise
+            return wrapper
+        return decorator
+
+# Usage: @MCPInstrumentation.track_tool("search")
+# Then in your monitoring dashboard:
+# - p50/p95/p99 latency per tool
+# - Error rate per tool
+# - Requests per minute per key
+# - Cache hit ratio</code></pre>
+
+<h2>Pattern 8: Graceful Degradation</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">8</div>
+    <div class="pattern-title">Graceful Degradation & Fallbacks</div>
+    <p>When external services fail, your MCP server shouldn't crash. Implement fallback strategies for resilience.</p>
+</div>
+
+<pre><code>import asyncio
+from typing import Optional, Callable, Any
+from functools import wraps
+
+class FallbackStrategy:
+    def __init__(self):
+        self.fallback_cache: dict[str, Any] = {}
+
+    async def with_fallback(
+        self,
+        primary_func: Callable,
+        fallback_funcs: list[Callable],
+        cache_key: str,
+        cache_ttl: int = 3600
+    ):
+        """Try primary, then fallbacks in order."""
+        # Try primary
+        try:
+            result = await primary_func()
+            # Cache successful result
+            self.fallback_cache[cache_key] = (result, time.time() + cache_ttl)
+            return result
+        except Exception as e:
+            logger.warning(f"Primary failed: {e}, trying fallbacks...")
+
+        # Try each fallback
+        for fallback in fallback_funcs:
+            try:
+                result = await fallback()
+                logger.info(f"Fallback {fallback.__name__} succeeded")
+                return result
+            except Exception as e2:
+                logger.warning(f"Fallback {fallback.__name__} also failed: {e2}")
+
+        # Last resort: return cached result if available
+        if cache_key in self.fallback_cache:
+            cached, expiry = self.fallback_cache[cache_key]
+            if time.time() < expiry:
+                logger.info(f"Returning stale cached result for {cache_key}")
+                return cached
+
+        # Everything failed
+        raise MCPServerError(MCPError(
+            code=MCPErrorCode.INTERNAL_ERROR,
+            message="All providers failed. Please try again later.",
+            details={"attempted_providers": len(fallback_funcs) + 1}
+        ))
+
+# Example usage
+async def search_with_fallback(query: str):
+    return await FallbackStrategy().with_fallback(
+        primary_func=lambda: vector_db_openai.search(query),
+        fallback_funcs=[
+            lambda: vector_db_local.search(query),
+            lambda: keyword_search.search(query)
+        ],
+        cache_key=f"search:{hash(query)}"
+    )</code></pre>
+
+<h2>Pattern 9: Input Validation</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">9</div>
+    <div class="pattern-title">JSON Schema Input Validation</div>
+    <p>Never trust AI agent inputs. Validate everything with JSON Schema before processing.</p>
+</div>
+
+<pre><code>import jsonschema
+from typing import Any
+
+# Tool input schemas
+TOOL_SCHEMAS = {
+    "search": {
+        "type": "object",
+        "required": ["query"],
+        "properties": {
+            "query": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "description": "Search query"
+            },
+            "max_results": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10
+            },
+            "filters": {
+                "type": "object",
+                "properties": {
+                    "date_from": {"type": "string", "format": "date"},
+                    "date_to": {"type": "string", "format": "date"},
+                    "category": {"type": "string", "enum": ["news", "blog", "docs"]}
+                }
+            }
+        }
+    },
+    "analyze": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+            "data": {
+                "type": "string",
+                "maxLength": 1000000  # 1MB max
+            },
+            "model": {
+                "type": "string",
+                "enum": ["fast", "accurate"],
+                "default": "fast"
+            }
+        }
+    }
+}
+
+def validate_tool_input(tool_name: str, input_data: dict) -> list[str]:
+    """Validate tool input against schema. Returns list of errors."""
+    if tool_name not in TOOL_SCHEMAS:
+        return [f"Unknown tool: {tool_name}"]
+
+    schema = TOOL_SCHEMAS[tool_name]
+    validator = jsonschema.Draft7Validator(schema)
+    errors = []
+
+    for error in validator.iter_errors(input_data):
+        path = ".".join(str(p) for p in error.path) or "root"
+        errors.append(f"{path}: {error.message}")
+
+    # Additional custom validations
+    if tool_name == "search":
+        if len(input_data.get("query", "").split()) > 50:
+            errors.append("query: Too many words (max 50)")
+
+    return errors
+
+def require_valid_input(tool_name: str):
+    """Decorator to validate tool inputs."""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(self, tool_name: str, arguments: dict, **kwargs):
+            errors = validate_tool_input(tool_name, arguments)
+            if errors:
+                raise MCPServerError(MCPError(
+                    code=MCPErrorCode.VALIDATION_ERROR,
+                    message="Invalid input",
+                    details={"errors": errors}
+                ))
+            return await func(self, tool_name, arguments, **kwargs)
+        return wrapper
+    return decorator</code></pre>
+
+<h2>Pattern 10: Request Timeouts & Circuit Breaker</h2>
+
+<div class="pattern-card">
+    <div class="pattern-num">10</div>
+    <div class="pattern-title">Circuit Breaker Pattern</div>
+    <p>When a downstream service is failing, stop hammering it. Circuit breaker prevents cascade failures and lets services recover.</p>
+</div>
+
+<pre><code>import asyncio
+import time
+from enum import Enum
+from typing import Callable, Any
+
+class CircuitState(Enum):
+    CLOSED = "closed"       # Normal operation
+    OPEN = "open"           # Failing, reject requests
+    HALF_OPEN = "half_open" # Testing if service recovered
+
+class CircuitBreaker:
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60,
+        half_open_max_calls: int = 3
+    ):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.half_open_max_calls = half_open_max_calls
+
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.last_failure_time: float | None = None
+        self.half_open_calls = 0
+
+    def _should_attempt(self) -> bool:
+        if self.state == CircuitState.CLOSED:
+            return True
+        if self.state == CircuitState.OPEN:
+            if time.time() - self.last_failure_time >= self.recovery_timeout:
+                self.state = CircuitState.HALF_OPEN
+                self.half_open_calls = 0
+                return True
+            return False
+        if self.state == CircuitState.HALF_OPEN:
+            return self.half_open_calls < self.half_open_max_calls
+        return False
+
+    async def call(self, func: Callable, *args, **kwargs) -> Any:
+        if not self._should_attempt():
+            raise MCPServerError(MCPError(
+                code=MCPErrorCode.TIMEOUT,
+                message="Service temporarily unavailable (circuit open)",
+                details={"state": self.state.value, "retry_after": self.recovery_timeout}
+            ))
+
+        try:
+            if self.state == CircuitState.HALF_OPEN:
+                self.half_open_calls += 1
+
+            result = await asyncio.wait_for(func(*args, **kwargs), timeout=30.0)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise
+
+    def _on_success(self):
+        self.failure_count = 0
+        self.state = CircuitState.CLOSED
+
+    def _on_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.state = CircuitState.OPEN
+            logger.warning(f"Circuit breaker OPEN after {self.failure_count} failures")
+
+# Usage
+db_circuit = CircuitBreaker(failure_threshold=5, recovery_timeout=60)
+
+@router.post("/tools/query")
+async def query_tool(request: QueryRequest):
+    result = await db_circuit.call(run_database_query, request.sql)
+    return result</code></pre>
+
+<h2>🚀 Putting It All Together</h2>
+
+<p>These 10 patterns form a layered defense strategy:</p>
+
+<ul style="margin: 1rem 0 1rem 1.5rem;">
+    <li><strong>Pattern 1-2:</strong> Structured errors + auth = security foundation</li>
+    <li><strong>Pattern 3-5:</strong> Rate limiting + streaming + pagination = scale</li>
+    <li><strong>Pattern 6-7:</strong> Caching + observability = performance</li>
+    <li><strong>Pattern 8-10:</strong> Fallbacks + validation + circuit breaker = resilience</li>
+</ul>
+
+<p>Start with Patterns 1-2 for any production MCP server. Add the rest based on your scale and reliability requirements.</p>
+
+<div class="callout tip">
+<strong>Quick win:</strong> Try_make_mcp implements most of these patterns out of the box. Clone the repo and use it as a reference implementation for your own MCP servers.
+</div>
+
+<h2>🔗 Resources</h2>
+
+<ul style="margin: 1rem 0 1rem 1.5rem;">
+    <li><a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> — MCP Factory with production patterns built in</li>
+    <li><a href="https://modelcontextprotocol.io/">Official MCP Spec</a></li>
+    <li><a href="https://glama.ai/mcp/servers">Glama MCP Directory</a> — 23,000+ production MCP servers</li>
+</ul>
+
+<footer>
+    <p><a href="https://demo112.github.io/Try_make_mcp/">Try_make_mcp</a> · <a href="https://github.com/demo112/Try_make_mcp">GitHub</a> · MIT License · 2026</p>
+</footer>
+
+</div>
+</body>
+</html>

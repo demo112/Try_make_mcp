@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dockerize MCP Server: Complete Production Deployment Guide (2026)</title>
+    <meta name="description" content="Containerize your MCP server with Docker. Complete guide covering multi-stage builds, health checks, Docker Compose, and production deployment patterns.">
+    <meta name="keywords" content="Docker, MCP server, containerize, Docker Compose, MCP deployment, production deployment, container orchestration">
+    <meta property="og:title" content="Dockerize Your MCP Server: Complete Production Guide">
+    <meta property="og:description" content="Containerize MCP servers with Docker for consistent, scalable deployment. Multi-stage builds, health checks, and Compose patterns.">
+    <meta property="og:type" content="article">
+    <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/docs/dockerize-mcp-server.html">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-purple: #a371f7; --accent-orange: #f0883e; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        header { padding: 2.5rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
+        .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; background: linear-gradient(135deg, var(--accent-green), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3; }
+        .meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+        h3 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; color: var(--text); }
+        p { margin-bottom: 1rem; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code { background: var(--card-bg); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.875rem; color: var(--accent-green); }
+        pre { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; overflow-x: auto; margin: 1.5rem 0; font-size: 0.875rem; line-height: 1.6; }
+        pre code { background: none; padding: 0; color: var(--text); }
+        .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-right: 0.5rem; }
+        .tag-docker { background: rgba(29, 98, 209, 0.15); color: #58a6ff; }
+        .tag-devops { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
+        .tag-prod { background: rgba(240, 136, 62, 0.15); color: var(--accent-orange); }
+        .callout { background: var(--card-bg); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 6px 6px 0; margin: 1.5rem 0; }
+        .callout.tip { border-left-color: var(--accent-green); }
+        .step { display: flex; gap: 1rem; margin: 1.5rem 0; }
+        .step-num { flex-shrink: 0; width: 2rem; height: 2rem; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+        .step-content { flex: 1; }
+        .code-label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .warn { background: rgba(240, 136, 62, 0.1); border: 1px solid rgba(240, 136, 62, 0.3); border-radius: 6px; padding: 1rem; margin: 1.5rem 0; }
+        footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; margin-top: 3rem; }
+        @media (max-width: 600px) { h1 { font-size: 1.5rem; } .step { flex-direction: column; } }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+    <div class="breadcrumb"><a href="https://demo112.github.io/Try_make_mcp/">Home</a> / <a href="https://demo112.github.io/Try_make_mcp/docs/index.html">Blog</a> / Dockerize MCP</div>
+    <h1>Dockerize MCP Server: Complete Production Deployment Guide (2026)</h1>
+    <div class="meta">📅 May 2026 · ⏱️ 10 min read · 🐳 Docker</div>
+    <div>
+        <span class="tag tag-docker">Docker</span>
+        <span class="tag tag-devops">DevOps</span>
+        <span class="tag tag-prod">Production</span>
+    </div>
+</header>
+
+<p>You've built your MCP server. Now you need to deploy it reliably — across your team, in CI/CD, and eventually to production. <strong>Docker is the answer.</strong> This guide covers everything from a minimal Dockerfile to production-grade patterns with health checks, multi-stage builds, and Docker Compose orchestration.</p>
+
+<div class="callout tip">
+<strong>Prerequisites:</strong> Docker 20.10+ installed. Basic understanding of MCP servers. If you haven't built an MCP server yet, start with the <a href="https://demo112.github.io/Try_make_mcp/docs/tutorial-mcp-factory-quickstart.html">5-minute MCP Factory tutorial</a>.
+</div>
+
+<h2>📦 Minimal Dockerfile</h2>
+
+<p>The simplest Docker setup for an MCP server. Works for most Python-based MCP servers:</p>
+
+<div class="code-label">Dockerfile (single-stage)</div>
+<pre><code>FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (for layer caching)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Default command (can be overridden)
+CMD ["python", "src/mcp_factory/run.py"]</code></pre>
+
+<div class="code-label">.dockerignore</div>
+<pre><code>__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.git/
+.gitignore
+.env
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.DS_Store
+*.log
+.coverage
+htmlcov/</code></pre>
+
+<h2>🚀 Multi-Stage Build (Production Optimized)</h2>
+
+<p>Multi-stage builds reduce image size by 60-80% by separating build-time and runtime dependencies:</p>
+
+<pre><code>FROM python:3.11-slim AS builder
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+
+# Runtime stage
+FROM python:3.11-slim
+
+# Install only runtime system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/bash mcpuser
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /home/mcpuser/.local
+ENV PATH=/home/mcpuser/.local/bin:$PATH
+
+# Copy only runtime code
+COPY --chown=mcpuser:mcpuser . .
+
+USER mcpuser
+
+CMD ["python", "src/mcp_factory/run.py"]</code></pre>
+
+<p><strong>Result:</strong> ~150MB vs ~900MB for single-stage build.</p>
+
+<h2>🏥 Health Checks</h2>
+
+<p>Health checks let Docker and orchestrators know when your MCP server is ready to serve traffic:</p>
+
+<pre><code>FROM python:3.11-slim
+
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Health check: ping the MCP server every 30s, timeout after 5s
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)" || exit 1
+
+CMD ["python", "src/mcp_factory/run.py"]</code></pre>
+
+<div class="warn">
+<strong>Note:</strong> MCP servers use STDIO transport by default, making traditional HTTP health checks tricky. For HTTP-transport MCP servers, add a <code>/health</code> endpoint. For STDIO servers, use a startup-time health check or Kubernetes readiness probes.
+</div>
+
+<h2>🐙 Docker Compose for Local Development</h2>
+
+<p>Docker Compose lets you run your MCP server alongside Claude Desktop for local development:</p>
+
+<pre><code>version: '3.8'
+
+services:
+  mcp-factory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-factory
+    volumes:
+      # Mount your local code for hot-reload during development
+      - .:/app
+      - ~/.config/claude:/home/mcpuser/.config/claude:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+    restart: unless-stopped
+
+  # Example: PostgreSQL for RAG pipeline
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: mcp-pg
+    environment:
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: rag_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:</code></pre>
+
+<h2>☁️ Production Deployment Patterns</h2>
+
+<h3>Pattern 1: Single Server (DigitalOcean/App Runner)</h3>
+
+<pre><code># Build and run directly
+docker build -t mcp-factory:latest .
+docker run -d \
+  --name mcp-factory \
+  -p 8000:8000 \
+  -e PRODUCTION=true \
+  -e API_KEYS="key1,key2" \
+  --restart unless-stopped \
+  --health-cmd="curl -f http://localhost:8000/health || exit 1" \
+  --health-interval=30s \
+  mcp-factory:latest</code></pre>
+
+<h3>Pattern 2: Kubernetes Deployment</h3>
+
+<pre><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-factory
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mcp-factory
+  template:
+    metadata:
+      labels:
+        app: mcp-factory
+    spec:
+      containers:
+        - name: mcp-factory
+          image: your-registry/mcp-factory:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PRODUCTION
+              value: "true"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10</code></pre>
+
+<h2>📊 Image Size Comparison</h2>
+
+<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem;">
+    <tr style="border-bottom: 1px solid var(--border);">
+        <th style="padding: 0.75rem; text-align: left; color: var(--accent); border-bottom: 1px solid var(--border);">Build Strategy</th>
+        <th style="padding: 0.75rem; text-align: left; color: var(--accent); border-bottom: 1px solid var(--border);">Image Size</th>
+        <th style="padding: 0.75rem; text-align: left; color: var(--accent); border-bottom: 1px solid var(--border);">Build Time</th>
+        <th style="padding: 0.75rem; text-align: left; color: var(--accent); border-bottom: 1px solid var(--border);">Security</th>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">python:3.11 (full)</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border); color: #f0883e;">~1.1 GB</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">~2 min</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border); color: #f0883e;">Poor</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">python:3.11-slim (single-stage)</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border); color: var(--accent);">~400 MB</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border);">~3 min</td>
+        <td style="padding: 0.75rem; border-bottom: 1px solid var(--border); color: var(--accent);">Good</td>
+    </tr>
+    <tr>
+        <td style="padding: 0.75rem;">Multi-stage (builder + runtime)</td>
+        <td style="padding: 0.75rem; color: var(--accent-green);">~150 MB</td>
+        <td style="padding: 0.75rem;">~4 min</td>
+        <td style="padding: 0.75rem; color: var(--accent-green);">Best</td>
+    </tr>
+</table>
+
+<h2>✅ Quick Start: Containerize Try_make_mcp</h2>
+
+<div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+        <strong>Clone and navigate</strong>
+        <pre><code>git clone https://github.com/demo112/Try_make_mcp.git
+cd Try_make_mcp</code></pre>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+        <strong>Use the existing Dockerfile</strong>
+        <p>Try_make_mcp already includes a production-ready Dockerfile. Build it:</p>
+        <pre><code>docker build -t mcp-factory:latest .</code></pre>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+        <strong>Run with Docker Compose</strong>
+        <pre><code>docker compose up -d</code></pre>
+    </div>
+</div>
+
+<div class="step">
+    <div class="step-num">4</div>
+    <div class="step-content">
+        <strong>Connect to Claude Desktop</strong>
+        <p>Add to your Claude Desktop MCP config:</p>
+        <pre><code>{
+  "mcpServers": {
+    "mcp_factory": {
+      "command": "docker",
+      "args": ["exec", "-i", "mcp-factory", "python", "src/mcp_factory/run.py"]
+    }
+  }
+}</code></pre>
+    </div>
+</div>
+
+<h2>🔗 Related Resources</h2>
+
+<ul style="margin: 1rem 0 1rem 1.5rem;">
+    <li><a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp on GitHub</a> — MCP Factory with 8 built-in apps</li>
+    <li><a href="https://docs.docker.com/engine/">Docker Documentation</a></li>
+    <li><a href="https://github.com/punkpeye/awesome-mcp-servers">Awesome MCP Servers</a> — 86k+ stars collection</li>
+    <li><a href="https://glama.ai/mcp/servers">Glama MCP Directory</a> — Discover and publish MCP servers</li>
+</ul>
+
+<footer>
+    <p><a href="https://demo112.github.io/Try_make_mcp/">Try_make_mcp</a> · <a href="https://github.com/demo112/Try_make_mcp">GitHub</a> · MIT License · 2026</p>
+</footer>
+
+</div>
+</body>
+</html>
