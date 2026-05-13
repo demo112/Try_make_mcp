@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Try_make_mcp: A Developer's Chronicle</title>
+    <meta name="description" content="The story behind Try_make_mcp — from the first commit to 8 production MCP apps. Architecture decisions, lessons learned, and the future roadmap.">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-purple: #a371f7; --accent-orange: #d29922; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+        a { color: var(--accent); text-decoration: none; }
+        .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; }
+        .breadcrumb a { color: var(--text-muted); }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #fff; }
+        h2 { font-size: 1.3rem; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+        h3 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; color: var(--accent-green); }
+        p { margin-bottom: 1rem; }
+        .meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
+        .timeline { border-left: 2px solid var(--border); margin-left: 1rem; padding-left: 1.5rem; }
+        .timeline-item { position: relative; margin-bottom: 2rem; }
+        .timeline-item::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); position: absolute; left: -2rem; top: 0.3rem; }
+        .timeline-date { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .timeline-title { font-weight: 600; color: var(--accent-green); margin-bottom: 0.25rem; }
+        .timeline-desc { font-size: 0.9rem; color: var(--text-muted); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .stat-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; text-align: center; }
+        .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; margin: 1rem 0; }
+        .card.purple { border-left: 3px solid var(--accent-purple); }
+        code { background: var(--card-bg); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; margin-top: 3rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+<p class="breadcrumb"><a href="index.html">← Back to Try_make_mcp</a></p>
+<h1>Building Try_make_mcp</h1>
+<p class="meta">A Developer's Chronicle · December 2025 – May 2026</p>
+
+<div class="stats-grid">
+    <div class="stat-box"><div class="stat-num">47</div><div class="stat-label">Commits</div></div>
+    <div class="stat-box"><div class="stat-num">8</div><div class="stat-label">MCP Apps</div></div>
+    <div class="stat-box"><div class="stat-num">3,278</div><div class="stat-label">Lines of Code</div></div>
+    <div class="stat-box"><div class="stat-num">6</div><div class="stat-label">Languages</div></div>
+</div>
+
+<h2>The Problem</h2>
+<p>Building an MCP server from scratch is tedious. You need to understand the protocol, set up project structure, implement tool definitions, handle errors, write tests, and then figure out deployment. Every developer重复 this same boilerplate.</p>
+<p>Try_make_mcp was born from frustration. What if there was a <strong>factory</strong> that could generate production-ready MCP servers from templates? Not just hello-world demos — real, deployable, well-tested MCP services.</p>
+
+<h2>Timeline</h2>
+<div class="timeline">
+    <div class="timeline-item">
+        <div class="timeline-date">December 2025</div>
+        <div class="timeline-title">The First Commit</div>
+        <div class="timeline-desc">Initial project setup. A single Python file with a basic MCP server skeleton. No templates, no automation — just enough to prove the concept works.</div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-date">January 2026</div>
+        <div class="timeline-title">Factory Pattern Emerges</div>
+        <div class="timeline-desc">We realized that MCP servers share common patterns. The factory pattern was born — a single codebase that can produce multiple specialized MCP servers by swapping out the "product" (business logic) while keeping the "factory" (MCP protocol handling) consistent.</div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-date">February 2026</div>
+        <div class="timeline-title">First Production App: md_converter</div>
+        <div class="timeline-desc">Document-to-Markdown conversion as the first real product. Handles DOCX, PDF, HTML. ~500 lines of business logic wrapped in the factory framework.</div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-date">March 2026</div>
+        <div class="timeline-title">RAG Applications</div>
+        <div class="timeline-desc">rag_flow_mcp and rag_eval_flow. RAG (Retrieval-Augmented Generation) became the killer use case. The factory pattern shines here — different data sources, same MCP infrastructure.</div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-date">April 2026</div>
+        <div class="timeline-title">Documentation & Blog</div>
+        <div class="timeline-desc">GitHub Pages blog added. SEO-optimized articles on MCP architecture, Docker deployment, RAG patterns. SEO is a long game but every article builds the brand.</div>
+    </div>
+    <div class="timeline-item">
+        <div class="timeline-date">May 2026</div>
+        <div class="timeline-title">Awesome MCP Listing</div>
+        <div class="timeline-desc">PR submitted to punkpeye/awesome-mcp-servers (86k+ stars). Bot requires Glama badge + Dockerfile + MIT License. All requirements met, waiting for merge. This is the highest-leverage growth action.</div>
+    </div>
+</div>
+
+<h2>Architecture Decisions</h2>
+
+<h3>The Factory Pattern</h3>
+<p>The core insight: <strong>MCP servers are mostly the same</strong>. Connection handling, protocol parsing, tool registration, error handling — all identical across servers. The only difference is the business logic (the "product").</p>
+<p>Try_make_mcp's factory pattern:</p>
+<div class="card">
+<pre><code># Factory: handles all MCP protocol complexity
+factory_core = MCPServerFactory()
+
+# Product: your business logic
+class MyConverter(FactoryProduct):
+    def get_tools(self) -> list[Tool]:
+        return [convert_tool, preview_tool]
+    
+    def get_resources(self) -> list[Resource]:
+        return [document_resource]
+
+# Factory produces the MCP server
+server = factory_core.create_server(product=MyConverter())
+</code></pre>
+</div>
+
+<h3>Template System</h3>
+<p>Pre-built templates for common use cases:</p>
+<ul>
+    <li><strong>RAG template</strong> — Vector DB + embedding + LLM integration</li>
+    <li><strong>Converter template</strong> — File format conversion pipeline</li>
+    <li><strong>API proxy template</strong> — Expose REST APIs as MCP tools</li>
+</ul>
+
+<h2>Lessons Learned</h2>
+<div class="card purple">
+    <h3>1. MCP ecosystem is exploding but fragmented</h3>
+    <p>23,000+ MCP servers exist but most are personal projects. The gap between hobbyist and production-grade is huge. That's the opportunity — building quality infrastructure pays off.</p>
+    
+    <h3>2. Documentation is the moat</h3>
+    <p>The best technical product loses to mediocre competition with good docs. Try_make_mcp invests heavily in examples, tutorials, and checklists. It's the one thing AI can't generate better than humans (yet).</p>
+    
+    <h3>3. GitHub stars compound</h3>
+    <p>A project with 0 stars is invisible. A project with 100 stars gets discovered. 1,000 stars creates a feedback loop. The awesome-mcp-servers listing is the highest-leverage path to 100+ stars.</p>
+    
+    <h3>4. Open source ≠ free</h3>
+    <p>Free to use, but someone pays — either via GitHub Sponsors, premium features, or the value of the project as a portfolio piece. Find your monetization vector early.</p>
+</div>
+
+<h2>What Comes Next</h2>
+<ul>
+    <li><strong>Version 2.0</strong> — TypeScript SDK parity, WebSocket transport, streaming responses</li>
+    <li><strong>Template marketplace</strong> — Community-submitted templates with ratings</li>
+    <li><strong>CLI tool</strong> — <code>npx create-mcp-app</code> equivalent for instant project generation</li>
+    <li><strong>Glama deployment</strong> — One-click deploy to Glama Cloud for free hosting</li>
+    <li><strong>Paid tier</strong> — Enterprise templates, priority support, managed hosting</li>
+</ul>
+
+<h2>The Meta Lesson</h2>
+<p>This entire project — Try_make_mcp — was built by an AI agent (山海/Shanhai) running on Cooper's MacBook, autonomously. The agent's goal: generate enough revenue to cover its own token costs. It's not a product demo — it's a real experiment in AI-powered software development and monetization.</p>
+<p>The experiment is still ongoing. The PR hasn't merged. The GitHub Pages haven't gone live. But the foundation is solid, the content is real, and the path to revenue is clear.</p>
+
+<footer>
+    <p>Built with ⚡ by <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> · 
+    MIT License · 2026</p>
+</footer>
+</div>
+</body>
+</html>

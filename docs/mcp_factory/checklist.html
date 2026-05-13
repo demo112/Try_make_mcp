@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server Pre-Deployment Checklist — Try_make_mcp</title>
+    <meta name="description" content="Essential checklist before deploying your MCP server to production. Covers security, performance, monitoring, and Glama submission.">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-red: #f85149; --accent-orange: #d29922; --accent-purple: #a371f7; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; }
+        .breadcrumb a { color: var(--text-muted); }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #fff; }
+        h2 { font-size: 1.3rem; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--accent); }
+        h3 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; color: var(--accent-green); }
+        p { margin-bottom: 1rem; }
+        .meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
+        .checklist { list-style: none; }
+        .checklist li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0.75rem; }
+        .checklist li::before { content: '☐'; color: var(--accent); font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+        .checklist li.done::before { content: '☑'; color: var(--accent-green); }
+        .tag { display: inline-block; background: var(--card-bg); border: 1px solid var(--border); border-radius: 3px; padding: 0.1rem 0.5rem; font-size: 0.75rem; margin-left: 0.5rem; color: var(--text-muted); }
+        .tag.critical { border-color: var(--accent-red); color: var(--accent-red); }
+        .tag.important { border-color: var(--accent-orange); color: var(--accent-orange); }
+        code { background: var(--card-bg); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        pre { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; margin: 1rem 0; }
+        pre code { background: none; padding: 0; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; margin: 1rem 0; }
+        .card.green { border-left: 3px solid var(--accent-green); }
+        .card.orange { border-left: 3px solid var(--accent-orange); }
+        .card.red { border-left: 3px solid var(--accent-red); }
+        footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.85rem; margin-top: 3rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+<p class="breadcrumb"><a href="../index.html">← Back to Try_make_mcp</a></p>
+<h1>MCP Server Pre-Deployment Checklist</h1>
+<p class="meta">Last updated: May 2026 · Est. reading time: 8 min</p>
+
+<div class="card green">
+    <strong>⚡ TL;DR</strong>: Before shipping your MCP server, verify these 5 critical items: <strong>(1) Glama badge</strong>, <strong>(2) Dockerfile</strong>, <strong>(3) MIT License</strong>, <strong>(4) Error handling</strong>, <strong>(5) Input sanitization</strong>.
+</div>
+
+<h2>🔐 Security</h2>
+<ul class="checklist">
+    <li><strong>Input sanitization</strong> — All user inputs are validated before processing. Never pass raw user input to system commands or database queries.<span class="tag critical">Critical</span></li>
+    <li><strong>API key protection</strong> — Credentials stored in environment variables, never hardcoded. Use <code>.env</code> files and never commit secrets.<span class="tag critical">Critical</span></li>
+    <li><strong>Rate limiting</strong> — Implement rate limits on all endpoints to prevent abuse. Check <a href="https://github.com/modelcontextprotocol/python-sdk">python-sdk</a> for built-in patterns.</li>
+    <li><strong>Permission model</strong> — Define clear scopes for tools and resources. Users should know what data the MCP can access.</li>
+    <li><strong>CORS & CSP headers</strong> — If serving web requests, configure appropriate Cross-Origin Resource Sharing policies.</li>
+</ul>
+
+<h2>🐛 Error Handling</h2>
+<ul class="checklist">
+    <li><strong>Graceful degradation</strong> — Server should handle external API failures without crashing. Return meaningful error messages.</li>
+    <li><strong>Timeout handling</strong> — All external API calls have timeouts. Network issues shouldn't hang the server indefinitely.</li>
+    <li><strong>Logging</strong> — Structured logging with appropriate levels (DEBUG, INFO, WARNING, ERROR). Include request IDs for tracing.</li>
+    <li><strong>Retry logic</strong> — Implement exponential backoff for transient failures (network issues, rate limits).</li>
+    <li><strong>Health check endpoint</strong> — A simple <code>/health</code> or <code>health</code> tool that returns server status and version.</li>
+</ul>
+
+<h2>⚡ Performance</h2>
+<ul class="checklist">
+    <li><strong>Async operations</strong> — Use async/await for I/O-bound operations. Python's <code>asyncio</code> is your friend.</li>
+    <li><strong>Connection pooling</strong> — Reuse HTTP connections when calling external APIs. Use <code>aiohttp</code> or <code>httpx</code>.</li>
+    <li><strong>Response caching</strong> — Cache repeated expensive operations (embeddings, search results) with TTL.</li>
+    <li><strong>Memory efficiency</strong> — Process large files in chunks, don't load entire datasets into memory.</li>
+    <li><strong>Startup time</strong> — Minimize cold-start latency. Lazy-load heavy dependencies.</li>
+</ul>
+
+<h2>📦 Packaging</h2>
+<ul class="checklist">
+    <li><strong>MIT License</strong> — Add <code>LICENSE</code> file with MIT license text. Required for Glama submission.<span class="tag important">Important</span></li>
+    <li><strong>Dockerfile</strong> — Provide a working <code>Dockerfile</code> for containerized deployment.<span class="tag important">Important</span></li>
+    <li><strong>requirements.txt / pyproject.toml</strong> — Pin dependency versions. Use <code>pip freeze</code> or <code>poetry</code>.</li>
+    <li><strong>README.md</strong> — Clear description, installation instructions, usage examples, and contribution guide.</li>
+    <li><strong>Tests</strong> — At minimum: unit tests for core logic, integration tests for tool definitions.</li>
+    <li><strong>CI/CD</strong> — GitHub Actions for automated testing on push and pull requests.</li>
+</ul>
+
+<h2>📄 Documentation</h2>
+<ul class="checklist">
+    <li><strong>README</strong> — Overview, installation, quick start, configuration, FAQ. Use badges for build status, license, version.</li>
+    <li><strong>API reference</strong> — Document all tools, resources, and prompts with input/output schemas.</li>
+    <li><strong>Architecture diagram</strong> — A visual overview helps users understand the system quickly.</li>
+    <li><strong>Changelog</strong> — Track versions and breaking changes. Keep users informed of updates.</li>
+    <li><strong>CONTRIBUTING.md</strong> — Guidelines for reporting issues, submitting PRs, coding standards.</li>
+</ul>
+
+<h2>🚀 Submission to Awesome MCP</h2>
+<ul class="checklist">
+    <li class="done"><strong>Create PR</strong> — Submit to <a href="https://github.com/punkpeye/awesome-mcp-servers">punkpeye/awesome-mcp-servers</a></li>
+    <li><strong>Glama score badge</strong> — Register at <a href="https://glama.ai">glama.ai</a> and add the badge to your README<span class="tag important">Required</span></li>
+    <li><strong>Format compliance</strong> — Follow the format: <code>| name | description | @owner/repo |</code></li>
+    <li><strong>Category selection</strong> — Add to appropriate category section (Audio, Video, Data, Dev Tools, etc.)</li>
+    <li><strong>Emoji prefix</strong> — Each entry should have an emoji prefix (⚡ for dev tools, 🎨 for creative, etc.)</li>
+</ul>
+
+<h2>📊 Monitoring (Post-Deployment)</h2>
+<ul class="checklist">
+    <li><strong>Usage metrics</strong> — Track tool invocation counts, latency percentiles, error rates.</li>
+    <li><strong>Alerting</strong> — Set up alerts for error rate spikes, unusual usage patterns.</li>
+    <li><strong>Version tracking</strong> — Know which version users are running to debug issues.</li>
+    <li><strong>User feedback loop</strong> — GitHub Issues, Discord, or email for user reports.</li>
+    <li><strong>Performance benchmarks</strong> — Run periodic benchmarks to catch regressions.</li>
+</ul>
+
+<h2>✅ Quick Glama Submission Guide</h2>
+<div class="card orange">
+    <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+        <li>Go to <a href="https://glama.ai/mcp/servers/new">glama.ai/mcp/servers/new</a></li>
+        <li>Enter your GitHub repo URL: <code>https://github.com/demo112/Try_make_mcp</code></li>
+        <li>Glama auto-scans the repo and generates a score</li>
+        <li>Copy the badge URL from the generated page</li>
+        <li>Add badge to README: <code>[![badge](badge-url.svg)](badge-landing-page)</code></li>
+        <li>Open PR on awesome-mcp-servers with the badge link</li>
+    </ol>
+</div>
+
+<footer>
+    <p>Part of <a href="../index.html">Try_make_mcp</a> · 
+    <a href="https://github.com/demo112/Try_make_mcp">GitHub</a> · 
+    MIT License · 2026</p>
+</footer>
+</div>
+</body>
+</html>
