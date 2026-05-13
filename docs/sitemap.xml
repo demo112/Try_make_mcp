@@ -22,4 +22,5 @@
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/deploy-mcp-cloudflare-workers.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-monetization-guide.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/stripe-mcp-integration-tutorial.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-payment-error-32042.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
 </urlset>

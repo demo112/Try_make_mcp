@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Error -32042: Payment Required — Complete Guide (2026) — Try_make_mcp</title>
+  <meta name="description" content="Complete guide to MCP error code -32042 (Payment Required). Learn how to implement, handle, and monetize your MCP server with the official payment error pattern from MCP discussion #2436.">
+  <meta name="keywords" content="MCP error -32042, MCP payment required, MCP monetization error handling, MCP freemium, MCP billing error code, JSON-RPC -32042">
+  <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/docs/mcp-payment-error-32042.html">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.7; color: #1a1a1a; }
+    h1 { font-size: 2rem; border-bottom: 3px solid #7c3aed; padding-bottom: 0.5rem; }
+    h2 { color: #7c3aed; margin-top: 2.5rem; }
+    h3 { color: #4c1d95; }
+    code { background: #f3f4f6; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.9em; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 1.5rem; border-radius: 8px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; }
+    pre code { background: none; padding: 0; color: inherit; }
+    .callout { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+    .callout-blue { background: #dbeafe; border-left-color: #3b82f6; }
+    .callout-green { background: #d1fae5; border-left-color: #10b981; }
+    .callout-red { background: #fee2e2; border-left-color: #ef4444; }
+    .callout-purple { background: #ede9fe; border-left-color: #7c3aed; }
+    table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
+    th { background: #f9fafb; font-weight: 600; }
+    .badge { display: inline-block; padding: 0.2em 0.6em; border-radius: 9999px; font-size: 0.8em; font-weight: 600; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    a { color: #7c3aed; }
+    .flow-box { background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+    .flow-step { display: flex; align-items: flex-start; gap: 1rem; margin: 0.75rem 0; }
+    .flow-num { background: #7c3aed; color: white; width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; font-size: 0.85em; }
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+    .comparison > div { padding: 1rem; border-radius: 8px; }
+    .comparison .good { background: #d1fae5; border: 1px solid #10b981; }
+    .comparison .bad { background: #fee2e2; border: 1px solid #ef4444; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← Back to MCP Factory</a></p>
+  
+  <h1>MCP Error -32042: The Complete Guide to Payment Required in MCP Servers</h1>
+  <p>
+    <span class="badge badge-purple">MCP Spec</span>
+    <span class="badge badge-green">Production Pattern</span>
+    <span class="badge badge-blue">Freemium Model</span>
+  </p>
+  <p><strong>10 min read</strong> · Updated May 2026 · Covers MCP Discussion #2436, BGPT MCP, and implementation best practices</p>
+
+  <p>Error code <code>-32042</code> is the MCP ecosystem's standard signal for <strong>"Payment Required"</strong>. This guide covers everything you need to know: what it is, how to implement it, how clients handle it, and how to build a complete freemium monetization layer around it.</p>
+
+  <h2>What is Error -32042?</h2>
+
+  <p>JSON-RPC reserves error codes in the <code>-32000</code> to <code>-32099</code> range for "Server Errors" that are application-defined. The MCP community proposed <code>-32042</code> specifically for payment-required scenarios in <a href="https://github.com/modelcontextprotocol/specification/discussions/2436">MCP Discussion #2436</a>.</p>
+
+  <div class="callout callout-purple">
+    <strong>Origin:</strong> Proposed in MCP Specification Discussion #2436 as a standard way for MCP servers to signal that a payment is needed before processing a request. This follows the HTTP <code>402 Payment Required</code> pattern adapted for the MCP/JSON-RPC protocol.
+  </div>
+
+  <h3>The Error Response Format</h3>
+  <pre><code>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32042,
+    "message": "Payment required",
+    "data": {
+      "subscribe_url": "https://your-domain.com/subscribe",
+      "pricing_url": "https://your-domain.com/pricing",
+      "free_tier_remaining": 0,
+      "upgrade_message": "Free tier exhausted. Upgrade for unlimited access."
+    }
+  }
+}</code></pre>
+
+  <h2>Error Code Reference Table</h2>
+
+  <table>
+    <tr>
+      <th>Code</th>
+      <th>Name</th>
+      <th>When to Use</th>
+      <th>Client Action</th>
+    </tr>
+    <tr>
+      <td><code>-32042</code></td>
+      <td><strong>Payment Required</strong></td>
+      <td>User has no valid API key AND free tier is exhausted</td>
+      <td>Show upgrade prompt with subscribe URL</td>
+    </tr>
+    <tr>
+      <td><code>-32001</code></td>
+      <td>Unauthorized</td>
+      <td>Invalid or expired API key provided</td>
+      <td>Re-authenticate or refresh key</td>
+    </tr>
+    <tr>
+      <td><code>-32600</code></td>
+      <td>Invalid Request</td>
+      <td>Malformed request</td>
+      <td>Fix request format</td>
+    </tr>
+    <tr>
+      <td><code>-32601</code></td>
+      <td>Method not found</td>
+      <td>Unknown tool/prompt/resource</td>
+      <td>Check available tools</td>
+    </tr>
+    <tr>
+      <td><code>-32602</code></td>
+      <td>Invalid params</td>
+      <td>Missing required parameters</td>
+      <td>Provide required params (e.g., api_key)</td>
+    </tr>
+  </table>
+
+  <h2>Complete Implementation Guide</h2>
+
+  <h3>Architecture: The Freemium Gate</h3>
+
+  <p>Here's how a production MCP server handles the payment flow:</p>
+
+  <div class="flow-box">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div><strong>Request arrives</strong> — MCP client sends a tool call (e.g., <code>tools/call</code>)</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div><strong>Check API key</strong> — Look for <code>api_key</code> in tool arguments. If valid → execute immediately ✅</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div><strong>Check free tier</strong> — No API key? Check IP-based rate limit. If under limit → execute and increment counter ✅</div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div><strong>Return -32042</strong> — Free tier exhausted AND no API key? Return payment required error with subscribe URL ❌</div>
+    </div>
+  </div>
+
+  <h3>Implementation: Cloudflare Worker (Production Code)</h3>
+
+  <p>The following is adapted from our <a href="stripe-mcp-integration-tutorial.html">Stripe MCP Integration Tutorial</a> and runs on Cloudflare Workers with KV persistence:</p>
+
+  <pre><code>// Validate API key against environment whitelist
+function validateApiKey(apiKey, env) {
+  if (!apiKey) return false;
+  const validKeys = (env.VALID_API_KEYS || '').split(',').filter(Boolean);
+  return validKeys.includes(apiKey);
+}
+
+// Check IP-based free tier with KV persistence
+async function checkFreeTierLimit(ip, env) {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `usage:${ip}:${today}`;
+  
+  // Try KV first (persistent across requests)
+  if (env.MCP_USAGE) {
+    const count = parseInt(await env.MCP_USAGE.get(key) || '0');
+    if (count >= 10) return false;
+    await env.MCP_USAGE.put(key, String(count + 1));
+    return true;
+  }
+  
+  // Fallback: in-memory (single-instance only)
+  if (!globalThis.usageCounts) globalThis.usageCounts = {};
+  const count = globalThis.usageCounts[key] || 0;
+  if (count >= 10) return false;
+  globalThis.usageCounts[key] = count + 1;
+  return true;
+}
+
+// Build the -32042 error response
+function paymentRequiredError(subscribeUrl, pricingUrl) {
+  return {
+    jsonrpc: '2.0',
+    id: null,
+    error: {
+      code: -32042,
+      message: 'Payment required: Free tier exhausted',
+      data: {
+        subscribe_url: subscribeUrl,
+        pricing_url: pricingUrl,
+        free_tier_remaining: 0,
+        upgrade_message: 'You have used all 10 free requests for today. ' +
+          'Upgrade for unlimited access at ' + subscribeUrl
+      }
+    }
+  };
+}</code></pre>
+
+  <h3>Integration: Wire It Into Your Request Handler</h3>
+
+  <pre><code>async function handleToolCall(request, env) {
+  const body = await request.json();
+  const toolArgs = body.params?.arguments || {};
+  const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+  
+  // Step 1: Check for valid API key
+  if (validateApiKey(toolArgs.api_key, env)) {
+    // Strip api_key from args before passing to tool
+    const { api_key, ...cleanArgs } = toolArgs;
+    return executeTool(body.params.name, cleanArgs);
+  }
+  
+  // Step 2: Fall back to free tier
+  const allowed = await checkFreeTierLimit(clientIP, env);
+  if (allowed) {
+    return executeTool(body.params.name, toolArgs);
+  }
+  
+  // Step 3: Payment required
+  return paymentRequiredError(
+    `${env.BASE_URL || 'https://your-domain.com'}/subscribe`,
+    `${env.BASE_URL || 'https://your-domain.com'}/pricing`
+  );
+}</code></pre>
+
+  <h2>Client-Side Error Handling</h2>
+
+  <p>If you're building an MCP client, here's how to handle -32042 gracefully:</p>
+
+  <pre><code>// Client-side error handler (TypeScript)
+function handleMCPError(error: MCPError) {
+  switch (error.code) {
+    case -32042: {
+      // Payment required — extract upgrade info
+      const data = error.data;
+      console.log('Upgrade needed:', data.upgrade_message);
+      console.log('Subscribe at:', data.subscribe_url);
+      console.log('Pricing info:', data.pricing_url);
+      
+      // Show user-friendly upgrade prompt
+      showUpgradeDialog({
+        message: data.upgrade_message,
+        subscribeUrl: data.subscribe_url,
+        pricingUrl: data.pricing_url
+      });
+      break;
+    }
+    case -32001: {
+      console.error('Invalid API key. Please check your credentials.');
+      break;
+    }
+    default: {
+      console.error(`MCP Error ${error.code}: ${error.message}`);
+    }
+  }
+}</code></pre>
+
+  <h2>Real-World Examples</h2>
+
+  <h3>BGPT MCP — Science Paper Search</h3>
+
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Repository</td><td><a href="https://github.com/connerlambden/bgpt-mcp">connerlambden/bgpt-mcp</a></td></tr>
+    <tr><td>Stars</td><td>19+</td></tr>
+    <tr><td>Product</td><td>Science paper search (25+ metadata fields)</td></tr>
+    <tr><td>Free tier</td><td>50 searches/day</td></tr>
+    <tr><td>Paid tier</td><td>$0.02/result via Stripe Checkout</td></tr>
+    <tr><td>Error code</td><td>Uses -32042 when free tier exhausted</td></tr>
+    <tr><td>Key delivery</td><td>API key generated after Stripe payment</td></tr>
+  </table>
+
+  <div class="callout callout-green">
+    <strong>Proven Model:</strong> BGPT MCP demonstrates that -32042 + Stripe Checkout is a working production pattern. Users connect without friction (free tier), then upgrade naturally when they hit the limit.
+  </div>
+
+  <h3>APIbase.pro — Micro-Payment Gateway</h3>
+
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Scale</td><td>177 providers, 576 tools</td></tr>
+    <tr><td>Pricing range</td><td>$0.001 — $1.00 per call</td></tr>
+    <tr><td>Payment methods</td><td>x402 (USDC on Base), MPP (USDC via Stripe)</td></tr>
+    <tr><td>Error handling</td><td>-32042 with payment metadata</td></tr>
+  </table>
+
+  <h2>Best Practices for -32042</h2>
+
+  <h3>✅ Do: Provide Rich Error Data</h3>
+  <div class="comparison">
+    <div class="good">
+      <strong>Good — Informative</strong>
+      <pre><code>{
+  "code": -32042,
+  "message": "Payment required",
+  "data": {
+    "subscribe_url": "https://...",
+    "pricing_url": "https://...",
+    "free_tier_remaining": 0,
+    "upgrade_message": "Upgrade..."
+  }
+}</code></pre>
+    </div>
+    <div class="bad">
+      <strong>Bad — Bare minimum</strong>
+      <pre><code>{
+  "code": -32042,
+  "message": "Pay up"
+}</code></pre>
+    </div>
+  </div>
+
+  <h3>✅ Do: Track Usage Per Day, Not Per Request</h3>
+  <p>Reset free tier counters daily. Use ISO date strings as KV keys (e.g., <code>usage:192.168.1.1:2026-05-13</code>) to ensure counters reset at midnight UTC.</p>
+
+  <h3>✅ Do: Use CF-Connecting-IP on Cloudflare Workers</h3>
+  <p>The standard <code>X-Forwarded-For</code> header can be spoofed. Cloudflare Workers provide <code>CF-Connecting-IP</code> which is always the real client IP.</p>
+
+  <h3>❌ Don't: Block Before Showing Value</h3>
+  <div class="callout callout-red">
+    <strong>Anti-pattern:</strong> Never require payment before the user has experienced any value. Always provide a generous free tier (10-50 calls/day) so users can evaluate your tool before hitting the paywall.
+  </div>
+
+  <h3>❌ Don't: Return -32042 for Auth Errors</h3>
+  <p>Use <code>-32001</code> for invalid/expired API keys and <code>-32042</code> only when payment is specifically required. Confusing these signals makes client-side handling unreliable.</p>
+
+  <h2>Alternative Payment Protocols</h2>
+
+  <table>
+    <tr>
+      <th>Protocol</th>
+      <th>How It Works</th>
+      <th>Pros</th>
+      <th>Cons</th>
+    </tr>
+    <tr>
+      <td><strong>Stripe Checkout</strong></td>
+      <td>Redirect user → pay → get API key</td>
+      <td> familiar, fiat currency, global</td>
+      <td>Requires Stripe account setup</td>
+    </tr>
+    <tr>
+      <td><strong>x402</strong></td>
+      <td>HTTP 402 header + crypto payment</td>
+      <td>No account needed, per-request</td>
+      <td>Crypto-only, smaller user base</td>
+    </tr>
+    <tr>
+      <td><strong>MPP (Machine Pay Protocol)</strong></td>
+      <td>USDC via Tempo/Stripe</td>
+      <td>Machine-to-machine, automatic</td>
+      <td>Newer, less adoption</td>
+    </tr>
+    <tr>
+      <td><strong>Lemon Squeezy</strong></td>
+      <td>Merchant of Record, global tax</td>
+      <td>Handles taxes/compliance</td>
+      <td>Extra fee layer, vendor lock-in</td>
+    </tr>
+  </table>
+
+  <h2>Quick Start Checklist</h2>
+
+  <div class="callout callout-green">
+    <strong>Get -32042 working in your MCP server in 4 steps:</strong>
+    <ol>
+      <li><strong>Add API key validation</strong> — Check <code>api_key</code> param against env whitelist</li>
+      <li><strong>Add IP rate limiting</strong> — Count requests per IP per day using KV/Redis</li>
+      <li><strong>Return -32042</strong> — When free tier is exhausted, include subscribe URL in error data</li>
+      <li><strong>Set up payment</strong> — Create Stripe Checkout session that generates API keys on success</li>
+    </ol>
+    <p><strong>Total time:</strong> ~45 minutes if you already have a working MCP server.</p>
+  </div>
+
+  <h2>Security Considerations</h2>
+
+  <table>
+    <tr><th>Concern</th><th>Mitigation</th></tr>
+    <tr><td>API key leakage in logs</td><td>Strip api_key from tool args before processing/logging</td></tr>
+    <tr><td>IP spoofing</td><td>Use <code>CF-Connecting-IP</code> on Cloudflare; never trust <code>X-Forwarded-For</code></td></tr>
+    <tr><td>Free tier abuse via VPN</td><td>Combine IP + fingerprinting; set reasonable limits (10-50/day)</td></tr>
+    <tr><td>API key brute force</td><td>Rate limit validation attempts; lock after N failures</td></tr>
+    <tr><td>Stripe webhook forgery</td><td>Always verify webhook signatures with <code>stripe.webhooks.constructEvent()</code></td></tr>
+    <tr><td>KV data exposure</td><td>Never expose raw usage data in API responses</td></tr>
+    <tr><td>CORS on subscribe endpoint</td><td>Set proper CORS headers; only allow your domains</td></tr>
+  </table>
+
+  <h2>Testing Your Implementation</h2>
+
+  <p>Use this MCP Inspector test sequence to verify your -32042 implementation:</p>
+
+  <pre><code># Test 1: Free tier should work (no API key)
+# Send 10 tool calls — all should succeed
+for i in $(seq 1 10); do
+  curl -s -X POST https://your-worker.your-subdomain.workers.dev/sse \
+    -H "Content-Type: application/json" \
+    -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"your_tool","arguments":{}}}'
+done
+
+# Test 2: 11th call should return -32042
+curl -s -X POST https://your-worker.your-subdomain.workers.dev/sse \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"your_tool","arguments":{}}}'
+# Expected: {"error":{"code":-32042,"message":"Payment required",...}}
+
+# Test 3: API key should bypass rate limit
+curl -s -X POST https://your-worker.your-subdomain.workers.dev/sse \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"your_tool","arguments":{"api_key":"sk_test_valid"}}}'
+# Expected: Success (tool result)</code></pre>
+
+  <h2>Related Reading</h2>
+
+  <ul>
+    <li><a href="stripe-mcp-integration-tutorial.html">Stripe + MCP Integration Tutorial</a> — Full freemium setup guide with Stripe Checkout</li>
+    <li><a href="mcp-monetization-guide.html">MCP Monetization Guide</a> — Overview of all MCP monetization strategies</li>
+    <li><a href="mcp-authentication-security.html">MCP Authentication & Security Guide</a> — Broader auth patterns for MCP servers</li>
+    <li><a href="deploy-mcp-cloudflare-workers.html">Deploy MCP on Cloudflare Workers</a> — Host your paid MCP server for free</li>
+  </ul>
+
+  <hr>
+  <p><em>Part of the <a href="index.html">MCP Factory</a> guide series. Built with production code from Try_make_mcp's Cloudflare Worker v2.0.</em></p>
+</body>
+</html>
