@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "try-make-mcp"
+version = "1.0.0"
+description = "Build custom MCP servers in minutes with 8 pre-built apps including web search, terminal, filesystem, and more"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "demo112"},
+]
+keywords = ["mcp", "model-context-protocol", "ai", "agent", "llm", "tools", "mcp-server", "mcp-factory"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "mcp[cli]>=0.1.0",
+    "markdown",
+    "python-docx",
+    "xhtml2pdf",
+    "openpyxl",
+    "beautifulsoup4",
+    "fastmcp",
+    "litellm",
+    "pandas",
+    "markdown-it-py",
+    "mdformat",
+    "tabulate",
+    "GitPython",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+try-make-mcp = "mcp_manager:main"
+
+[project.urls]
+Homepage = "https://github.com/demo112/Try_make_mcp"
+Repository = "https://github.com/demo112/Try_make_mcp"
+Issues = "https://github.com/demo112/Try_make_mcp/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "mcp_manager*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
