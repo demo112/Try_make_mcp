@@ -70,6 +70,114 @@ a:hover{text-decoration:underline}
 </div>
 
 <div class="post">
+<h2>🚀 MCP vs Tool Calling: When to Use Each (And Why It Matters)</h2>
+<h3>May 13, 2026 · <span class="tag">Comparison</span> <span class="tag">Architecture</span> <span class="tag">Decision Guide</span></h3>
+<div class="post-body">
+<p>If you're building AI agents in 2026, you've hit this fork in the road: <strong>Model Context Protocol (MCP)</strong> vs <strong>native tool calling</strong>. The answer isn't obvious — and the wrong choice costs you months of rework.</p>
+
+<p><strong>The fundamental difference:</strong> Native tool calling bakes tool definitions directly into your agent's prompt. MCP externalizes them into a discoverable, reusable service layer. Think REST API vs embedded function calls.</p>
+
+<p><strong>Use native tool calling when:</strong></p>
+<ul>
+<li>You have &lt;10 tools and they won't change often</li>
+<li>You're building a single, self-contained agent</li>
+<li>Latency is your #1 constraint (MCP adds ~20-50ms overhead)</li>
+<li>You're prototyping and need to move fast</li>
+</ul>
+
+<p><strong>Use MCP when:</strong></p>
+<ul>
+<li>You need tools to be <strong>discoverable</strong> by multiple AI clients</li>
+<li>You're building a <strong>platform</strong> where others extend your agent</li>
+<li>Tools are owned by <strong>different teams or services</strong></li>
+<li>You want <strong>standardized authentication</strong>, logging, and rate limiting</li>
+<li>You're targeting the growing MCP ecosystem (9,600+ servers)</li>
+</ul>
+
+<p><strong>The hybrid approach that works:</strong></p>
+<p>Most production systems use MCP for stable, shared services (database access, file storage, authentication) and native tool calling for agent-specific, rapidly-changing logic. This gives you ecosystem compatibility without sacrificing iteration speed.</p>
+
+<pre><code># MCP for shared services
+# Native tool calling for agent-specific logic
+
+# MCP server (shared)
+class DatabaseMCP:
+    """Reusable by any AI client. Standard auth, logging."""
+    tools = ["query", "schema", "migrate"]
+
+# Native tool (agent-specific)
+def agent_specific_routing(user_intent):
+    """Changes daily. No MCP overhead needed."""
+    pass</code></pre>
+
+<p><strong>Bottom line:</strong> MCP is infrastructure. Native tool calling is custom code. Build infrastructure once, use custom code for differentiation.</p>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp">Start building with Try_make_mcp →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>📦 Dockerize Your MCP Server in 10 Minutes: A Production Checklist</h2>
+<h3>May 13, 2026 · <span class="tag">DevOps</span> <span class="tag">Docker</span> <span class="tag">Deployment</span></h3>
+<div class="post-body">
+<p>You've built a great MCP server. Now you need to ship it. This checklist covers everything from Dockerfile optimization to health checks that actually catch failures.</p>
+
+<p><strong>1. Multi-stage build — keep images lean</strong></p>
+<pre><code>FROM python:3.11-slim AS builder
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY ./app /app
+WORKDIR /app
+CMD ["python", "-m", "mcp_factory", "serve"]</code></pre>
+
+<p><strong>2. Non-root user — security non-negotiable</strong></p>
+<pre><code>RUN addgroup -S mcp && adduser -S mcp -G mcp
+USER mcp</code></pre>
+
+<p><strong>3. Health check that actually works</strong></p>
+<pre><code>HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"</code></pre>
+
+<p><strong>4. Signal handling — graceful shutdown</strong></p>
+<pre><code>import signal, sys
+
+def shutdown(signum, frame):
+    print("Received SIGTERM, shutting down gracefully...")
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, shutdown)</code></pre>
+
+<p><strong>5. Environment validation on startup</strong></p>
+<pre><code>import os
+required = ["API_KEY", "DB_HOST"]
+missing = [k for k in required if not os.environ.get(k)]
+if missing:
+    raise RuntimeError(f"Missing required env vars: {missing}")</code></pre>
+
+<p><strong>Docker Compose for local dev:</strong></p>
+<pre><code>version: '3.8'
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s</code></pre>
+
+<p>The Dockerfile above is what Try_make_mcp generates automatically with <code>mcp_factory init</code>. You get production-ready containers without the checklist.</p>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp/tree/main/docs/mcp_factory">View mcp_factory templates →</a></p>
+</div>
+</div>
+
+<div class="post">
 <h2>🧠 RAG Flow MCP: Building Self-Evolving Knowledge Assistants</h2>
 <h3>May 13, 2026 · <span class="tag">RAG</span> <span class="tag">Tutorial</span> <span class="tag">Advanced</span></h3>
 <div class="post-body">
