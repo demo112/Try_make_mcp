@@ -1,132 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main Pages -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/PROJECT_CHRONICLE.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/mcp_factory/checklist.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- MCP Core Articles (High Priority) -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/mcp_factory/01_Align/ALIGNMENT_MCP%E7%94%9F%E4%BA%A7%E5%B7%A5%E5%8E%82.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/mcp_factory/Readme.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/mcp_factory/UserManual.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- MD Converter Articles -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/md_converter/01_Align/ALIGNMENT_MD%E8%BD%AC%E5%A4%9A%E6%A0%BC%E5%BC%8F-MCP.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/md_converter/Readme.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/md_converter/UserManual.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/md_converter/CHANGELOG.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- RAG Flow Articles -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/rag_flow_mcp/01_Align/ALIGNMENT_rag_flow_mcp.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/rag_flow_mcp/Readme.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/rag_flow_mcp/UserManual.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- RAG Eval Articles -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/rag_eval_flow/Readme.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/rag_eval_flow/UserManual.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Everything2MD Articles -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/Everything2MD/MCP/Readme.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Tutorial Articles -->
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/tutorials/%E6%9E%84%E5%BB%BA-MCP%E6%9C%8D%E5%8A%A1/01_Align/ALIGNMENT_%E6%9E%84%E5%BB%BA-MCP%E6%9C%8D%E5%8A%A1.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://demo112.github.io/Try_make_mcp/tutorials/%E6%9E%84%E5%BB%BA-MCP%E6%9C%8D%E5%8A%A1/Readme.html</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- GitHub Reference -->
-  <url>
-    <loc>https://github.com/demo112/Try_make_mcp</loc>
-    <lastmod>2026-05-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/PROJECT_CHRONICLE.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp_factory/readme.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp_factory/checklist.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp_factory/user_manual.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp_factory/alignment.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/md_converter/readme.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/rag_flow/rag_flow.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/tutorial-mcp-factory-quickstart.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-vs-tool-calling.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/dockerize-mcp-server.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/rag-flow-mcp-tutorial.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-server-patterns.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/6a-ai-agent-workflow.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/rag-evaluation-metrics.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/everything2md-guide.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/changelog.html</loc><priority>0.6</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/architecture-diagram.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/deployment-guide.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/README.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
 </urlset>
