@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Testing Complete Guide 2026 — How to Test MCP Servers | MCP Factory</title>
+    <meta name="description" content="Complete guide to testing MCP servers in 2026. Learn unit testing, integration testing, E2E testing, mock MCP clients, CI/CD pipelines, and testing best practices for Model Context Protocol servers.">
+    <meta name="keywords" content="MCP testing, test MCP server, MCP unit test, MCP integration test, MCP E2E test, MCP CI/CD, MCP test framework, mock MCP client, MCP server testing, Model Context Protocol testing">
+    <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/mcp-testing-guide.html">
+    <meta property="og:title" content="MCP Testing Complete Guide 2026">
+    <meta property="og:description" content="Master MCP server testing: unit tests, integration tests, E2E tests, CI/CD pipelines, and production testing strategies.">
+    <meta property="og:type" content="article">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "MCP Testing Complete Guide 2026",
+        "description": "Complete guide to testing MCP servers with unit tests, integration tests, E2E tests, and CI/CD.",
+        "author": {"@type": "Organization", "name": "MCP Factory"},
+        "datePublished": "2026-05-13",
+        "dateModified": "2026-05-13"
+    }
+    </script>
+    <style>
+        :root { --primary: #4f46e5; --bg: #0a0a0a; --card: #161616; --border: #262626; --text: #e5e5e5; --text2: #a3a3a3; --green: #22c55e; --yellow: #eab308; --red: #ef4444; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
+        h1 { font-size: 2.2rem; margin-bottom: .5rem; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .meta { color: var(--text2); margin-bottom: 2rem; font-size: .9rem; }
+        .meta span { margin-right: 1.5rem; }
+        h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: #c7d2fe; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+        h3 { font-size: 1.15rem; margin: 1.5rem 0 .75rem; color: #ddd6fe; }
+        p { margin-bottom: 1rem; }
+        pre { background: #111; border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; overflow-x: auto; margin: 1rem 0; font-size: .85rem; line-height: 1.5; }
+        code { font-family: 'SF Mono', 'Fira Code', monospace; }
+        pre code { color: #e5e5e5; }
+        :not(pre) > code { background: #1e1e2e; padding: .15em .4em; border-radius: 4px; font-size: .85em; color: #c084fc; }
+        .callout { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.5rem 0; }
+        .callout.green { border-left-color: var(--green); }
+        .callout.yellow { border-left-color: var(--yellow); }
+        .callout.red { border-left-color: var(--red); }
+        .callout strong { color: #c7d2fe; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid var(--border); padding: .6rem .8rem; text-align: left; font-size: .9rem; }
+        th { background: var(--card); color: #c7d2fe; }
+        ul, ol { margin: .5rem 0 1rem 1.5rem; }
+        li { margin-bottom: .4rem; }
+        a { color: #818cf8; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .badge { display: inline-block; background: var(--primary); color: white; padding: .15em .5em; border-radius: 4px; font-size: .75rem; font-weight: 600; }
+        .badge.green { background: var(--green); }
+        .badge.yellow { background: var(--yellow); color: #000; }
+        .badge.red { background: var(--red); }
+        .toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; }
+        .toc h3 { margin-top: 0; }
+        .toc ol { counter-reset: toc; list-style: none; padding-left: 0; }
+        .toc li { counter-increment: toc; padding: .3rem 0; }
+        .toc li::before { content: counter(toc) ". "; color: var(--primary); font-weight: 600; }
+        .nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .nav a { color: var(--text2); }
+        .nav a:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" style="color:var(--text2);font-size:.9rem;">← Back to MCP Factory</a>
+    <h1>MCP Testing Complete Guide 2026</h1>
+    <p class="meta">
+        <span>📅 May 13, 2026</span>
+        <span>⏱️ 12 min read</span>
+        <span>📖 Testing &amp; Quality</span>
+    </p>
+
+    <p>Testing MCP (Model Context Protocol) servers is fundamentally different from testing traditional REST APIs. MCP uses JSON-RPC 2.0 over bidirectional transports (stdio, SSE, Streamable HTTP), supports multiple interaction patterns (tools, resources, prompts), and has unique failure modes like transport disconnection and payment-required errors. This guide covers every testing strategy you need — from unit tests to production CI/CD pipelines.</p>
+
+    <div class="toc">
+        <h3>📋 Table of Contents</h3>
+        <ol>
+            <li>Why MCP Testing is Different</li>
+            <li>Testing Pyramid for MCP Servers</li>
+            <li>Unit Testing: Testing Individual Tools</li>
+            <li>Integration Testing: Testing the MCP Protocol Layer</li>
+            <li>E2E Testing: Testing Complete Client-Server Flows</li>
+            <li>Mock MCP Clients for Testing</li>
+            <li>Transport-Level Testing (stdio, SSE, HTTP)</li>
+            <li>Testing MCP Responses and JSON-RPC Compliance</li>
+            <li>CI/CD Pipeline for MCP Servers</li>
+            <li>Existing MCP Testing Frameworks</li>
+            <li>Testing Checklist for Production MCP Servers</li>
+        </ol>
+    </div>
+
+    <h2>1. Why MCP Testing is Different</h2>
+    <p>Traditional API testing sends HTTP requests and checks responses. MCP testing must account for:</p>
+    <ul>
+        <li><strong>Bidirectional communication</strong> — The server can send notifications to the client</li>
+        <li><strong>Multiple transport types</strong> — stdio, Server-Sent Events (SSE), and Streamable HTTP each have different failure modes</li>
+        <li><strong>JSON-RPC 2.0 protocol</strong> — Request IDs, error codes, and batch processing add complexity</li>
+        <li><strong>Multiple interaction types</strong> — Tools, Resources, and Prompts each have different schemas</li>
+        <li><strong>Session management</strong> — Initialization handshake, capability negotiation, and graceful shutdown</li>
+        <li><strong>Payment &amp; rate limiting</strong> — Error code -32042 requires specific handling</li>
+    </ul>
+
+    <div class="callout">
+        <strong>Key Insight:</strong> A tool might work perfectly in isolation but fail when called through the MCP protocol layer due to serialization issues, transport problems, or capability mismatches.
+    </div>
+
+    <h2>2. Testing Pyramid for MCP Servers</h2>
+    <table>
+        <tr><th>Level</th><th>Scope</th><th>Speed</th><th>Tools</th><th>What You Test</th></tr>
+        <tr><td><span class="badge">Unit</span></td><td>Single function/tool</td><td>~1ms</td><td>Jest, pytest, vitest</td><td>Business logic, input validation</td></tr>
+        <tr><td><span class="badge yellow">Integration</span></td><td>MCP protocol layer</td><td>~10ms</td><td>Custom MCP test client</td><td>JSON-RPC compliance, tool registration</td></tr>
+        <tr><td><span class="badge green">E2E</span></td><td>Full client-server</td><td>~100ms</td><td>MCP Inspector, custom scripts</td><td>Complete workflows, transport</td></tr>
+        <tr><td><span class="badge red">Production</span></td><td>Live server</td><td>~1s</td><td>Health checks, monitoring</td><td>Real-world reliability</td></tr>
+    </table>
+
+    <h2>3. Unit Testing: Testing Individual Tools</h2>
+    <p>Unit tests validate your tool's business logic independently from the MCP protocol. Test input validation, output formatting, and error handling.</p>
+
+    <h3>Python Example with pytest</h3>
+    <pre><code># test_tools.py
+import pytest
+from mcp_factory.tools.calculator import calculate
+
+def test_calculator_addition():
+    """Test basic arithmetic tool."""
+    result = calculate(operation="add", a=10, b=5)
+    assert result == 15
+
+def test_calculator_division_by_zero():
+    """Test error handling for division by zero."""
+    with pytest.raises(ValueError, match="Cannot divide by zero"):
+        calculate(operation="divide", a=10, b=0)
+
+def test_calculator_invalid_operation():
+    """Test handling of unsupported operations."""
+    with pytest.raises(ValueError, match="Unsupported operation"):
+        calculate(operation="modulo", a=10, b=3)
+
+# Test input validation
+def test_calculator_type_validation():
+    """Test that non-numeric inputs are rejected."""
+    with pytest.raises(TypeError):
+        calculate(operation="add", a="hello", b=5)
+
+# Test MCP tool schema compliance
+def test_tool_returns_valid_structure():
+    """Ensure tool output matches expected MCP content format."""
+    result = calculate(operation="add", a=1, b=2)
+    assert isinstance(result, (int, float))
+    assert result == 3</code></pre>
+
+    <h3>TypeScript Example with Vitest</h3>
+    <pre><code>// tools/calculator.test.ts
+import { describe, it, expect } from 'vitest';
+import { calculate } from './calculator';
+
+describe('Calculator Tool', () => {
+  it('should add two numbers', () => {
+    expect(calculate('add', 10, 5)).toBe(15);
+  });
+
+  it('should handle division by zero', () => {
+    expect(() => calculate('divide', 10, 0)).toThrow('Cannot divide by zero');
+  });
+
+  it('should validate input types', () => {
+    expect(() => calculate('add', 'hello' as any, 5)).toThrow();
+  });
+
+  it('should return numeric results', () => {
+    const result = calculate('multiply', 3, 4);
+    expect(typeof result).toBe('number');
+  });
+});</code></pre>
+
+    <div class="callout green">
+        <strong>Best Practice:</strong> Design your tool functions to be pure (no side effects) so they're easy to unit test. Inject dependencies (HTTP clients, databases) rather than importing them directly.
+    </div>
+
+    <h2>4. Integration Testing: Testing the MCP Protocol Layer</h2>
+    <p>Integration tests verify that your server correctly implements the MCP protocol — initialization, capability negotiation, tool listing, and tool invocation via JSON-RPC 2.0.</p>
+
+    <h3>Python Integration Test</h3>
+    <pre><code># test_mcp_integration.py
+import asyncio
+import json
+import pytest
+
+async def test_initialize_handshake():
+    """Test MCP server initialization handshake."""
+    from mcp_factory.server import create_server
+
+    server = create_server()
+
+    # Simulate client sending initialize request
+    init_request = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {
+                "name": "test-client",
+                "version": "1.0.0"
+            }
+        }
+    }
+
+    response = await server.handle_request(json.dumps(init_request))
+    response_data = json.loads(response)
+
+    assert response_data["jsonrpc"] == "2.0"
+    assert response_data["id"] == 1
+    assert "result" in response_data
+    assert response_data["result"]["protocolVersion"] == "2024-11-05"
+    assert "serverInfo" in response_data["result"]
+
+async def test_list_tools():
+    """Test that server correctly lists available tools."""
+    server = create_server()
+    await server.initialize()
+
+    list_tools_request = {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/list",
+        "params": {}
+    }
+
+    response = await server.handle_request(json.dumps(list_tools_request))
+    response_data = json.loads(response)
+
+    assert "result" in response_data
+    tools = response_data["result"]["tools"]
+    assert len(tools) > 0
+
+    # Validate tool schema
+    for tool in tools:
+        assert "name" in tool
+        assert "description" in tool
+        assert "inputSchema" in tool
+        # inputSchema must be valid JSON Schema
+        assert tool["inputSchema"]["type"] == "object"
+
+async def test_call_tool():
+    """Test invoking a tool through the MCP protocol."""
+    server = create_server()
+    await server.initialize()
+
+    call_request = {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+            "name": "calculate",
+            "arguments": {"operation": "add", "a": 10, "b": 5}
+        }
+    }
+
+    response = await server.handle_request(json.dumps(call_request))
+    response_data = json.loads(response)
+
+    assert "result" in response_data
+    assert response_data["result"]["content"][0]["text"] == "15"
+
+async def test_invalid_method():
+    """Test that server returns proper error for invalid methods."""
+    server = create_server()
+    await server.initialize()
+
+    invalid_request = {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "tools/nonexistent",
+        "params": {}
+    }
+
+    response = await server.handle_request(json.dumps(invalid_request))
+    response_data = json.loads(response)
+
+    assert "error" in response_data
+    assert response_data["error"]["code"] == -32601  # Method not found</code></pre>
+
+    <h3>TypeScript Integration Test</h3>
+    <pre><code>// server.integration.test.ts
+import { describe, it, expect, beforeAll } from 'vitest';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { createServer } from './server.js';
+
+describe('MCP Server Integration', () => {
+  let client: Client;
+  let transport: InMemoryTransport;
+
+  beforeAll(async () => {
+    const server = createServer();
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+
+    client = new Client({ name: 'test-client', version: '1.0.0' });
+    await client.connect(transport);
+  });
+
+  it('should list available tools', async () => {
+    const { tools } = await client.listTools();
+    expect(tools.length).toBeGreaterThan(0);
+    expect(tools[0]).toHaveProperty('name');
+    expect(tools[0]).toHaveProperty('inputSchema');
+  });
+
+  it('should invoke calculate tool', async () => {
+    const result = await client.callTool({
+      name: 'calculate',
+      arguments: { operation: 'add', a: 10, b: 5 }
+    });
+    expect(result.content[0].text).toBe('15');
+  });
+
+  it('should return error for unknown tool', async () => {
+    await expect(
+      client.callTool({ name: 'nonexistent', arguments: {} })
+    ).rejects.toThrow();
+  });
+});</code></pre>
+
+    <h2>5. E2E Testing: Testing Complete Client-Server Flows</h2>
+    <p>End-to-end tests launch your server as a subprocess and communicate via stdio — exactly how Claude Desktop or Cursor would.</p>
+
+    <pre><code># test_e2e.py
+import subprocess
+import json
+import pytest
+
+@pytest.fixture
+def server_process():
+    """Launch MCP server as subprocess (stdio transport)."""
+    proc = subprocess.Popen(
+        ['python', '-m', 'mcp_factory.server'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    yield proc
+    proc.terminate()
+    proc.wait(timeout=5)
+
+def send_request(proc, request):
+    """Send a JSON-RPC request and read the response."""
+    request_str = json.dumps(request)
+    proc.stdin.write(f"Content-Length: {len(request_str)}\r\n\r\n{request_str}")
+    proc.stdin.flush()
+
+    # Read response header
+    header = proc.stdout.readline().strip()
+    content_length = int(header.split(': ')[1])
+
+    # Read response body
+    body = proc.stdout.read(content_length)
+    return json.loads(body)
+
+def test_full_workflow(server_process):
+    """Test complete E2E workflow: init → list tools → call tool."""
+    # 1. Initialize
+    init_response = send_request(server_process, {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "e2e-test", "version": "1.0.0"}
+        }
+    })
+    assert init_response["result"]["protocolVersion"] == "2024-11-05"
+
+    # 2. Send initialized notification
+    send_request(server_process, {
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized"
+    })
+
+    # 3. List tools
+    list_response = send_request(server_process, {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/list",
+        "params": {}
+    })
+    assert len(list_response["result"]["tools"]) > 0
+
+    # 4. Call a tool
+    call_response = send_request(server_process, {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+            "name": "calculate",
+            "arguments": {"operation": "multiply", "a": 6, "b": 7}
+        }
+    })
+    assert call_response["result"]["content"][0]["text"] == "42"</code></pre>
+
+    <h2>6. Mock MCP Clients for Testing</h2>
+    <p>Create a reusable mock client for rapid testing. The <code>@modelcontextprotocol/sdk</code> provides <code>InMemoryTransport</code> for this purpose.</p>
+
+    <pre><code>// mock-client.ts
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+
+export async function createTestPair(serverSetup: (server: McpServer) => void) {
+  const server = new McpServer({ name: 'test-server', version: '1.0.0' });
+  serverSetup(server);
+
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+
+  const client = new Client({ name: 'test-client', version: '1.0.0' });
+  const serverClient = new Client({ name: 'test-server', version: '1.0.0' });
+
+  await Promise.all([
+    client.connect(clientTransport),
+    serverClient.connect(serverTransport)
+  ]);
+
+  return { client, server: serverClient, cleanup: async () => {
+    await client.close();
+    await serverClient.close();
+  }};
+}
+
+// Usage in tests
+import { describe, it, expect } from 'vitest';
+import { createTestPair } from './mock-client';
+
+describe('MCP Tools', () => {
+  it('should work through mock transport', async () => {
+    const { client, cleanup } = await createTestPair((server) => {
+      server.tool('echo', { message: 'string' }, async ({ message }) => ({
+        content: [{ type: 'text', text: message }]
+      }));
+    });
+
+    const result = await client.callTool({
+      name: 'echo',
+      arguments: { message: 'hello mcp' }
+    });
+
+    expect(result.content[0].text).toBe('hello mcp');
+    await cleanup();
+  });
+});</code></pre>
+
+    <h2>7. Transport-Level Testing</h2>
+    <p>Each MCP transport type has unique failure modes. Test each one your server supports:</p>
+
+    <table>
+        <tr><th>Transport</th><th>Failure Modes to Test</th><th>Recovery Strategy</th></tr>
+        <tr>
+            <td><strong>stdio</strong></td>
+            <td>Process crash, stdin/stdout pipe break, buffer overflow</td>
+            <td>Parent process restart, health check ping</td>
+        </tr>
+        <tr>
+            <td><strong>SSE</strong></td>
+            <td>Connection drops, server restart, firewall timeout</td>
+            <td>Auto-reconnect with exponential backoff</td>
+        </tr>
+        <tr>
+            <td><strong>Streamable HTTP</strong></td>
+            <td>POST failures, missing session ID, network latency</td>
+            <td>Session resumption, request retry</td>
+        </tr>
+    </table>
+
+    <pre><code># test_transport_resilience.py
+import asyncio
+import pytest
+
+async def test_sse_reconnection():
+    """Test that SSE client reconnects after server restart."""
+    from mcp_factory.client.sse_client import SSEClient
+
+    client = SSEClient("http://localhost:8080/mcp")
+
+    # Initial connection
+    await client.connect()
+    tools = await client.list_tools()
+    assert len(tools) > 0
+
+    # Simulate server restart
+    client.disconnect()
+
+    # Should reconnect automatically
+    await client.connect()
+    tools_after = await client.list_tools()
+    assert len(tools_after) > 0
+
+async def test_stdio_process_crash():
+    """Test that stdio client handles server process crash."""
+    import subprocess
+
+    proc = subprocess.Popen(['python', '-m', 'crash_server'],
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE)
+    # Server crashes on second request
+    proc.stdin.write('{"jsonrpc":"2.0","id":1,"method":"initialize",...}\n')
+    # ... should handle gracefully with proper error</code></pre>
+
+    <h2>8. Testing MCP Responses and JSON-RPC Compliance</h2>
+    <p>Every MCP response must comply with JSON-RPC 2.0. Use these assertions:</p>
+
+    <pre><code># test_jsonrpc_compliance.py
+import json
+
+def validate_jsonrpc_response(response_str):
+    """Validate that a response complies with JSON-RPC 2.0."""
+    response = json.loads(response_str)
+
+    # Must have jsonrpc version
+    assert response.get("jsonrpc") == "2.0", "Missing jsonrpc version"
+
+    # Must have either 'result' or 'error', never both
+    has_result = "result" in response
+    has_error = "error" in response
+    assert has_result != has_error, "Must have result OR error, not both/neither"
+
+    # Must have id matching request
+    assert "id" in response, "Missing response id"
+
+    if has_error:
+        error = response["error"]
+        assert "code" in error, "Error must have code"
+        assert "message" in error, "Error must have message"
+        # Standard JSON-RPC error codes
+        assert isinstance(error["code"], int)
+
+    return True
+
+def test_all_mcp_errors_use_correct_format():
+    """Test that MCP-specific errors use the reserved -32000 to -32099 range."""
+    mcp_errors = [
+        (-32001, "Resource not found"),
+        (-32002, "Tool not found"),
+        (-32042, "Payment required"),  # MCP billing error
+    ]
+
+    for code, message in mcp_errors:
+        response = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": {"code": code, "message": message}
+        }
+        assert validate_jsonrpc_response(json.dumps(response))</code></pre>
+
+    <h2>9. CI/CD Pipeline for MCP Servers</h2>
+    <p>Automate your MCP testing with GitHub Actions:</p>
+
+    <pre><code># .github/workflows/test.yml
+name: MCP Server Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[test]"
+      - run: pytest tests/unit/ -v --cov=mcp_factory --cov-report=xml
+      - uses: codecov/codecov-action@v4
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e ".[test]"
+      - run: pytest tests/integration/ -v
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e ".[test]"
+      - run: pytest tests/e2e/ -v --timeout=30
+
+  protocol-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install -g @modelcontextprotocol/inspector
+      - run: mcp-inspector validate --server python -m mcp_factory.server</code></pre>
+
+    <div class="callout yellow">
+        <strong>Pro Tip:</strong> The MCP Inspector (<code>@mcp-use/inspector</code>, 161K monthly npm downloads) provides a <code>validate</code> command that checks protocol compliance. Add it to your CI pipeline.
+    </div>
+
+    <h2>10. Existing MCP Testing Frameworks</h2>
+    <table>
+        <tr><th>Framework</th><th>Language</th><th>Monthly Downloads</th><th>Key Feature</th></tr>
+        <tr>
+            <td><strong><code>@mcp-use/inspector</code></strong></td>
+            <td>TypeScript</td>
+            <td>161,134</td>
+            <td>Visual debugging + validation</td>
+        </tr>
+        <tr>
+            <td><strong><code>mcp-testing-kit</code></strong></td>
+            <td>TypeScript</td>
+            <td>2,266</td>
+            <td>LLM-based tool evaluation</td>
+        </tr>
+        <tr>
+            <td><strong><code>@dotsetlabs/bellwether</code></strong></td>
+            <td>TypeScript</td>
+            <td>179</td>
+            <td>Structural drift detection</td>
+        </tr>
+        <tr>
+            <td><strong><code>mcp-evals</code></strong></td>
+            <td>TypeScript</td>
+            <td>~500</td>
+            <td>GitHub Action for MCP evals</td>
+        </tr>
+        <tr>
+            <td><strong><code>openapi-mcp-generator</code></strong></td>
+            <td>TypeScript</td>
+            <td>87,784</td>
+            <td>Generate MCP from OpenAPI (includes tests)</td>
+        </tr>
+    </table>
+
+    <div class="callout">
+        <strong>Recommendation:</strong> Start with the official <code>@modelcontextprotocol/sdk</code> (48K dependents) for InMemoryTransport-based tests. Add <code>@mcp-use/inspector</code> for visual debugging. Use <code>mcp-testing-kit</code> for LLM-evaluated quality tests.
+    </div>
+
+    <h2>11. Testing Checklist for Production MCP Servers</h2>
+    <div class="callout green">
+        <h3>✅ Must-Have Tests</h3>
+        <ul>
+            <li>✅ <strong>Initialization handshake</strong> — Server responds correctly to <code>initialize</code> with capabilities</li>
+            <li>✅ <strong>Tool listing</strong> — <code>tools/list</code> returns valid tool definitions with JSON Schema</li>
+            <li>✅ <strong>Tool invocation</strong> — Each tool works with valid and invalid arguments</li>
+            <li>✅ <strong>Error responses</strong> — Proper JSON-RPC error codes for all failure modes</li>
+            <li>✅ <strong>Input validation</strong> — Invalid inputs return errors, not crashes</li>
+            <li>✅ <strong>Protocol version</strong> — Correct <code>2024-11-05</code> version in responses</li>
+            <li>✅ <strong>Resource listing</strong> — <code>resources/list</code> returns valid URIs and descriptions</li>
+            <li>✅ <strong>Prompt listing</strong> — <code>prompts/list</code> returns valid prompt definitions</li>
+            <li>✅ <strong>Transport resilience</strong> — Server handles connection drops gracefully</li>
+            <li>✅ <strong>Concurrency</strong> — Multiple simultaneous tool calls work correctly</li>
+            <li>✅ <strong>Large payloads</strong> — Server handles large tool arguments without crashing</li>
+            <li>✅ <strong>Timeout handling</strong> — Long-running tools handle client timeouts</li>
+        </ul>
+    </div>
+
+    <div class="callout red">
+        <h3>❌ Common Anti-Patterns</h3>
+        <ul>
+            <li>❌ Only testing business logic, never testing the MCP protocol layer</li>
+            <li>❌ Testing with <code>curl</code> to HTTP endpoints (doesn't test stdio/SSE transports)</li>
+            <li>❌ Not testing the <code>initialized</code> notification exchange</li>
+            <li>❌ Ignoring JSON-RPC error code conventions (using HTTP-like 404, 500)</li>
+            <li>❌ Not testing tool schema — invalid schemas cause client crashes</li>
+        </ul>
+    </div>
+
+    <div class="nav">
+        <a href="mcp-client-error-handling.html">← MCP Error Handling</a>
+        <a href="index.html">All Articles →</a>
+    </div>
+</div>
+</body>
+</html>
