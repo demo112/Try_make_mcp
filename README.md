@@ -83,3 +83,4 @@ python -m src.factory.build_app my_tool
 - `src/factory/`: 工厂工具链（初始化、构建、验证脚本）。
 - `src/common/`: 公共库（日志、配置等）。
 - `docs/`: 项目文档，一级目录与 `src/apps/` 保持同名。
+# test Wed May 13 10:35:17 CST 2026
