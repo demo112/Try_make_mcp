@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Server Debugging & Monitoring: Production Guide 2026</title>
+  <meta name="description" content="Master MCP server debugging and monitoring. Learn observability patterns, logging strategies, performance profiling, and production troubleshooting with real examples.">
+  <meta name="keywords" content="MCP debugging, MCP monitoring, MCP server observability, MCP production, Model Context Protocol">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+<article>
+
+# MCP Server Debugging & Monitoring: Production Guide 2026
+
+*Published: 2026-05-13 | Reading time: ~12 min | Category: Production Operations*
+
+---
+
+## Introduction
+
+Debugging MCP servers in production presents unique challenges. Unlike typical API services, MCP servers operate as long-running daemon processes with bidirectional streaming communication. This guide covers the complete observability stack for MCP servers: structured logging, metrics collection, distributed tracing, health checks, and production troubleshooting patterns used by teams running MCP at scale.
+
+> **Who this is for**: DevOps engineers, backend developers, and platform teams deploying MCP servers in production environments.
+
+---
+
+## 1. Structured Logging Architecture
+
+### The Problem with Print Debugging
+
+MCP servers handle concurrent tool calls from multiple AI agents. `console.log()` debugging creates three problems:
+
+1. **No correlation IDs** — requests interleave in logs without identifiers
+2. **No severity levels** — can't filter errors from info
+3. **No structured context** — can't query specific tool names or session IDs
+
+### Structured JSON Logging
+
+```python
+import logging
+import json
+import uuid
+from datetime import datetime
+from contextvars import ContextVar
+
+# Context variable for request correlation
+request_id: ContextVar[str] = ContextVar('request_id', default='no-request')
+
+class StructuredJSONFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        log_data = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "request_id": request_id.get(),
+            "message": record.getMessage(),
+        }
+        
+        # Add extra fields from record
+        if hasattr(record, 'tool_name'):
+            log_data['tool_name'] = record.tool_name
+        if hasattr(record, 'session_id'):
+            log_data['session_id'] = record.session_id
+        if hasattr(record, 'latency_ms'):
+            log_data['latency_ms'] = record.latency_ms
+        if record.exc_info:
+            log_data['exception'] = self.formatException(record.exc_info)
+        
+        return json.dumps(log_data)
+
+# Usage
+logger = logging.getLogger("mcp_server")
+handler = logging.StreamHandler()
+handler.setFormatter(StructuredJSONFormatter())
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+```
+
+### Request Context Middleware
+
+```python
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
+class MCPLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Generate or extract request ID
+        req_id = request.headers.get('X-Request-ID', str(uuid.uuid4()))
+        token = request_id.set(req_id)
+        
+        start_time = time.time()
+        logger.info(f"Request started: {request.url.path}")
+        
+        try:
+            response = await call_next(request)
+            latency_ms = (time.time() - start_time) * 1000
+            logger.info(
+                f"Request completed",
+                extra={"latency_ms": round(latency_ms, 2)}
+            )
+            response.headers['X-Request-ID'] = req_id
+            return response
+        except Exception as e:
+            latency_ms = (time.time() - start_time) * 1000
+            logger.error(
+                f"Request failed: {str(e)}",
+                extra={"latency_ms": round(latency_ms, 2)},
+                exc_info=True
+            )
+            raise
+        finally:
+            request_id.reset(token)
+```
+
+---
+
+## 2. Health Check Endpoints
+
+### Standard Health Check Pattern
+
+```python
+from fastapi import FastAPI, Response
+from pydantic import BaseModel
+import psutil
+import os
+
+app = FastAPI()
+
+class HealthStatus(BaseModel):
+    status: str
+    uptime_seconds: float
+    memory_mb: float
+    active_sessions: int
+    version: str
+
+@app.get("/health")
+async def health_check():
+    """Basic liveness probe — is the server running?"""
+    return {"status": "ok"}
+
+@app.get("/health/ready")
+async def readiness_check():
+    """Readiness probe — is the server ready to serve traffic?"""
+    checks = {
+        "memory": psutil.virtual_memory().percent < 90,
+        "sessions": get_active_session_count() < 1000,
+        "dependencies": await check_dependencies(),
+    }
+    
+    all_healthy = all(checks.values())
+    return Response(
+        content=json.dumps({"ready": all_healthy, "checks": checks}),
+        status_code=200 if all_healthy else 503,
+        media_type="application/json"
+    )
+
+@app.get("/health/metrics")
+async def metrics():
+    """Prometheus-compatible metrics endpoint"""
+    uptime = time.time() - start_time
+    memory_mb = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
+    
+    metrics_text = f"""# HELP mcp_server_uptime_seconds Server uptime in seconds
+# TYPE mcp_server_uptime_seconds gauge
+mcp_server_uptime_seconds {uptime}
+
+# HELP mcp_server_memory_mb Memory usage in MB
+# TYPE mcp_server_memory_mb gauge
+mcp_server_memory_mb {memory_mb}
+
+# HELP mcp_server_active_sessions Number of active sessions
+# TYPE mcp_server_active_sessions gauge
+mcp_server_active_sessions {get_active_session_count()}
+
+# HELP mcp_server_tool_calls_total Total tool calls
+# TYPE mcp_server_tool_calls_total counter
+mcp_server_tool_calls_total {get_total_tool_calls()}
+"""
+    return Response(content=metrics_text, media_type="text/plain")
+```
+
+---
+
+## 3. Observability with OpenTelemetry
+
+### Auto-Instrumentation Setup
+
+```python
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+# Configure tracing
+resource = Resource.create({
+    "service.name": "mcp-server",
+    "service.version": "1.0.0",
+    "deployment.environment": os.getenv("ENV", "production"),
+})
+
+provider = TracerProvider(resource=resource)
+processor = BatchSpanProcessor(OTLPSpanExporter(
+    endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+))
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
+
+# Instrument FastAPI
+FastAPIInstrumentor.instrument_app(app)
+```
+
+### Custom Span Decoration
+
+```python
+from opentelemetry import trace
+
+tracer = trace.get_tracer(__name__)
+
+async def handle_tool_call(tool_name: str, arguments: dict):
+    with tracer.start_as_current_span(
+        f"tool.{tool_name}",
+        attributes={
+            "tool.name": tool_name,
+            "tool.arguments_count": len(arguments),
+            "mcp.server.name": "try_make_mcp",
+        }
+    ) as span:
+        try:
+            result = await execute_tool(tool_name, arguments)
+            span.set_attribute("tool.success", True)
+            span.set_attribute("tool.result_size_bytes", len(str(result)))
+            return result
+        except Exception as e:
+            span.set_attribute("tool.success", False)
+            span.set_attribute("tool.error_type", type(e).__name__)
+            span.record_exception(e)
+            raise
+```
+
+---
+
+## 4. Prometheus Metrics Dashboard
+
+### Key Metrics to Track
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `mcp_tool_calls_total` | Counter | Total tool calls by name and status |
+| `mcp_tool_latency_seconds` | Histogram | Tool execution time distribution |
+| `mcp_active_sessions` | Gauge | Currently active MCP sessions |
+| `mcp_request_queue_depth` | Gauge | Pending requests in queue |
+| `mcp_error_rate` | Gauge | Error rate (errors / total requests) |
+| `mcp_tokens_processed_total` | Counter | Total tokens processed |
+
+### Grafana Dashboard Queries
+
+```promql
+# Tool call rate by name (last 5 minutes)
+rate(mcp_tool_calls_total[5m])
+
+# P99 latency per tool
+histogram_quantile(0.99, 
+    rate(mcp_tool_latency_seconds_bucket[5m])
+)
+
+# Error rate
+rate(mcp_tool_calls_total{status="error"}[5m]) 
+/ 
+rate(mcp_tool_calls_total[5m])
+
+# Sessions and queue
+mcp_active_sessions
+mcp_request_queue_depth
+```
+
+---
+
+## 5. Distributed Tracing Patterns
+
+### Context Propagation
+
+MCP servers often sit behind API gateways or are called by AI agents running on different infrastructure. Proper context propagation links traces end-to-end:
+
+```python
+from opentelemetry.propagate import inject, extract
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+propagator = TraceContextTextMapPropagator()
+
+async def call_upstream_service(payload: dict, headers: dict):
+    """Call another MCP server with trace context propagation"""
+    context = extract(headers)
+    
+    with tracer.start_as_current_span(
+        "mcp.upstream_call",
+        context=context,
+    ) as span:
+        # Inject trace context into outgoing request
+        outgoing_headers = {}
+        inject(outgoing_headers)
+        
+        response = await http_client.post(
+            "http://upstream-mcp:8080/mcp",
+            json=payload,
+            headers=outgoing_headers
+        )
+        
+        span.set_attribute("upstream.service", "external-mcp")
+        span.set_attribute("upstream.status", response.status_code)
+        return response.json()
+```
+
+---
+
+## 6. Common Production Issues & Solutions
+
+### Issue 1: Tool Timeouts
+
+**Symptom**: AI agent reports "tool call timed out" after 30 seconds.
+
+**Root causes & fixes**:
+
+```python
+# 1. Set explicit timeouts per tool
+TOOL_TIMEOUTS = {
+    "file_read": 5,      # seconds
+    "database_query": 30,
+    "http_request": 60,
+    "ai_inference": 120,
+}
+
+async def execute_with_timeout(tool_name: str, fn, *args):
+    timeout = TOOL_TIMEOUTS.get(tool_name, 30)
+    try:
+        return await asyncio.wait_for(fn(*args), timeout=timeout)
+    except asyncio.TimeoutError:
+        logger.warning(f"Tool {tool_name} timed out after {timeout}s")
+        return {"error": "timeout", "tool": tool_name}
+```
+
+### Issue 2: Memory Leaks from Session Accumulation
+
+**Symptom**: Memory usage grows continuously over days.
+
+**Diagnosis**:
+
+```python
+import tracemalloc
+import weakref
+
+# Track session objects
+active_sessions: weakref.WeakSet = weakref.WeakSet()
+
+async def create_session(session_id: str):
+    session = MCPSession(session_id)
+    active_sessions.add(session)
+    logger.info(
+        f"Session created",
+        extra={"active_count": len(active_sessions)}
+    )
+    
+    # Alert if too many sessions
+    if len(active_sessions) > 500:
+        logger.warning(
+            f"High session count: {len(active_sessions)}",
+            extra={"active_count": len(active_sessions)}
+        )
+```
+
+**Fix**: Use `weakref.WeakSet` to allow GC to reclaim abandoned sessions.
+
+### Issue 3: Rate Limiting from Upstream APIs
+
+```python
+from asyncio import Semaphore
+from time import time
+
+# Token bucket rate limiter
+class RateLimiter:
+    def __init__(self, rate: int, period: float):
+        self.rate = rate
+        self.period = period
+        self.allowance = rate
+        self.last_check = time()
+        self._lock = Semaphore(1)
+    
+    async def acquire(self):
+        async with self._lock:
+            now = time()
+            elapsed = now - self.last_check
+            self.last_check = now
+            self.allowance += elapsed * (self.rate / self.period)
+            
+            if self.allowance > self.rate:
+                self.allowance = self.rate
+            
+            if self.allowance < 1:
+                wait_time = (1 - self.allowance) * (self.period / self.rate)
+                logger.warning(f"Rate limit reached, waiting {wait_time:.2f}s")
+                await asyncio.sleep(wait_time)
+                self.allowance = 0
+            else:
+                self.allowance -= 1
+
+# Per-API-key rate limiters
+api_rate_limiters = {}
+
+def get_limiter(api_key: str) -> RateLimiter:
+    if api_key not in api_rate_limiters:
+        api_rate_limiters[api_key] = RateLimiter(rate=100, period=60)
+    return api_rate_limiters[api_key]
+```
+
+---
+
+## 7. Debugging in Development
+
+### MCP Inspector
+
+```bash
+# Install MCP inspector
+npx @anthropic-ai/mcp-inspector
+
+# Or use the CLI
+npx @anthropic-ai/mcp dev /path/to/your/mcp-server
+
+# Connect with a test client
+npx @anthropic-ai/mcp-client --server http://localhost:8080
+```
+
+### Local Testing with pytest
+
+```python
+import pytest
+from mcp_server import app, MCPServer
+
+@pytest.fixture
+def server():
+    return MCPServer(host="127.0.0.1", port=8081)
+
+@pytest.fixture
+async def client(server):
+    async with AsyncClient(app=server.app, base_url="http://test") as ac:
+        yield ac
+
+@pytest.mark.asyncio
+async def test_tool_call_success(client):
+    response = await client.post("/mcp", json={
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "file_read",
+            "arguments": {"path": "/tmp/test.txt"}
+        }
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert "result" in data
+
+@pytest.mark.asyncio
+async def test_tool_call_with_tracing(client):
+    """Test with OpenTelemetry trace context"""
+    headers = {"traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}
+    response = await client.post("/mcp", json={...}, headers=headers)
+    # Verify trace context was propagated
+    assert "traceresponse" in response.headers or response.status_code == 200
+```
+
+---
+
+## 8. Production Deployment Checklist
+
+Before deploying your MCP server to production, verify:
+
+- [ ] **Structured logging enabled** — JSON format, request IDs, severity levels
+- [ ] **Health endpoints exposed** — `/health`, `/health/ready`, `/health/metrics`
+- [ ] **Prometheus metrics configured** — tool call counts, latencies, error rates
+- [ ] **OpenTelemetry tracing set up** — auto-instrumentation + custom spans
+- [ ] **Rate limiting configured** — per-client and per-tool limits
+- [ ] **Timeouts set per tool** — no unbounded waits
+- [ ] **Session cleanup implemented** — WeakRef or TTL-based cleanup
+- [ ] **Graceful shutdown handled** — drain active requests before exit
+- [ ] **Environment variables documented** — all config via env, no hardcoding
+- [ ] **Alerting configured** — PagerDuty/OpsGenie for error rate spikes
+
+---
+
+## Conclusion
+
+MCP server observability isn't optional in production — it's the difference between blind debugging and data-driven optimization. Start with structured JSON logging and Prometheus metrics, add OpenTelemetry for distributed tracing, and layer in alerting for the metrics that matter most: error rate, latency P99, and active session count.
+
+The patterns in this guide scale from single-server deployments to clusters handling millions of tool calls per day.
+
+---
+
+## Further Reading
+
+- [MCP Best Practices 2026](/docs/mcp-best-practices-2026.html) — Production patterns and circuit breakers
+- [MCP Authentication & Security](/docs/mcp-authentication-security.html) — Auth patterns and TLS
+- [10 MCP Server Patterns for Production](/docs/mcp-server-patterns.html) — Architecture patterns
+
+</article>
+</main>
+</body>
+</html>
