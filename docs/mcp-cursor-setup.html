@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP with Cursor: Complete Setup Guide (2026) | Try_make_mcp</title>
+    <meta name="description" content="Learn how to integrate MCP servers with Cursor IDE. Step-by-step setup guide covering filesystem, GitHub, and custom MCP servers for enhanced AI coding.">
+    <meta name="keywords" content="MCP Cursor, Cursor IDE MCP, Cursor AI MCP setup, Model Context Protocol Cursor, Cursor extensions MCP">
+    <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/mcp-cursor-setup.html">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+    <nav><a href="index.html">← Home</a></nav>
+</header>
+<main>
+<article>
+<h1>MCP with Cursor: Complete Setup Guide (2026)</h1>
+<p><em>Published: May 2026 | Reading time: 14 minutes | Category: Setup</em></p>
+
+<h2>What is Cursor IDE and Why Use MCP with It?</h2>
+<p><strong>Cursor</strong> is an AI-first code editor built on VS Code, designed for developers who want intelligent code completion, chat, and refactoring powered by large language models. It has rapidly gained adoption among individual developers and small teams since its public launch.</p>
+
+<p>The <strong>Model Context Protocol (MCP)</strong> extends Cursor's capabilities by allowing it to connect to external tools and data sources. While Cursor has its own built-in AI features, MCP integration unlocks additional specialized tools — from RAG document search to custom API integrations — directly within the editor workflow.</p>
+
+<h2>Prerequisites</h2>
+<ul>
+    <li><strong>Cursor</strong> version 0.45+ (download from <a href="https://cursor.com">cursor.com</a>)</li>
+    <li><strong>Node.js</strong> 18+ (for running npm-based MCP servers)</li>
+    <li><strong>Python</strong> 3.9+ (for Python-based MCP servers)</li>
+    <li><strong>Git</strong> installed and configured</li>
+    <li>A terminal/command prompt</li>
+</ul>
+
+<h2>Method 1: Using Cursor's Built-in MCP Support</h2>
+
+<p>Cursor 0.45+ includes native MCP support. Here's how to configure it:</p>
+
+<h3>Step 1: Locate Cursor's MCP Settings</h3>
+<ol>
+    <li>Open Cursor → <code>Cmd/Ctrl + Shift + P</code></li>
+    <li>Type <code>MCP</code> and select <strong>"MCP: Configure"</strong></li>
+    <li>This opens <code>.cursor/mcp.json</code> in your home/user directory</li>
+</ol>
+
+<h3>Step 2: Configure a Filesystem MCP Server</h3>
+<p>Add this configuration to enable local file access:</p>
+<pre><code>{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/your/project"]
+    }
+  }
+}</code></pre>
+
+<h3>Step 3: Configure GitHub MCP Server</h3>
+<pre><code>{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}</code></pre>
+
+<h2>Method 2: Using Try_make_mcp with Cursor</h2>
+
+<p><strong>Try_make_mcp</strong> provides a factory for building and deploying custom MCP servers. When integrated with Cursor, it enables advanced document conversion and RAG-powered search over your codebase.</p>
+
+<h3>Quick Setup with Try_make_mcp</h3>
+<ol>
+    <li><strong>Clone the repository:</strong>
+    <pre><code>git clone https://github.com/demo112/Try_make_mcp.git
+cd Try_make_mcp</code></pre>
+    </li>
+    <li><strong>Install dependencies:</strong>
+    <pre><code>pip install -e .</code></pre>
+    </li>
+    <li><strong>Run an MCP server:</strong>
+    <pre><code>python -m md_converter</code></pre>
+    </li>
+    <li><strong>Add to Cursor's MCP config:</strong>
+    <pre><code>{
+  "mcpServers": {
+    "md-converter": {
+      "command": "python",
+      "args": ["-m", "md_converter"],
+      "cwd": "/path/to/Try_make_mcp"
+    }
+  }
+}</code></pre>
+    </li>
+</ol>
+
+<h2>Popular MCP Servers for Cursor</h2>
+
+<table>
+    <thead>
+        <tr><th>MCP Server</th><th>Purpose</th><th>Setup Difficulty</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>@modelcontextprotocol/server-filesystem</code></td><td>Local file operations</td><td>Easy</td></tr>
+        <tr><td><code>@modelcontextprotocol/server-github</code></td><td>GitHub API integration</td><td>Medium</td></tr>
+        <tr><td><code>@modelcontextprotocol/server-brave-search</code></td><td>Web search</td><td>Easy</td></tr>
+        <tr><td><code>@modelcontextprotocol/server-slack</code></td><td>Slack messaging</td><td>Medium</td></tr>
+        <tr><td>Try_make_mcp (md_converter)</td><td>Document conversion + RAG</td><td>Easy</td></tr>
+        <tr><td>Try_make_mcp (everything2md)</td><td>Universal document extraction</td><td>Easy</td></tr>
+        <tr><td>Custom MCP servers</td><td>Project-specific tools</td><td>Varies</td></tr>
+    </tbody>
+</table>
+
+<h2>Cursor MCP Workflow: Practical Example</h2>
+
+<p>Here's a real-world workflow combining Cursor + MCP:</p>
+
+<h3>Scenario: RAG-Powered Codebase Search</h3>
+<ol>
+    <li>Configure the <code>md_converter</code> MCP server from Try_make_mcp in Cursor</li>
+    <li>Index your codebase documentation using <code>everything2md</code></li>
+    <li>In Cursor, use the MCP-powered chat to ask questions about your codebase</li>
+    <li>The MCP server retrieves relevant documentation chunks</li>
+    <li>Cursor's AI generates contextually accurate responses</li>
+</ol>
+
+<h3>Scenario: Automated Documentation Updates</h3>
+<ol>
+    <li>Configure the <code>md_converter</code> server in Cursor</li>
+    <li>Edit code in Cursor</li>
+    <li>Ask Cursor to update documentation using the MCP tool</li>
+    <li>Changes sync automatically via the MCP protocol</li>
+</ol>
+
+<h2>Troubleshooting Common Issues</h2>
+
+<h3>Issue 1: MCP Server Won't Start</h3>
+<p><strong>Symptom:</strong> "Connection refused" or timeout errors</p>
+<p><strong>Solution:</strong></p>
+<ul>
+    <li>Verify Node.js/Python are installed: <code>node --version</code> / <code>python --version</code></li>
+    <li>Check the server command is correct (try running it manually in terminal)</li>
+    <li>Ensure the working directory (<code>cwd</code>) is set correctly</li>
+</ul>
+
+<h3>Issue 2: "MCP: Command not found" Error</h3>
+<p><strong>Symptom:</strong> Cursor shows "command not found" for npx commands</p>
+<p><strong>Solution:</strong> Install the MCP server globally or use the full path to npx:</p>
+<pre><code># Install globally
+npm install -g @modelcontextprotocol/server-filesystem
+
+# Then in mcp.json, use:
+"command": "mcp-server-filesystem"</code></pre>
+
+<h3>Issue 3: Authentication Failures</h3>
+<p><strong>Symptom:</strong> GitHub MCP returns 401 errors</p>
+<p><strong>Solution:</strong> Generate a new Personal Access Token at <a href="https://github.com/settings/tokens">github.com/settings/tokens</a> with appropriate scopes (repo, read:user).</p>
+
+<h3>Issue 4: Cursor Doesn't Detect MCP Servers</h3>
+<p><strong>Symptom:</strong> MCP servers don't appear in Cursor's command palette</p>
+<p><strong>Solution:</strong></p>
+<ol>
+    <li>Restart Cursor completely (Cmd+Q, then reopen)</li>
+    <li>Check <code>~/.cursor/mcp.json</code> for syntax errors (valid JSON)</li>
+    <li>Ensure no duplicate server names</li>
+</ol>
+
+<h2>Comparing Cursor MCP vs VS Code MCP</h2>
+
+<table>
+    <thead>
+        <tr><th>Feature</th><th>Cursor MCP</th><th>VS Code MCP</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Native support</td><td>Yes (0.45+)</td><td>Via extension</td></tr>
+        <tr><td>AI-first design</td><td>✅ Yes</td><td>Partial</td></tr>
+        <tr><td>MCP tool visibility in chat</td><td>Direct inline</td><td>Sidebar panel</td></tr>
+        <tr><td>Performance</td><td>Optimized for LLM use</td><td>Standard</td></tr>
+        <tr><td>Custom MCP integration</td><td>Full support</td><td>Full support</td></tr>
+        <tr><td>Learning curve</td><td>Lower</td><td>Moderate</td></tr>
+    </tbody>
+</table>
+
+<h2>Best Practices for Cursor + MCP</h2>
+
+<ul>
+    <li><strong>Security first:</strong> Never expose sensitive API keys in the mcp.json file that gets committed to version control. Use environment variables.</li>
+    <li><strong>Start simple:</strong> Begin with one MCP server, verify it works, then add more.</li>
+    <li><strong>Test outside Cursor:</strong> Run the MCP server manually first to catch configuration errors.</li>
+    <li><strong>Use Try_make_mcp:</strong> The factory pattern makes it easy to create project-specific MCP servers without starting from scratch.</li>
+    <li><strong>Monitor token usage:</strong> MCP tool calls consume context tokens. Be mindful in long conversations.</li>
+    <li><strong>Document your setup:</strong> Keep a README in your project documenting which MCP servers are configured.</li>
+</ul>
+
+<h2>Conclusion</h2>
+
+<p>MCP integration with Cursor transforms the already-capable AI code editor into a powerful, extensible development environment. Whether you're using official MCP servers from the Model Context Protocol project or custom servers built with <strong>Try_make_mcp</strong>, the setup process is straightforward and the productivity gains are immediate.</p>
+
+<p>Start with the filesystem MCP server for local file operations, then gradually add specialized servers as your workflow demands. For developers working with documentation-heavy projects, Try_make_mcp's document conversion and RAG tools offer significant advantages.</p>
+
+<p><strong>Ready to get started?</strong> Clone <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> and configure your first MCP server in Cursor today.</p>
+
+<hr>
+<p><em>This guide is part of the Try_make_mcp documentation series. For more MCP tutorials, see our <a href="index.html">homepage</a>.</em></p>
+</article>
+</main>
+<footer>
+    <p>Built with <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> — MCP Factory for AI Agents</p>
+</footer>
+</body>
+</html>
