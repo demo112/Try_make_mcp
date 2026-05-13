@@ -1,0 +1,11 @@
+# Try_make_mcp Funding Configuration
+# GitHub reads this automatically and shows "Sponsor" button on the repo
+# Cooper enables GitHub Sponsors at: https://github.com/sponsors/demo112
+
+github:
+  - demo112  # GitHub Sponsors handle
+
+# Future options (uncomment when ready):
+# custom:
+#   - https://ko-fi.com/yourhandle
+#   - https://www.patreon.com/yourhandle
