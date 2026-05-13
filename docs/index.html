@@ -4,22 +4,109 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MCP Blog — Building AI Agents That Actually Work</title>
+<meta name="description" content="Practical guides on MCP servers, RAG workflows, and production AI agent patterns. Built with Try_make_mcp.">
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:0 auto;padding:40px 20px;background:#0d1117;color:#c9d1d9}
 h1{color:#58a6ff;border-bottom:2px solid #30363d;padding-bottom:10px}
-.post{margin:30px 0;padding:20px;border:1px solid #30363d;border-radius:8px}
+.post{margin:30px 0;padding:20px;border:1px solid #30363d;border-radius:8px;animation:fadeIn 0.5s ease}
+.post:hover{border-color:#58a6ff50;background:#161b22}
 .post h2{color:#f0883e;margin-top:0}
 .post h3{color:#8b949e;font-size:0.9em;font-weight:400;margin-bottom:15px}
-.tag{background:#388bfd33;color:#58a6ff;padding:3px 10px;border-radius:12px;font-size:0.8em}
+.tag{background:#388bfd33;color:#58a6ff;padding:3px 10px;border-radius:12px;font-size:0.8em;margin-right:5px}
 .post-body{line-height:1.7}
+.post-body ul,.post-body ol{line-height:1.9}
+.post-body pre{background:#161b22;padding:15px;border-radius:6px;overflow-x:auto;font-size:0.85em;border:1px solid #30363d}
+.post-body code{color:#79c0ff;background:#161b22;padding:2px 6px;border-radius:4px}
 a{color:#58a6ff;text-decoration:none}
 a:hover{text-decoration:underline}
 .footer{margin-top:60px;padding-top:20px;border-top:1px solid #30363d;text-align:center;color:#8b949e;font-size:0.9em}
+.hero{background:linear-gradient(135deg,#161b22 0%,#0d1117 100%);padding:30px;border-radius:12px;margin-bottom:40px;border:1px solid #30363d}
+.hero h1{margin:0 0 10px 0;border:none;padding:0}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
+
+<div class="hero">
 <h1>MCP Blog</h1>
-<p style="color:#8b949e;font-size:1.1em">Building production-ready AI agents with the Model Context Protocol</p>
+<p style="color:#8b949e;font-size:1.1em;margin:0">Building production-ready AI agents with the Model Context Protocol</p>
+</div>
+
+<div class="post">
+<h2>🧠 RAG Flow MCP: Building Self-Evolving Knowledge Assistants</h2>
+<h3>May 13, 2026 · <span class="tag">RAG</span> <span class="tag">Tutorial</span> <span class="tag">Advanced</span></h3>
+<div class="post-body">
+<p>Most RAG implementations answer questions. RAG Flow MCP does something more powerful: it <em>evolves</em> knowledge bases through structured feedback loops.</p>
+
+<p><strong>The 4-Engine Architecture:</strong></p>
+<ul>
+<li><strong>Inference Engine</strong> — semantic search over your knowledge base with confidence scoring</li>
+<li><strong>Evolution Engine</strong> — detects knowledge gaps and generates new documentation</li>
+<li><strong>Governance Engine</strong> — enforces consistency rules across all markdown docs</li>
+<li><strong>Lifecycle Engine</strong> — manages version history and deprecation chains</li>
+</ul>
+
+<p><strong>Real-world use case:</strong> Feed it your codebase, and it will identify undocumented patterns, draft docs for them, and flag inconsistencies — all via MCP protocol.</p>
+
+<pre><code># Start in 3 lines
+cd rag_flow_mcp
+python -m mcp_factory serve --template rag_flow
+# RAG Flow MCP is live on localhost:8000</code></pre>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp/tree/main/docs/rag_flow_mcp">View RAG Flow MCP Source →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>⚡ 6A Workflow: Build MCP Servers in Days, Not Months</h2>
+<h3>May 12, 2026 · <span class="tag">Workflow</span> <span class="tag">Best Practices</span></h3>
+<div class="post-body">
+<p>Creating an MCP server from scratch involves dozens of decisions: authentication, error handling, logging, health checks, deployment. The 6A workflow standardizes all of it.</p>
+
+<p><strong>The 6 Phases:</strong></p>
+<ol>
+<li><strong>Align</strong> — clarify requirements, get stakeholder consensus</li>
+<li><strong>Architect</strong> — design the system with unified architecture doc</li>
+<li><strong>Atomize</strong> — break down into concrete tasks with acceptance criteria</li>
+<li><strong>Approve</strong> — checklist review before execution</li>
+<li><strong>Automate</strong> — write code, run tests</li>
+<li><strong>Assess</strong> — acceptance report, lessons learned, delivery sign-off</li>
+</ol>
+
+<p><strong>Why it works:</strong> Most MCP projects fail because the "Align" and "Architect" phases are skipped. Teams jump straight to coding, then spend months on rewrites. The 6A workflow front-loads decisions.</p>
+
+<p>Try_make_mcp's mcp_factory CLI enforces the 6A pipeline automatically:</p>
+
+<pre><code>python -m mcp_factory init --name my_server --workflow 6a
+# Creates full 6A directory structure with templates</code></pre>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp/tree/main/docs/mcp_factory">View 6A Workflow Templates →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>🔧 MCP Server Patterns: Lessons from 6 Production Deployments</h2>
+<h3>May 11, 2026 · <span class="tag">Patterns</span> <span class="tag">Production</span></h3>
+<div class="post-body">
+<p>After building 6 MCP servers with Try_make_mcp, patterns emerge. Here are the 4 most important lessons:</p>
+
+<p><strong>1. Separate Tool Discovery from Tool Execution</strong></p>
+<p>Don't put business logic in your MCP handler. Use a "tool registry" pattern — the handler only routes requests. This makes testing 10x easier.</p>
+
+<p><strong>2. Health Check = Trust Signal</strong></p>
+<p>Every MCP server should expose a <code>/health</code> endpoint. Clients use it to verify connectivity before sending real requests. Without it, you'll get mysterious timeouts in production.</p>
+
+<p><strong>3. Structured Logging is Non-Negotiable</strong></p>
+<p>Use <code>structlog</code> or <code>json-logging</code>. Raw print statements don't survive production. You need log levels, request IDs, and trace context.</p>
+
+<p><strong>4. Graceful Degradation Over Hard Failures</strong></p>
+<p>If your RAG lookup times out, return a partial answer with a warning flag. Don't crash. The AI client can work with incomplete data; it can't work with exceptions.</p>
+
+<p><strong>TL;DR:</strong> Treat MCP servers like web APIs, not scripts. Design for failure, log aggressively, test with real clients.</p>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp">Explore Try_make_mcp Templates →</a></p>
+</div>
+</div>
 
 <div class="post">
 <h2>📦 Try_make_mcp: A Factory for MCP Servers</h2>
@@ -42,15 +129,6 @@ a:hover{text-decoration:underline}
 <div class="post-body">
 <p>MCP servers connect AI models to real-world tools. That's powerful — and dangerous. Here are the 7 authentication vulnerabilities found in 281 MCP implementations.</p>
 <p>→ <a href="https://github.com/demo112/Try_make_mcp#security">Security Guide →</a></p>
-</div>
-</div>
-
-<div class="post">
-<h2>📊 97M Installs: MCP Ecosystem in 2026</h2>
-<h3>May 5, 2026 · <span class="tag">Ecosystem</span> <span class="tag">Stats</span></h3>
-<div class="post-body">
-<p>The Model Context Protocol went from experiment to enterprise standard in 18 months. Here's what the ecosystem looks like today.</p>
-<p>Key stats: 97M monthly installs, every major AI provider on board, Linux Foundation backing.</p>
 </div>
 </div>
 
