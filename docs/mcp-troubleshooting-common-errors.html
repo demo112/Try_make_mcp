@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Troubleshooting: Common Errors & Fixes (2026)</title>
+    <meta name="description" content="Complete guide to troubleshooting MCP server errors. Solutions for connection refused, authentication failures, timeout issues, transport errors, and more. Updated 2026.">
+    <meta name="keywords" content="MCP troubleshooting, MCP error fix, MCP connection refused, MCP timeout, MCP authentication error, MCP transport error, Model Context Protocol debugging">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.7; color: #24292f; background: #fff; }
+        h1 { font-size: 2rem; color: #0969da; border-bottom: 2px solid #0969da; padding-bottom: 0.5rem; }
+        h2 { font-size: 1.4rem; color: #1f2328; margin-top: 2rem; padding-left: 0.75rem; border-left: 4px solid #0969da; }
+        h3 { font-size: 1.1rem; color: #1f2328; margin-top: 1.5rem; }
+        .error-block { background: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; padding: 1rem; margin: 1rem 0; font-family: monospace; font-size: 0.9rem; color: #b71c1c; }
+        .fix-block { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+        .fix-block strong { color: #2e7d32; }
+        code { background: #f6f8fa; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.875rem; }
+        pre { background: #161b22; color: #e6edf3; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.875rem; line-height: 1.5; }
+        pre code { background: none; color: inherit; padding: 0; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #d0d7de; padding: 0.75rem; text-align: left; }
+        th { background: #f6f8fa; font-weight: 600; }
+        .toc { background: #f6f8fa; border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+        .toc ul { margin: 0.5rem 0 0.5rem 1.5rem; }
+        .toc li { margin: 0.25rem 0; }
+        .nav-links { display: flex; justify-content: space-between; margin: 2rem 0; padding: 1rem 0; border-top: 1px solid #d0d7de; }
+        .nav-links a { color: #0969da; text-decoration: none; font-weight: 500; }
+        .nav-links a:hover { text-decoration: underline; }
+        .updated { color: #8b949e; font-size: 0.85rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+
+<h1>MCP Troubleshooting: Common Errors & Fixes (2026)</h1>
+<p class="updated">Last updated: May 2026 · Reading time: 16 minutes</p>
+
+<div class="toc">
+<strong>Table of Contents</strong>
+<ul>
+<li><a href="#connection">1. Connection Refused / Cannot Connect</a></li>
+<li><a href="#auth">2. Authentication & Authorization Failures</a></li>
+<li><a href="#timeout">3. Timeout & Latency Issues</a></li>
+<li><a href="#transport">4. Transport Protocol Errors</a></li>
+<li><a href="#stdio">5. Stdio Transport Common Issues</a></li>
+<li><a href="#jsonrpc">6. JSON-RPC Protocol Errors</a></li>
+<li><a href="#manifest">7. MCP Manifest / Configuration Errors</a></li>
+<li><a href="#resources">8. Resource & Tool Discovery Failures</a></li>
+<li><a href="#sampling">9. Sampling / SamplingRequest Errors</a></li>
+<li><a href="#debugging">10. Debugging Tools & Techniques</a></li>
+<li><a href="#checklist">11. Quick Reference Checklist</a></li>
+</ul>
+</div>
+
+<p>Model Context Protocol (MCP) servers can fail for many reasons — misconfigured endpoints, expired tokens, transport mismatches, or protocol version incompatibilities. This guide covers the 40+ most common MCP errors with practical fixes you can apply immediately.</p>
+
+<h2 id="connection">1. Connection Refused / Cannot Connect</h2>
+
+<h3>Error: <code>ECONNREFUSED</code> or <code>Connection refused</code></h3>
+
+<div class="error-block">
+Error: connect ECONNREFUSED 127.0.0.1:8080<br>
+Error: Connection refused — is the MCP server running?
+</div>
+
+<p><strong>Causes & Fixes:</strong></p>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Verify the server is running</strong><br>
+MCP servers using HTTP/SSE transport must be actively listening before the client connects. Start the server first:<br>
+<pre><code>python -m mcp_server my_server.py
+# Or with uvicorn for FastAPI-based servers:
+uvicorn my_server:app --host 127.0.0.1 --port 8080</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Check the correct port and host</strong><br>
+Misconfigured host/port is the #1 cause. Verify in your client config:<br>
+<pre><code># Claude Desktop config (~/.claude_desktop_config.json)
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "python",
+      "args": ["/path/to/server.py"],
+      "env": {
+        "MCP_PORT": "8080",
+        "MCP_HOST": "127.0.0.1"
+      }
+    }
+  }
+}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 3: Check firewall / port availability</strong><br>
+<pre><code># macOS/Linux: Check if port is listening
+lsof -i :8080
+netstat -tlnp | grep 8080
+
+# Test connectivity
+curl http://127.0.0.1:8080/health</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 4: Docker port mapping</strong><br>
+If running inside Docker, ensure ports are mapped correctly:<br>
+<pre><code>docker run -p 127.0.0.1:8080:8080 my-mcp-server</code></pre>
+</div>
+
+<h3>Error: <code>ENOTFOUND</code> or DNS resolution failure</h3>
+
+<div class="error-block">
+Error: getaddrinfo ENOTFOUND api.example.com
+Error: DNS lookup failed for remote MCP server
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix: Check DNS and network connectivity</strong><br>
+<pre><code># Verify DNS resolution
+nslookup api.example.com
+dig api.example.com
+
+# Test with curl
+curl -v https://api.example.com/mcp
+
+# Check proxy settings (common in corporate environments)
+echo $HTTP_PROXY
+echo $HTTPS_PROXY</code></pre>
+</div>
+
+<h2 id="auth">2. Authentication & Authorization Failures</h2>
+
+<h3>Error: <code>401 Unauthorized</code> or <code>Authentication failed</code></h3>
+
+<div class="error-block">
+Error: 401 Unauthorized — Invalid or missing API key<br>
+Error: Authentication failed: Bearer token expired<br>
+Error: HMAC signature verification failed
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Verify API key format and placement</strong><br>
+Different transports require different key placements:<br>
+<pre><code># For stdio transport: key in process environment
+{
+  "command": "python",
+  "args": ["/path/to/server.py"],
+  "env": {
+    "API_KEY": "sk-xxxxxxxxxxxxxxxx"
+  }
+}
+
+# For HTTP/SSE: key in Authorization header
+curl -H "Authorization: Bearer sk-xxx" https://api.example.com/mcp
+
+# For API key in header
+curl -H "X-API-Key: sk-xxx" https://api.example.com/mcp</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Check token expiration</strong><br>
+Many MCP providers use short-lived tokens. Implement refresh logic:<br>
+<pre><code>import time
+
+class TokenManager:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.expires_at = time.time() + 3600  # 1 hour
+    
+    def get_valid_token(self):
+        if time.time() >= self.expires_at:
+            self.api_key = self.refresh_token()
+            self.expires_at = time.time() + 3600
+        return self.api_key</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 3: OAuth 2.0 configuration errors</strong><br>
+Common OAuth mistakes with MCP servers:<br>
+<pre><code># Wrong: Token in query param (some servers reject this)
+curl "https://api.example.com/mcp?token=sk-xxx"  # ❌
+
+# Correct: Authorization header
+curl -H "Authorization: Bearer sk-xxx" https://api.example.com/mcp
+
+# Correct: mTLS with client certificates
+curl --cert client.crt --key client.key https://api.example.com/mcp</code></pre>
+</div>
+
+<h2 id="timeout">3. Timeout & Latency Issues</h2>
+
+<h3>Error: <code>TimeoutError</code> or <code>Request timeout after N ms</code></h3>
+
+<div class="error-block">
+Error: TimeoutError: Request to MCP server timed out after 30000ms<br>
+Error: Server did not respond within configured timeout (5000ms)<br>
+Error: Tool execution exceeded maximum allowed duration
+</div>
+
+<table>
+<tr><th>Timeout Type</th><th>Default Value</th><th>When to Increase</th></tr>
+<tr><td>Connection timeout</td><td>5-10 seconds</td><td>Remote servers, cold starts</td></tr>
+<tr><td>Request timeout</td><td>30 seconds</td><td>Long-running tool calls, RAG</td></tr>
+<tr><td>Tool call timeout</td><td>Varies (10s-5min)</td><td>File I/O, database queries</td></tr>
+<tr><td>Streaming timeout</td><td>60 seconds</td><td>Large response streaming</td></tr>
+</table>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Configure timeouts appropriately</strong><br>
+<pre><code># Claude Desktop: configure timeouts in config
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "python",
+      "args": ["/path/to/server.py"],
+      "timeout": 120,  // seconds, for all requests
+      "env": {
+        "REQUEST_TIMEOUT": "60",
+        "CONNECT_TIMEOUT": "30"
+      }
+    }
+  }
+}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Implement proper streaming for long responses</strong><br>
+Long responses should use Server-Sent Events (SSE) streaming to avoid timeouts:<br>
+<pre><code>@app.post("/mcp")
+async def mcp_endpoint(request: Request):
+    async def event_generator():
+        result = await process_long_task(request)
+        # Stream results instead of waiting
+        for chunk in result:
+            yield f"data: {json.dumps(chunk)}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream"
+    )</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 3: Cold start optimization for containerized servers</strong><br>
+<pre><code># Dockerfile with pre-warming
+FROM python:3.11-slim
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-warm: import all modules at build time
+RUN python -c "import mcp_server; import handlers; import db"
+
+COPY . .
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0"]</code></pre>
+</div>
+
+<h2 id="transport">4. Transport Protocol Errors</h2>
+
+<h3>Error: <code>Invalid transport type</code> or <code>Unsupported transport</code></h3>
+
+<div class="error-block">
+Error: Invalid transport type 'http'. Supported: stdio, sse<br>
+Error: Transport mismatch: client uses stdio, server expects HTTP/SSE
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Know which transport each MCP server requires</strong><br>
+MCP officially supports two transports:</p>
+<ul>
+<li><strong>stdio</strong>: Spawns server as subprocess. Used by Claude Desktop, Cursor, VS Code extensions.</li>
+<li><strong>HTTP/SSE</strong>: Server runs as network service. Used by remote MCP servers, web integrations.</li>
+</ul>
+<pre><code># stdio transport (for Claude Desktop, etc.)
+{
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+}
+
+# HTTP/SSE transport (for remote servers)
+{
+  "url": "https://api.example.com/mcp/sse"
+}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Transport mismatch between client and server</strong><br>
+If your client uses stdio but server exposes HTTP:<br>
+<pre><code># Option A: Use an MCP proxy that bridges stdio <-> HTTP
+npx @modelcontextprotocol/server-http-proxy \
+  --port 3000 \
+  --http-endpoint https://api.example.com/mcp
+
+# Option B: Use Try_make_mcp to create a stdio-compatible wrapper
+python src/mcp_factory/run.py --mode stdio --target http://api.example.com/mcp</code></pre>
+</div>
+
+<h2 id="stdio">5. Stdio Transport Common Issues</h2>
+
+<h3>Error: <code>Process exited with code 1</code> or <code>Server process died</code></h3>
+
+<div class="error-block">
+Error: MCP server process exited with code 1<br>
+Error: Stderr: ModuleNotFoundError: No module named 'mcp'<br>
+Error: Stderr: ImportError: libffi.so.7: cannot open shared object file
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Missing Python dependencies</strong><br>
+<pre><code># Install the required MCP Python package
+pip install mcp
+
+# Or for servers requiring specific versions
+pip install "mcp>=1.0.0"
+
+# Check what's installed
+pip list | grep -i mcp</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: System library missing (libffi on Linux/macOS)</strong><br>
+<pre><code># macOS
+brew install libffi
+export PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+
+# Ubuntu/Debian
+sudo apt-get install libffi-dev python3-dev
+
+# Then reinstall Python packages
+pip install --force-reinstall cffi</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 3: Wrong Python version</strong><br>
+<pre><code># MCP servers may require specific Python versions
+python --version  # Should be 3.9+
+
+# If using virtualenv, ensure it's activated
+source venv/bin/activate
+python --version</code></pre>
+</div>
+
+<h2 id="jsonrpc">6. JSON-RPC Protocol Errors</h2>
+
+<h3>Error: <code>Invalid JSON-RPC request</code> or <code>Parse error</code></h3>
+
+<div class="error-block">
+Error: Parse error: Unexpected token at position 0<br>
+Error: Invalid JSON-RPC response: missing 'jsonrpc' field<br>
+Error: Method not found: 'tools/call' is not a valid MCP method
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Verify JSON-RPC 2.0 compliance</strong><br>
+MCP uses JSON-RPC 2.0. Every request MUST include:<br>
+<pre><code># Valid MCP request
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list",
+  "params": {}
+}
+
+# MCP responses must include jsonrpc and id
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [...]
+  }
+}
+
+# Error responses
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32600,
+    "message": "Invalid Request"
+  }
+}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Notification vs Request distinction</strong><br>
+Notifications (no id) are one-way and the server must NOT respond:<br>
+<pre><code># This is a notification — NO response expected
+{"jsonrpc": "2.0", "method": "notifications/initialized"}
+
+# This is a request — MUST respond
+{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 3: Protocol method name errors</strong><br>
+MCP defines specific method names. Common mistakes:<br>
+<pre><code># Correct MCP method names:
+"initialize"          # First call to establish protocol
+"tools/list"          # List available tools
+"tools/call"          # Call a tool
+"resources/list"      # List resources
+"resources/read"      # Read a resource
+"prompts/list"        # List prompts
+"sampling/createMessage"  # Request LLM sampling
+
+# WRONG (MCP doesn't use these names):
+"mcp_tools_list"      # ❌
+"list_tools"          # ❌
+"/tools/list"         # ❌</code></pre>
+</div>
+
+<h2 id="manifest">7. MCP Manifest / Configuration Errors</h2>
+
+<h3>Error: <code>Invalid server manifest</code> or <code>Schema validation failed</code></h3>
+
+<div class="error-block">
+Error: Server manifest validation failed: missing 'name' field<br>
+Error: Invalid capabilities object in server manifest<br>
+Error: Protocol version mismatch: server supports 2024-11-05, client supports 2024-12-06
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Complete and valid server manifest</strong><br>
+The MCP initialization handshake requires this exact structure:<br>
+<pre><code>{
+  "protocolVersion": "2024-11-05",
+  "capabilities": {
+    "tools": {},
+    "resources": {},
+    "prompts": {}
+  },
+  "serverInfo": {
+    "name": "my-mcp-server",
+    "version": "1.0.0"
+  }
+}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Protocol version negotiation</strong><br>
+Client and server must agree on a protocol version:<br>
+<pre><code># Client sends its supported versions in initialize:
+{
+  "protocolVersion": "2024-12-06",
+  "capabilities": { "roots": { "listChanged": true } },
+  "clientInfo": { "name": "claude-desktop", "version": "1.0" }
+}
+
+# Server responds with the version it will use:
+{
+  "protocolVersion": "2024-11-05",  # Common version both support
+  "capabilities": { "tools": {} },
+  "serverInfo": { "name": "my-server", "version": "1.0" }
+}</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 3: Capabilities mismatch</strong><br>
+If server declares capabilities it doesn't actually implement:<br>
+<pre><code># Only declare what you actually implement:
+"capabilities": {
+  "tools": {},        # Only if you implement tools/list and tools/call
+  "resources": {},    # Only if you implement resources/list and resources/read
+  "prompts": {},      # Only if you implement prompts/list
+  "logging": {}       # Only if you implement logging/message
+}</code></pre>
+</div>
+
+<h2 id="resources">8. Resource & Tool Discovery Failures</h2>
+
+<h3>Error: <code>Unknown tool</code> or <code>Tool not found</code></h3>
+
+<div class="error-block">
+Error: Unknown tool 'database_query'. Available tools: ['search', 'fetch']<br>
+Error: Tool 'files/search' not found in server capabilities<br>
+Error: Resource not found: 'config://app/settings'
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 1: Always query tools/list first</strong><br>
+Before calling any tool, always discover what's available:<br>
+<pre><code># Correct workflow:
+1. Send: {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+2. Receive: {"jsonrpc": "2.0", "id": 1, "result": {"tools": [...]}}
+3. Pick tool by name from the list
+4. Call with exact name from the manifest
+
+# Wrong: hardcoding tool names without discovery
+{"method": "tools/call", "params": {"name": "search"}}  # ❌ guessing</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix 2: Handle optional capabilities gracefully</strong><br>
+Not all MCP servers implement all features:<br>
+<pre><code># Check server capabilities before calling
+if "tools" in server_capabilities:
+    tools = await list_tools()
+    
+if "resources" in server_capabilities:
+    resources = await list_resources()
+    
+# For optional features, handle NotImplemented gracefully
+try:
+    result = await call_tool("optional_feature")
+except MethodNotFoundError:
+    print("Tool not available on this server")</code></pre>
+</div>
+
+<h2 id="sampling">9. Sampling / SamplingRequest Errors</h2>
+
+<h3>Error: <code>SamplingRequest rejected</code> or <code>Invalid sampling parameters</code></h3>
+
+<div class="error-block">
+Error: SamplingRequest: model 'gpt-4' not allowed by server policy<br>
+Error: Invalid sampling request: missing 'systemPrompt' field<br>
+Error: Sampling rejected: context window exceeded (200k > 128k limit)
+</div>
+
+<div class="fix-block">
+<strong>✅ Fix: Implement proper sampling request handling</strong><br>
+<pre><code># Sampling is used when the server needs the LLM to generate text
+# It's an advanced feature that requires careful implementation
+
+@sse.on_message("sampling/createMessage")
+async def handle_sampling_request(request: SamplingRequest):
+    # Validate request parameters
+    if not request.prompt:
+        raise ValueError("Missing required field: prompt")
+    
+    if request.maxTokens > MAX_SUPPORTED_TOKENS:
+        raise ValueError(f"maxTokens exceeds limit: {MAX_SUPPORTED_TOKENS}")
+    
+    # Implement allowlist policy for models
+    allowed_models = ["claude-3-5-sonnet", "gpt-4o", "gpt-4-turbo"]
+    if request.model not in allowed_models:
+        raise ValueError(f"Model '{request.model}' not in allowlist")
+    
+    # Return the sampling response
+    return {
+        "model": request.model,
+        "completion": await llm.generate(request.prompt),
+        "stopReason": "endTurn"
+    }</code></pre>
+</div>
+
+<h2 id="debugging">10. Debugging Tools & Techniques</h2>
+
+<h3>Enable verbose logging</h3>
+
+<div class="fix-block">
+<strong>✅ Debug technique 1: Enable MCP SDK debug logging</strong><br>
+<pre><code>import logging
+
+# Enable all MCP debug logs
+logging.basicConfig(level=logging.DEBUG)
+
+# For MCP Python SDK specifically
+import mcp.server.stdio
+logging.getLogger("mcp.server").setLevel(logging.DEBUG)
+logging.getLogger("mcp.protocol").setLevel(logging.DEBUG)
+logging.getLogger("mcp.transport").setLevel(logging.DEBUG)</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Debug technique 2: Use MCP CLI inspector</strong><br>
+The official MCP CLI provides a debugging inspector:<br>
+<pre><code># Install MCP CLI
+npm install -g @modelcontextprotocol/cli
+
+# Run the inspector to test your server
+mcp inspect stdio --command "python" --args "/path/to/server.py"
+
+# Test HTTP/SSE servers
+mcp inspect http --url http://localhost:8080/mcp/sse</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Debug technique 3: Wire-level protocol logging</strong><br>
+For stdio transport, capture the raw JSON-RPC messages:<br>
+<pre><code># Wrap your server to log all incoming/outgoing messages
+class LoggingStdioServer:
+    def __init__(self, server):
+        self.server = server
+    
+    def handle_message(self, msg):
+        print(f"[IN]  {json.dumps(msg)}", file=sys.stderr)
+        response = self.server.process(msg)
+        print(f"[OUT] {json.dumps(response)}", file=sys.stderr)
+        return response</code></pre>
+</div>
+
+<div class="fix-block">
+<strong>✅ Debug technique 4: Test with Try_make_mcp validation</strong><br>
+Use Try_make_mcp's built-in MCP validator to test compliance:<br>
+<pre><code># Run Try_make_mcp's validation suite against your server
+python -m mcp_factory validate \
+  --transport stdio \
+  --command "python" \
+  --args "server.py"
+
+# Check for protocol compliance issues
+python -m mcp_factory test-compliance \
+  --server-url http://localhost:8080/mcp/sse</code></pre>
+</div>
+
+<h2 id="checklist">11. Quick Reference Checklist</h2>
+
+<table>
+<tr><th>Error Type</th><th>Quick Fix</th></tr>
+<tr><td><code>ECONNREFUSED</code></td><td>Start the server first; check port/host config</td></tr>
+<tr><td><code>401 Unauthorized</code></td><td>Verify API key format, placement, and expiration</td></tr>
+<tr><td><code>TimeoutError</code></td><td>Increase timeout; use streaming for long responses</td></tr>
+<tr><td><code>Invalid transport</code></td><td>Match stdio vs HTTP/SSE to client requirements</td></tr>
+<tr><td><code>Process died (code 1)</code></td><td>Install dependencies; check libffi; verify Python version</td></tr>
+<tr><td><code>Parse error</code></td><td>Validate JSON-RPC 2.0 format; check for extra fields</td></tr>
+<tr><td><code>Method not found</code></td><td>Use exact MCP method names; check capabilities first</td></tr>
+<tr><td><code>Version mismatch</code></td><td>Negotiate common protocol version; update client/server</td></tr>
+<tr><td><code>Tool not found</code></td><td>Always call tools/list before tools/call</td></tr>
+<tr><td><code>Schema validation failed</code></td><td>Ensure manifest includes all required fields</td></tr>
+</table>
+
+<div class="nav-links">
+<a href="mcp-vscode-setup.html">← MCP with VS Code Setup</a>
+<a href="mcp-best-practices-2026.html">MCP Best Practices →</a>
+</div>
+
+<hr style="margin-top: 2rem;">
+<p style="color: #8b949e; font-size: 0.85rem;">Built with <a href="https://demo112.github.io/Try_make_mcp/">Try_make_mcp</a> — MCP Factory · <a href="https://github.com/punkpeye/awesome-mcp-servers">Awesome MCP Servers</a></p>
+
+</body>
+</html>
