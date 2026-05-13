@@ -8,5 +8,15 @@
     "url": "https://github.com/demo112/Try_make_mcp",
     "source": "github"
   },
-  "websiteUrl": "https://demo112.github.io/Try_make_mcp/"
+  "websiteUrl": "https://demo112.github.io/Try_make_mcp/",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "try-make-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
 }

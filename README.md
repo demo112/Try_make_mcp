@@ -1,5 +1,7 @@
 # Try_make_mcp (MCP Factory)
 
+<!-- mcp-name: io.github.demo112/try-make-mcp -->
+
 > ⚡ A Model Context Protocol (MCP) service production factory. Build, validate, and deploy production-ready MCP servers in minutes.
 
 [![MCP](https://img.shields.io/badge/MCP-Ready-blue)](https://modelcontextprotocol.io)
