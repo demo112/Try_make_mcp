@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building Your First MCP Server in 2026: A Complete Step-by-Step Guide</title>
+<meta name="description" content="Learn how to build your first MCP server in 2026. Complete step-by-step guide covering Python/TypeScript setup, tool definitions, authentication, and deployment.">
+<meta name="keywords" content="build MCP server, MCP server tutorial, Model Context Protocol, MCP implementation, create MCP server">
+<link rel="canonical" href="https://demo112.github.io/Try_make_mcp/docs/building-first-mcp-server-2026.html">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.7;color:#1a1a2e;background:#f8f9fc;max-width:860px;margin:0 auto;padding:2rem 1.5rem}
+header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:3rem 2rem;border-radius:16px;margin-bottom:2rem}
+h1{font-size:2rem;font-weight:800;margin-bottom:0.5rem}
+.subtitle{opacity:0.9;font-size:1.1rem}
+.meta{font-size:0.85rem;opacity:0.7;margin-top:0.5rem}
+.content{background:#fff;padding:2.5rem;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+h2{color:#667eea;margin:2rem 0 1rem;font-size:1.5rem;border-bottom:2px solid #f0f0ff;padding-bottom:0.5rem}
+h3{color:#333;margin:1.5rem 0 0.75rem;font-size:1.2rem}
+p{margin-bottom:1rem;color:#444}
+ul,ol{margin:1rem 0 1.5rem 1.5rem}
+li{margin-bottom:0.5rem;color:#444}
+code{background:#f0f0ff;color:#667eea;padding:0.2em 0.5em;border-radius:4px;font-size:0.9em;font-family:'SF Mono',Monaco,'Cascadia Code',monospace}
+pre{background:#1a1a2e;color:#a8dadc;padding:1.5rem;border-radius:8px;overflow-x:auto;margin:1.5rem 0;font-size:0.88rem;line-height:1.6}
+pre code{background:none;color:inherit;padding:0}
+blockquote{background:#f0f4ff;border-left:4px solid #667eea;padding:1rem 1.5rem;margin:1.5rem 0;border-radius:0 8px 8px 0;font-style:italic}
+.callout{background:linear-gradient(135deg,#fef9ff,#f5f0ff);border:1px solid #e8d5ff;padding:1.5rem;border-radius:8px;margin:1.5rem 0}
+.callout strong{color:#764ba2}
+.toc{background:#fafbff;border:1px solid #e0e4ff;padding:1.5rem;border-radius:8px;margin:1.5rem 0}
+.toc h3{margin-top:0}
+.toc ol{margin:0.5rem 0 0 1.5rem}
+.table-wrap{overflow-x:auto;margin:1.5rem 0}
+table{width:100%;border-collapse:collapse;font-size:0.92rem}
+th{background:#667eea;color:#fff;padding:0.75rem 1rem;text-align:left;font-weight:600}
+td{padding:0.75rem 1rem;border-bottom:1px solid #f0f0f8}
+tr:nth-child(even){background:#fafbff}
+.btn{display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:0.75rem 1.5rem;border-radius:8px;text-decoration:none;font-weight:600;margin-top:1rem;transition:transform 0.2s}
+.btn:hover{transform:translateY(-2px)}
+footer{text-align:center;margin-top:2rem;padding-top:2rem;border-top:1px solid #eee;color:#888;font-size:0.85rem}
+.kbd{display:inline-block;background:#e8e8f0;padding:0.1em 0.5em;border-radius:4px;font-size:0.85em;font-family:monospace;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<header>
+<h1>Building Your First MCP Server in 2026: Complete Step-by-Step Guide</h1>
+<p class="subtitle">From zero to production-ready Model Context Protocol server with Python or TypeScript</p>
+<p class="meta">Last updated: May 2026 · 15 min read</p>
+</header>
+
+<div class="content">
+
+<div class="toc">
+<h3>📋 Table of Contents</h3>
+<ol>
+<li><a href="#what-is-mcp">What is MCP and Why Build a Server</a></li>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#python-server">Method 1: Python MCP Server (Recommended for Beginners)</a></li>
+<li><a href="#typescript-server">Method 2: TypeScript MCP Server (For Production)</a></li>
+<li><a href="#defining-tools">Defining Tools and Resources</a></li>
+<li><a href="#authentication">Adding Authentication</a></li>
+<li><a href="#testing">Testing Your Server</a></li>
+<li><a href="#deployment">Deployment Options</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#next-steps">Next Steps</a></li>
+</ol>
+</div>
+
+<h2 id="what-is-mcp">1. What is MCP and Why Build a Server?</h2>
+
+<p>The <strong>Model Context Protocol (MCP)</strong> is an open protocol developed by Anthropic that enables AI models to connect securely with external data sources and tools. Unlike traditional tool-calling where every integration is custom-built, MCP provides a <strong>standardized interface</strong> that works across any AI model and any tool provider.</p>
+
+<blockquote>
+If you've ever integrated APIs into AI applications, you know the pain: every new tool requires custom code, error handling, and maintenance. MCP solves this by creating a universal "USB port" for AI — one connection, infinite tools.
+</blockquote>
+
+<p>Building your own MCP server lets you:</p>
+<ul>
+<li>Expose your APIs, databases, or services to <strong>any MCP-compatible AI client</strong></li>
+<li>Monetize your data/tools through the growing MCP ecosystem</li>
+<li>Build once, use everywhere — no more per-client integration work</li>
+<li>Join 23,000+ MCP servers already in production (Glama.ai registry)</li>
+</ul>
+
+<h2 id="prerequisites">2. Prerequisites</h2>
+
+<div class="table-wrap">
+<table>
+<tr><th>Requirement</th><th>Python Path</th><th>TypeScript Path</th></tr>
+<tr><td>Language</td><td>Python 3.10+</td><td>Node.js 18+</td></tr>
+<tr><td>Package Manager</td><td>pip / uv</td><td>npm / pnpm</td></tr>
+<tr><td>Core Library</td><td><code>mcp</code> (PyPI)</td><td><code>@modelcontextprotocol/sdk</code> (npm)</td></tr>
+<tr><td>Best For</td><td>Data tools, scripts, internal tools</td><td>Production, scalable services</td></tr>
+</table>
+</div>
+
+<p>No prior MCP experience needed — this guide covers everything from scratch.</p>
+
+<h2 id="python-server">3. Method 1: Python MCP Server</h2>
+
+<h3>Step 1: Install the MCP SDK</h3>
+
+<pre><code># Create a virtual environment
+python3 -m venv mcp-env
+source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
+
+# Install the MCP Python SDK
+pip install mcp httpx</code></pre>
+
+<h3>Step 2: Create Your First Server</h3>
+
+<p>Create a file called <code>server.py</code>:</p>
+
+<pre><code>import mcp.server.stdio
+import mcp.types as types
+from mcp.server import Server
+import asyncio
+
+# Create a server instance
+server = Server("my-first-mcp-server")
+
+@server.list_tools()
+async def list_tools() -> list[types.Tool]:
+    """Define the tools this server provides."""
+    return [
+        types.Tool(
+            name="get_weather",
+            description="Get current weather for a city",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string", "description": "City name"}
+                },
+                "required": ["city"]
+            }
+        )
+    ]
+
+@server.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+    """Handle tool calls from AI clients."""
+    if name == "get_weather":
+        city = arguments["city"]
+        # Replace with actual weather API call
+        return [types.TextContent(
+            type="text",
+            text=f"🌤️ The weather in {city} is 22°C with clear skies."
+        )]
+    raise ValueError(f"Unknown tool: {name}")
+
+async def main():
+    async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            server.create_initialization_options()
+        )
+
+if __name__ == "__main__":
+    asyncio.run(main())</code></pre>
+
+<h3>Step 3: Test It</h3>
+
+<pre><code>python server.py
+# Server starts and listens on stdio
+# Test with: echo '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}' | python server.py</code></pre>
+
+<h2 id="typescript-server">4. Method 2: TypeScript MCP Server</h2>
+
+<h3>Step 1: Initialize Project</h3>
+
+<pre><code>mkdir my-mcp-server && cd my-mcp-server
+npm init -y
+npm install @modelcontextprotocol/sdk zod</code></pre>
+
+<h3>Step 2: Create the Server</h3>
+
+<p>Create <code>src/index.ts</code>:</p>
+
+<pre><code>import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+
+const server = new Server(
+  { name: "my-mcp-server", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
+    tools: [
+      {
+        name: "search_database",
+        description: "Search a database for records matching a query",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Search query" },
+            limit: { type: "number", description: "Max results (default: 10)", default: 10 }
+          },
+          required: ["query"]
+        }
+      }
+    ]
+  };
+});
+
+server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
+  const { name, arguments: args } = params;
+  
+  if (name === "search_database") {
+    const { query, limit = 10 } = args as { query: string; limit?: number };
+    // Implement your database search logic here
+    return [{
+      type: "text",
+      content: `Found ${limit} results for "${query}": [simulated results]`
+    }];
+  }
+  
+  throw new Error(`Unknown tool: ${name}`);
+});
+
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("MCP server running on stdio");
+}
+
+main().catch(console.error);</code></pre>
+
+<h3>Step 3: Configure package.json</h3>
+
+<pre><code>{
+  "name": "my-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}</code></pre>
+
+<h2 id="defining-tools">5. Defining Tools and Resources</h2>
+
+<p>MCP supports three primary capability types:</p>
+
+<div class="table-wrap">
+<table>
+<tr><th>Capability</th><th>Use Case</th><th>Example</th></tr>
+<tr><td><strong>Tools</strong></td><td>Actions the AI can perform</td><td>Send email, query DB, call API</td></tr>
+<tr><td><strong>Resources</strong></td><td>Data the AI can read</td><td>File contents, API responses, configs</td></tr>
+<tr><td><strong>Prompts</strong></td><td>Reusable prompt templates</td><td>Code review template, email draft</td></tr>
+</table>
+</div>
+
+<h3>Adding Resources</h3>
+
+<pre><code># Python: Adding resources
+@server.list_resources()
+async def list_resources() -> list[types.Resource]:
+    return [
+        types.Resource(
+            uri="file:///config/app.json",
+            name="app_config",
+            description="Application configuration",
+            mimeType="application/json"
+        )
+    ]
+
+@server.read_resource()
+async def read_resource(uri: str) -> str:
+    if uri == "file:///config/app.json":
+        return json.dumps({"debug": True, "version": "1.0.0"})
+    raise ValueError(f"Unknown resource: {uri}")</code></pre>
+
+<h2 id="authentication">6. Adding Authentication</h2>
+
+<div class="callout">
+<strong>⚠️ Security Note:</strong> Never expose sensitive APIs without authentication. MCP supports API Key, OAuth 2.0, and mTLS. See our <a href="mcp-authentication-security.html">MCP Authentication & Security Guide</a> for production security patterns.
+</div>
+
+<pre><code># Python: API Key authentication example
+class AuthenticatedServer:
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+    
+    def validate_request(self, headers: dict) -> bool:
+        provided_key = headers.get("Authorization", "").replace("Bearer ", "")
+        return provided_key == self.api_key
+
+# Usage: Only process requests with valid auth
+@server.call_tool()
+async def call_tool(name: str, arguments: dict, headers: dict) -> list[types.TextContent]:
+    auth = AuthenticatedServer(os.environ["API_KEY"])
+    if not auth.validate_request(headers):
+        raise PermissionError("Invalid API key")
+    # ... proceed with tool execution</code></pre>
+
+<h2 id="testing">7. Testing Your MCP Server</h2>
+
+<h3>Using the MCP Inspector (Recommended)</h3>
+
+<pre><code># Install MCP CLI
+npm install -g @modelcontextprotocol/cli
+
+# Test your server
+npx mcp dev server.py  # Python
+npx mcp dev npm run build && node dist/index.js  # TypeScript</code></pre>
+
+<h3>Manual Testing with stdio</h3>
+
+<pre><code># Test initialize
+echo '{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' > /dev/stdout | python server.py
+
+# Test list tools
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | python server.py</code></pre>
+
+<h3>Integration Testing</h3>
+
+<pre><code># Python: pytest integration test
+import pytest
+from server import server
+
+@pytest.mark.asyncio
+async def test_list_tools():
+    """Test that tools are properly listed."""
+    tools = await list_tools()
+    assert len(tools) > 0
+    assert any(t.name == "get_weather" for t in tools)
+
+@pytest.mark.asyncio
+async def test_call_tool():
+    """Test tool execution."""
+    result = await call_tool("get_weather", {"city": "Tokyo"})
+    assert "Tokyo" in result[0].text
+    assert "22°C" in result[0].text</code></pre>
+
+<h2 id="deployment">8. Deployment Options</h2>
+
+<h3>Option A: Local Development (stdio)</h3>
+<p>The simplest method — server communicates via stdin/stdout. Perfect for local testing and development. Configure your AI client (Claude Desktop, Cursor, etc.) to point to your local script.</p>
+
+<h3>Option B: HTTP/SSE Transport (Production)</h3>
+
+<pre><code># Python: HTTP server with SSE (Server-Sent Events)
+from mcp.server.sse import SSEServer
+
+sse_server = SSEServer(
+    server,
+    cors_origins=["https://claude.ai", "https://cursor.com"]
+)
+
+# Run with a web framework like FastAPI or Flask
+# See: https://github.com/modelcontextprotocol/python-sdk</code></pre>
+
+<h3>Option C: Docker Deployment</h3>
+
+<pre><code># Dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["python", "server.py"]</code></pre>
+
+<pre><code># Build and run
+docker build -t my-mcp-server .
+docker run -e API_KEY=$API_KEY my-mcp-server</code></pre>
+
+<h2 id="best-practices">9. Best Practices</h2>
+
+<ul>
+<li><strong>Validate all inputs</strong> — Use Zod (TS) or Pydantic (Python) to validate tool arguments before processing</li>
+<li><strong>Handle errors gracefully</strong> — Return structured error messages, not raw exceptions</li>
+<li><strong>Rate limit your tools</strong> — Protect against abuse with token bucket or sliding window rate limiting</li>
+<li><strong>Log for debugging</strong> — Track tool calls, durations, and errors for observability</li>
+<li><strong>Version your protocol</strong> — Increment version when changing tool schemas to avoid client breakage</li>
+<li><strong>Use environment variables</strong> — Never hardcode API keys or secrets</li>
+<li><strong>Write comprehensive schemas</strong> — Detailed descriptions and examples in your tool schemas dramatically improve AI understanding</li>
+</ul>
+
+<h2 id="next-steps">10. Next Steps</h2>
+
+<div class="callout">
+<strong>🚀 Ready to go deeper?</strong> Check out these related guides:
+<ul style="margin-top:0.5rem">
+<li><a href="mcp-server-patterns.html">10 MCP Server Patterns for Production</a> — Scalability, caching, and resilience patterns</li>
+<li><a href="dockerize-mcp-server.html">Dockerize MCP Server Guide</a> — Container deployment for production</li>
+<li><a href="mcp-authentication-security.html">MCP Authentication & Security</a> — OAuth, API keys, and mTLS</li>
+<li><a href="mcp-vs-tool-calling.html">MCP vs Tool Calling</a> — Which approach is right for your use case?</li>
+</ul>
+</div>
+
+<p>Your first MCP server is complete! Whether you chose Python for its simplicity or TypeScript for its type safety, you now have a server that can be discovered and used by <strong>any MCP-compatible AI client</strong>. The MCP ecosystem is growing fast — you're early to a significant trend.</p>
+
+<footer>
+<p>Built with <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> · <a href="https://modelcontextprotocol.io">MCP Documentation</a></p>
+<p>This guide is part of the Try_make_mcp open-source project helping developers build better MCP servers.</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -2,11 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://demo112.github.io/Try_make_mcp/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/index.html</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-authentication-security.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/tutorial-mcp-factory-quickstart.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-vs-tool-calling.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/dockerize-mcp-server.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-server-patterns.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://demo112.github.io/Try_make_mcp/docs/PROJECT_CHRONICLE.html</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://demo112.github.io/Try_make_mcp/docs/tutorial-mcp-factory-quickstart.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp_factory/checklist.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/mcp-authentication-security.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://demo112.github.io/Try_make_mcp/docs/building-first-mcp-server-2026.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
 </urlset>
