@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP with VS Code: Complete Setup Guide (2026) | AI-Powered Development</title>
+    <meta name="description" content="Integrate MCP servers with VS Code for AI-powered development. Step-by-step setup for filesystem, GitHub, database, and custom MCP servers. Boost productivity with Claude in your editor.">
+    <meta name="keywords" content="MCP VS Code, VS Code MCP, MCP extension, Claude VS Code, AI coding assistant VS Code, VS Code AI integration, MCP server setup, Cursor VS Code comparison">
+    <meta property="og:title" content="MCP with VS Code: Complete Setup Guide">
+    <meta property="og:description" content="Connect MCP servers to VS Code for AI-powered development. Complete 2026 guide with examples.">
+    <meta property="og:type" content="article">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-red: #f85149; --accent-yellow: #d29922; --accent-purple: #a371f7; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .toc { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .toc h3 { font-size: 1rem; color: var(--accent); margin-bottom: 0.75rem; }
+        .toc ol { padding-left: 1.5rem; color: var(--text-muted); font-size: 0.9rem; }
+        .toc li { margin-bottom: 0.4rem; }
+        .toc a { color: var(--accent); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3; }
+        .meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .meta span { margin-right: 1.5rem; }
+        h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--text); }
+        h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--accent); }
+        p { margin-bottom: 1rem; }
+        .warning { background: rgba(210,153,34,0.1); border: 1px solid var(--accent-yellow); border-left: 4px solid var(--accent-yellow); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        .info { background: rgba(88,166,255,0.1); border: 1px solid var(--accent); border-left: 4px solid var(--accent); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        .success { background: rgba(63,185,80,0.1); border: 1px solid var(--accent-green); border-left: 4px solid var(--accent-green); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        code { background: var(--card-bg); padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.85em; color: var(--accent-green); }
+        pre { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; overflow-x: auto; }
+        pre code { background: none; padding: 0; color: var(--text); font-size: 0.85rem; line-height: 1.6; }
+        ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+        li { margin-bottom: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+        th, td { border: 1px solid var(--border); padding: 0.75rem; text-align: left; font-size: 0.9rem; }
+        th { background: var(--card-bg); color: var(--accent); font-weight: 600; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; margin-bottom: 2rem; }
+        .back-link:hover { text-decoration: underline; }
+        footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        @media (max-width: 600px) { h1 { font-size: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to MCP Factory</a>
+        
+        <h1>MCP with VS Code: Complete Setup Guide (2026)</h1>
+        <div class="meta">
+            <span>📅 Updated: May 2026</span>
+            <span>⏱️ 14 min read</span>
+            <span>🏷️ IDE Integration</span>
+        </div>
+
+        <nav class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+                <li><a href="#why">Why Use MCP with VS Code?</a></li>
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#setup">Step-by-Step Setup</a></li>
+                <li><a href="#builtin">VS Code MCP Built-in Servers</a></li>
+                <li><a href="#custom">Adding Custom MCP Servers</a></li>
+                <li><a href="#github">GitHub MCP Server Setup</a></li>
+                <li><a href="#troubleshoot">Troubleshooting Common Issues</a></li>
+                <li><a href="#vs-cursor">VS Code vs Cursor: MCP Support Comparison</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+            </ol>
+        </nav>
+
+        <h2 id="why">Why Use MCP with VS Code?</h2>
+        <p>VS Code is the world's most popular code editor with over 75% market share among developers. By integrating MCP servers, you can give your AI coding assistant (<strong>Claude</strong>, <strong>Copilot</strong>, or any MCP-compatible model) access to powerful tools directly from your editor.</p>
+        
+        <p>With MCP in VS Code, you can:</p>
+        <ul>
+            <li><strong>Browse and manage GitHub repositories</strong> — create issues, PRs, and reviews without leaving your editor</li>
+            <li><strong>Access filesystem with precision</strong> — read, write, search files with full project context</li>
+            <li><strong>Query databases directly</strong> — run SQL queries and get results in natural language</li>
+            <li><strong>Use custom AI tools</strong> — deploy your own MCP servers for specialized workflows</li>
+            <li><strong>Streamline code reviews</strong> — let AI analyze diffs, suggest changes, and explain code</li>
+        </ul>
+
+        <div class="info">
+            <strong>Note:</strong> VS Code's native MCP support is available through the <strong>Cline extension</strong> (formerly Claude Dev) or the <strong>Continue extension</strong>. Native VS Code MCP integration is an emerging feature in 2026.
+        </div>
+
+        <h2 id="prerequisites">Prerequisites</h2>
+        <ul>
+            <li><strong>VS Code 1.90+</strong> — Ensure you're running the latest version</li>
+            <li><strong>Node.js 18+</strong> — Required for running MCP server clients</li>
+            <li><strong>Git</strong> — For GitHub MCP integration</li>
+            <li><strong>Python 3.9+</strong> — For Python-based MCP servers</li>
+            <li><strong>MCP-compatible AI extension</strong> (Cline, Continue, or similar)</li>
+        </ul>
+
+        <h2 id="setup">Step-by-Step Setup</h2>
+        
+        <h3>Step 1: Install an MCP-Compatible Extension</h3>
+        <p>The most popular options for VS Code MCP integration:</p>
+        
+        <table>
+            <tr><th>Extension</th><th>MCP Support</th><th>Best For</th><th>Price</th></tr>
+            <tr><td>Cline (Claude Dev)</td><td>Native</td><td>Deep Claude integration</td><td>Free / Pro $20/mo</td></tr>
+            <tr><td>Continue</td><td>Native</td><td>Multi-model support</td><td>Free / Teams</td></tr>
+            <tr><td>GitHub Copilot Chat</td><td>Partial</td><td>Copilot users</td><td>Included in Copilot</td></tr>
+            <tr><td>Aider</td><td>Via CLI</td><td>Terminal-focused devs</td><td>Free</td></tr>
+        </table>
+
+        <p>Install Cline from the VS Code marketplace:</p>
+        <pre><code># Open VS Code and go to Extensions (Cmd/Ctrl + Shift + X)
+# Search for "Cline" and install</code></pre>
+
+        <h3>Step 2: Configure MCP Servers in Cline</h3>
+        <p>After installing Cline, configure your MCP servers through the extension settings:</p>
+        
+        <pre><code>{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/your/project"],
+      "env": {}
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-token-here"
+      }
+    }
+  }
+}</code></pre>
+
+        <div class="warning">
+            <strong>Security:</strong> Never commit your <code>GITHUB_PERSONAL_ACCESS_TOKEN</code> to version control. Use environment variables or VS Code's encrypted secrets storage.
+        </div>
+
+        <h2 id="builtin">VS Code MCP Built-in Servers</h2>
+        
+        <p>Model Context Protocol provides several official MCP servers that work seamlessly with VS Code:</p>
+
+        <h3>1. Filesystem Server</h3>
+        <p>The most fundamental MCP server — gives AI full read/write access to your project files:</p>
+        <pre><code>npx -y @modelcontextprotocol/server-filesystem ./my-project</code></pre>
+        <p><strong>Capabilities:</strong> Read/write files, create directories, search with glob patterns, watch for changes.</p>
+
+        <h3>2. GitHub Server</h3>
+        <p>Integrate GitHub workflows directly into your AI-assisted development:</p>
+        <pre><code>npx -y @modelcontextprotocol/server-github</code></pre>
+        <p><strong>Capabilities:</strong> Create issues, manage PRs, search code, review diffs, manage repositories.</p>
+
+        <h3>3. Brave Search Server</h3>
+        <p>Give your AI assistant web search capabilities:</p>
+        <pre><code>npx -y @modelcontextprotocol/server-brave-search</code></pre>
+        <p><strong>Capabilities:</strong> Web search, news search, local business search.</p>
+
+        <h3>4. Slack Server</h3>
+        <p>Post updates and receive notifications in your team Slack:</p>
+        <pre><code>npx -y @modelcontextprotocol/server-slack</code></pre>
+        <p><strong>Capabilities:</strong> Post messages, read channels, manage threads.</p>
+
+        <h2 id="custom">Adding Custom MCP Servers</h2>
+        <p>Want to create your own MCP server for VS Code integration? Try_make_mcp makes this straightforward:</p>
+
+        <pre><code># Clone and setup
+git clone https://github.com/demo112/Try_make_mcp.git
+cd Try_make_mcp
+
+# Create a new MCP server
+python main.py --app new --name my-vscode-tools
+
+# Edit the generated server
+# Add your custom tools for VS Code integration
+
+# Start the server
+python main.py --app my-vscode-tools</code></pre>
+
+        <p>Then add it to your VS Code MCP configuration:</p>
+        <pre><code>{
+  "mcpServers": {
+    "my-vscode-tools": {
+      "command": "python",
+      "args": ["/path/to/Try_make_mcp/main.py", "--app", "my-vscode-tools"],
+      "env": {}
+    }
+  }
+}</code></pre>
+
+        <h2 id="github">GitHub MCP Server Setup</h2>
+        <p>Setting up the GitHub MCP server gives your AI assistant superpowers for code collaboration:</p>
+
+        <h3>Generate a GitHub Personal Access Token</h3>
+        <ol>
+            <li>Go to <a href="https://github.com/settings/tokens" style="color: var(--accent);">GitHub Settings → Personal Access Tokens</a></li>
+            <li>Click "Generate new token (classic)"</li>
+            <li>Select scopes: <code>repo</code>, <code>read:user</code>, <code>workflow</code></li>
+            <li>Copy the generated token</li>
+        </ol>
+
+        <h3>Configure in VS Code</h3>
+        <pre><code>{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here"
+      }
+    }
+  }
+}</code></pre>
+
+        <div class="success">
+            <strong>Result:</strong> You can now ask Claude to "show me the latest PR for this repo", "create an issue about the bug we discussed", or "review the changes in branch feature-x".
+        </div>
+
+        <h2 id="troubleshoot">Troubleshooting Common Issues</h2>
+
+        <h3>Issue: MCP server fails to start</h3>
+        <p><strong>Symptoms:</strong> Error message "MCP server connection failed"</p>
+        <ul>
+            <li>Check Node.js version: <code>node --version</code> (needs 18+)</li>
+            <li>Verify the server command is correct</li>
+            <li>Check if the package is installed: <code>npx -y @modelcontextprotocol/server-filesystem --help</code></li>
+        </ul>
+
+        <h3>Issue: GitHub token not working</h3>
+        <p><strong>Symptoms:</strong> "Authentication failed" when accessing GitHub</p>
+        <ul>
+            <li>Verify token has correct scopes (repo, read:user)</li>
+            <li>Check token hasn't expired</li>
+            <li>Ensure token is properly set in environment variables</li>
+        </ul>
+
+        <h3>Issue: VS Code crashes with multiple MCP servers</h3>
+        <p><strong>Symptoms:</strong> VS Code becomes unresponsive</p>
+        <ul>
+            <li>Reduce the number of concurrent MCP servers</li>
+            <li>Increase VS Code memory limit</li>
+            <li>Check for circular dependency between servers</li>
+        </ul>
+
+        <h2 id="vs-cursor">VS Code vs Cursor: MCP Support Comparison</h2>
+        <p>If you're choosing between VS Code and Cursor for MCP development, here's a quick comparison:</p>
+
+        <table>
+            <tr><th>Feature</th><th>VS Code + Cline</th><th>Cursor</th></tr>
+            <tr><td>Native MCP UI</td><td>Via extension</td><td>✅ Built-in</td></tr>
+            <tr><td>Setup Complexity</td><td>Medium</td><td>Low</td></tr>
+            <tr><td>Custom Server Support</td><td>✅ Full</td><td>✅ Full</td></tr>
+            <tr><td>Memory Usage</td><td>Higher</td><td>Optimized</td></tr>
+            <tr><td>Extension Ecosystem</td><td>Massive</td><td>Growing</td></tr>
+            <tr><td>Cost</td><td>Free + extension costs</td><td>$20/month Pro</td></tr>
+            <tr><td>Best for</td><td>Existing VS Code users</td><td>New AI-first workflows</td></tr>
+        </table>
+
+        <p><strong>Recommendation:</strong> If you're already invested in VS Code with existing extensions and settings, use Cline. If starting fresh with AI-first development, Cursor offers a more streamlined MCP experience.</p>
+
+        <h2 id="best-practices">Best Practices for VS Code MCP Integration</h2>
+
+        <ol>
+            <li><strong>Limit server permissions</strong> — Only enable servers you actually use. Each server is a potential attack surface.</li>
+            <li><strong>Use read-only modes</strong> — For AI code review, use read-only filesystem access to prevent accidental writes.</li>
+            <li><strong>Monitor API usage</strong> — MCP servers can make many API calls. Keep an eye on rate limits and costs.</li>
+            <li><strong>Keep servers updated</strong> — MCP is evolving rapidly. Update your servers regularly for new features.</li>
+            <li><strong>Test locally first</strong> — Before deploying custom MCP servers, test thoroughly in a local environment.</li>
+            <li><strong>Document your setup</strong> — Keep a record of which MCP servers you use and their configurations for team sharing.</li>
+        </ol>
+
+        <div class="success">
+            <strong>Get Started:</strong> The fastest path to MCP in VS Code is installing <strong>Cline</strong> and adding the filesystem and GitHub servers. Try it today at <a href="https://github.com/demo112/Try_make_mcp" style="color: var(--accent);">Try_make_mcp</a> for building your own custom MCP servers.
+        </div>
+
+        <footer>
+            <p>Part of the <a href="index.html">Try_make_mcp Blog Series</a> · <a href="mcp-performance-benchmark-2026.html">← Previous: MCP Performance Benchmark 2026</a></p>
+            <p>Built with ⚡ by Try_make_mcp · MIT License</p>
+        </footer>
+    </div>
+</body>
+</html>
