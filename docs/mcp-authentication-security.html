@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Authentication & Security: A Complete Guide for Production Deployments</title>
+    <meta name="description" content="Learn how to implement robust authentication and security for your MCP servers in production. Covers OAuth 2.0, API keys, mTLS, rate limiting, and real-world patterns used by top AI teams.">
+    <meta name="keywords" content="MCP authentication, MCP security, Model Context Protocol security, MCP OAuth, MCP API key, mTLS, rate limiting MCP">
+    <meta property="og:title" content="MCP Authentication & Security Guide">
+    <meta property="og:description" content="Production security patterns for MCP servers — OAuth 2.0, API keys, mTLS, and more.">
+    <meta property="og:type" content="article">
+    <style>
+        :root { --bg: #0d1117; --card-bg: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-red: #f85149; --accent-yellow: #d29922; --accent-purple: #a371f7; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .toc { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .toc h3 { font-size: 1rem; color: var(--accent); margin-bottom: 0.75rem; }
+        .toc ol { padding-left: 1.5rem; color: var(--text-muted); font-size: 0.9rem; }
+        .toc li { margin-bottom: 0.4rem; }
+        .toc a { color: var(--accent); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.3; }
+        .meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .meta span { margin-right: 1.5rem; }
+        h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--text); }
+        h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--accent); }
+        p { margin-bottom: 1rem; }
+        .warning { background: rgba(210,153,34,0.1); border: 1px solid var(--accent-yellow); border-left: 4px solid var(--accent-yellow); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        .info { background: rgba(88,166,255,0.1); border: 1px solid var(--accent); border-left: 4px solid var(--accent); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        .success { background: rgba(63,185,80,0.1); border: 1px solid var(--accent-green); border-left: 4px solid var(--accent-green); border-radius: 4px; padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 0.9rem; }
+        code { background: var(--card-bg); padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.85em; color: var(--accent-green); }
+        pre { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; overflow-x: auto; }
+        pre code { background: none; padding: 0; color: var(--text); font-size: 0.85rem; line-height: 1.6; }
+        ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+        li { margin-bottom: 0.5rem; }
+        .threat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+        .threat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+        .threat-card.high { border-color: var(--accent-red); }
+        .threat-card.medium { border-color: var(--accent-yellow); }
+        .threat-title { font-weight: 600; margin-bottom: 0.5rem; }
+        .threat-card.high .threat-title { color: var(--accent-red); }
+        .threat-card.medium .threat-title { color: var(--accent-yellow); }
+        .threat-desc { font-size: 0.85rem; color: var(--text-muted); }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+        th, td { border: 1px solid var(--border); padding: 0.75rem; text-align: left; font-size: 0.9rem; }
+        th { background: var(--card-bg); color: var(--accent); font-weight: 600; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; margin-bottom: 2rem; }
+        .back-link:hover { text-decoration: underline; }
+        footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        @media (max-width: 600px) { .threat-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to MCP Factory</a>
+        
+        <h1>MCP Authentication & Security: A Complete Guide for Production Deployments</h1>
+        <div class="meta">
+            <span>📅 Updated: May 2026</span>
+            <span>⏱️ 12 min read</span>
+            <span>🔒 Security</span>
+        </div>
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ol>
+                <li><a href="#threats">Common MCP Security Threats</a></li>
+                <li><a href="#api-keys">API Key Authentication</a></li>
+                <li><a href="#oauth">OAuth 2.0 for MCP Servers</a></li>
+                <li><a href="#mtls">mTLS (Mutual TLS)</a></li>
+                <li><a href="#rate-limiting">Rate Limiting & Throttling</a></li>
+                <li><a href="#input-validation">Input Validation</a></li>
+                <li><a href="#logging">Security Logging & Monitoring</a></li>
+                <li><a href="#production-checklist">Production Checklist</a></li>
+            </ol>
+        </div>
+
+        <p>As MCP (Model Context Protocol) adoption accelerates, security becomes critical. MCP servers act as bridges between AI models and external tools — a compromised server can expose sensitive data or execute unintended actions on behalf of users. This guide covers the security patterns that production MCP deployments actually use.</p>
+
+        <h2 id="threats">1. Common MCP Security Threats</h2>
+        
+        <p>Before implementing defenses, understand what you're protecting against:</p>
+
+        <div class="threat-grid">
+            <div class="threat-card high">
+                <div class="threat-title">⚠️ Injection Attacks</div>
+                <div class="threat-desc">Malicious prompts designed to manipulate MCP tool calls or extract data through crafted tool arguments.</div>
+            </div>
+            <div class="threat-card high">
+                <div class="threat-title">⚠️ Unauthorized Tool Access</div>
+                <div class="threat-desc">Clients calling tools they shouldn't have permission to use, especially dangerous for file system or database tools.</div>
+            </div>
+            <div class="threat-card medium">
+                <div class="threat-title">⚡ Data Exfiltration</div>
+                <div class="threat-desc">Excessive data returned by tools being used to train models or leak proprietary information.</div>
+            </div>
+            <div class="threat-card medium">
+                <div class="threat-title">⚡ Token Exhaustion</div>
+                <div class="threat-desc">Abusive clients sending thousands of requests to drain your compute budget or cause denial of service.</div>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ The MCP protocol itself doesn't mandate authentication.</strong> By default, any client that can connect to your MCP server can call any tool it exposes. This is fine for local development but unacceptable in production. You must add authentication layer.
+        </div>
+
+        <h2 id="api-keys">2. API Key Authentication</h2>
+
+        <p>The simplest production-ready authentication for MCP servers. Works well for server-to-server and single-user scenarios.</p>
+
+        <h3>Implementation Pattern</h3>
+        
+        <pre><code>"""
+MCP Server with API Key Authentication
+Using the official MCP Python SDK
+"""
+import os
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("SecureMCPServer")
+
+# In production, use a proper secret manager (AWS Secrets Manager, Vault, etc.)
+API_KEY = os.environ.get("MCP_API_KEY")
+
+def verify_api_key(headers: dict) -> bool:
+    """Verify the API key from request headers."""
+    provided_key = headers.get("x-api-key", "")
+    return provided_key == API_KEY
+
+@mcp.tool()
+def sensitive_data_query(query: str, context: dict) -> str:
+    """
+    A tool that accesses sensitive data.
+    Requires API key authentication before processing.
+    """
+    # Step 1: Verify authentication
+    if not verify_api_key(context.get("headers", {})):
+        raise PermissionError("Invalid or missing API key")
+    
+    # Step 2: Log the access (who, what, when)
+    log_access(
+        user=context.get("client_id", "unknown"),
+        tool="sensitive_data_query",
+        timestamp=context.get("timestamp")
+    )
+    
+    # Step 3: Proceed with the actual work
+    return f"Query result for: {query}"</code></pre>
+
+        <h3>Key API Key Best Practices</h3>
+        <ul>
+            <li><strong>Never hardcode keys</strong> — use environment variables or secret managers</li>
+            <li><strong>Hash keys at rest</strong> — store only hashed versions, compare hashes</li>
+            <li><strong>Use long, random keys</strong> — minimum 32 characters, generated with <code>secrets.token_urlsafe(32)</code></li>
+            <li><strong>Implement key rotation</strong> — support multiple valid keys during rotation window</li>
+            <li><strong>Scope keys</strong> — different keys for different clients or permission levels</li>
+        </ul>
+
+        <h2 id="oauth">3. OAuth 2.0 for MCP Servers</h2>
+
+        <p>For MCP servers that need to support multiple users with fine-grained permissions, OAuth 2.0 is the standard. Particularly important if your MCP server acts on behalf of users (e.g., reading their emails, accessing their cloud resources).</p>
+
+        <h3>When to Use OAuth</h3>
+        <ul>
+            <li>Multi-tenant deployments where different users have different access levels</li>
+            <li>MCP servers that integrate with third-party services (the OAuth token can be passed through)</li>
+            <li>Enterprise environments requiring audit trails and user-level attribution</li>
+            <li>Long-running agent sessions that need to maintain identity context</li>
+        </ul>
+
+        <h3>Simplified OAuth Flow for MCP</h3>
+
+        <pre><code>"""
+OAuth 2.0 integration pattern for MCP servers.
+Uses Bearer token authentication in the MCP protocol.
+"""
+from functools import wraps
+from typing import Optional
+
+class OAuthValidator:
+    """Validates OAuth 2.0 Bearer tokens."""
+    
+    def __init__(self, jwks_url: str, audience: str):
+        self.jwks_url = jwks_url
+        self.audience = audience
+        self._jwks_client = None  # Initialize JWKS client in production
+    
+    def validate_token(self, token: str) -> Optional[dict]:
+        """
+        Validate JWT token and return claims.
+        In production, use PyJWT with proper signature verification.
+        """
+        # Simplified — in production:
+        # 1. Fetch JWKS from jwks_url
+        # 2. Verify signature with the appropriate public key
+        # 3. Validate exp, iss, aud claims
+        # 4. Return decoded claims
+        
+        # Production pseudocode:
+        # key = self._jwks_client.get_signing_key_from_jwt(token)
+        # claims = jwt.decode(
+        #     token, key.key,
+        #     algorithms=["RS256"],
+        #     audience=self.audience
+        # )
+        return {
+            "sub": "user_123",
+            "scope": "read:data write:data",
+            "exp": 1735689600
+        }
+
+oauth_validator = OAuthValidator(
+    jwks_url="https://auth.example.com/.well-known/jwks.json",
+    audience="https://mcp.example.com"
+)
+
+def require_scope(required_scope: str):
+    """Decorator to enforce OAuth scope requirements on tools."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            context = kwargs.get("context", {})
+            token = context.get("headers", {}).get("authorization", "")
+            
+            if not token.startswith("Bearer "):
+                raise PermissionError("Missing Bearer token")
+            
+            claims = oauth_validator.validate_token(token[7:])
+            if not claims:
+                raise PermissionError("Invalid token")
+            
+            # Check scope
+            scopes = claims.get("scope", "").split()
+            if required_scope not in scopes:
+                raise PermissionError(f"Missing required scope: {required_scope}")
+            
+            # Attach user info to context for logging
+            kwargs["user_id"] = claims["sub"]
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator</code></pre>
+
+        <div class="info">
+            <strong>💡 MCP + OAuth Tip:</strong> The MCP protocol doesn't have a built-in auth field, so auth is typically passed via HTTP headers when the MCP server is served over HTTP (SSE transport). If using stdio transport (common for local tools), auth must be handled at the orchestration layer (Claude Desktop, etc.).
+        </div>
+
+        <h2 id="mtls">4. mTLS (Mutual TLS)</h2>
+
+        <p>For high-security environments where you need to verify both client and server identities at the transport layer, mutual TLS is the gold standard. Particularly relevant for enterprise MCP servers handling sensitive data.</p>
+
+        <h3>Certificate-Based Authentication Flow</h3>
+
+        <pre><code># nginx.conf snippet for MCP server with mTLS
+server {
+    listen 443 ssl;
+    server_name mcp.example.com;
+
+    # Server certificate (standard TLS)
+    ssl_certificate /etc/ssl/certs/mcp-server.crt;
+    ssl_certificate_key /etc/ssl/private/mcp-server.key;
+    ssl_protocols TLS 1.2 TLS 1.3;
+
+    # mTLS: Require client certificate
+    ssl_client_certificate /etc/ssl/ca/client-ca.crt;
+    ssl_verify_client on;
+    ssl_verify_depth 2;
+
+    # Pass client certificate info to MCP server
+    proxy_set_header X-Client-Cert $ssl_client_cert;
+    proxy_set_header X-Client-S-DN $ssl_client_s_dn;
+
+    location /mcp/ {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}</code></pre>
+
+        <h3>mTLS vs API Keys — When to Use Each</h3>
+
+        <table>
+            <tr><th>Criteria</th><th>API Keys</th><th>mTLS</th></tr>
+            <tr><td>Ease of setup</td><td>Simple</td><td>Complex (PKI required)</td></tr>
+            <tr><td>Rotation</td><td>Easy, no infra changes</td><td>Requires cert renewal</td></tr>
+            <tr><td>Compromise detection</td><td>Harder to detect</td><td>Revocation list + short-lived certs</td></tr>
+            <tr><td>Best for</td><td>Developer tools, single-org</td><td>Enterprise, regulated industries</td></tr>
+            <tr><td>Key management</td><td>Manual or secret manager</td><td>Automated (Vault, cert-manager)</td></tr>
+        </table>
+
+        <h2 id="rate-limiting">5. Rate Limiting & Throttling</h2>
+
+        <p>Rate limiting protects against both malicious abuse and accidental resource exhaustion. Implement at multiple levels.</p>
+
+        <pre><code>"""
+Token bucket rate limiter for MCP servers.
+Supports per-client and per-tool rate limits.
+"""
+import time
+from collections import defaultdict
+from threading import Lock
+
+class RateLimiter:
+    """
+    Token bucket rate limiter.
+    - Each client gets a bucket of 'capacity' tokens.
+    - Tokens replenish at 'rate' per second.
+    - Request costs 'cost' tokens (default: 1).
+    """
+    
+    def __init__(self, capacity: int = 100, rate: float = 10.0):
+        self.capacity = capacity
+        self.rate = rate
+        self.buckets = defaultdict(lambda: {"tokens": capacity, "last_refill": time.time()})
+        self.locks = defaultdict(Lock)
+    
+    def _refill(self, client_id: str):
+        """Refill tokens based on elapsed time."""
+        bucket = self.buckets[client_id]
+        now = time.time()
+        elapsed = now - bucket["last_refill"]
+        bucket["tokens"] = min(self.capacity, bucket["tokens"] + elapsed * self.rate)
+        bucket["last_refill"] = now
+    
+    def allow_request(self, client_id: str, cost: int = 1) -> tuple[bool, float]:
+        """
+        Check if request is allowed.
+        Returns (allowed, retry_after_seconds).
+        """
+        with self.locks[client_id]:
+            self._refill(client_id)
+            bucket = self.buckets[client_id]
+            
+            if bucket["tokens"] >= cost:
+                bucket["tokens"] -= cost
+                return True, 0.0
+            else:
+                # Calculate how long until enough tokens refill
+                deficit = cost - bucket["tokens"]
+                retry_after = deficit / self.rate
+                return False, retry_after
+
+# Usage
+rate_limiter = RateLimiter(capacity=100, rate=10)  # 100 req burst, 10/sec refill
+
+def rate_limit_check(client_id: str):
+    allowed, retry_after = rate_limiter.allow_request(client_id)
+    if not allowed:
+        raise Exception(f"Rate limit exceeded. Retry after {retry_after:.1f}s")</code></pre>
+
+        <div class="success">
+            <strong>✅ Recommended Rate Limits by Tier:</strong><br>
+            Free tier: 60 requests/minute, 5 requests/minute per tool<br>
+            Pro tier: 600 requests/minute, 50 requests/minute per tool<br>
+            Enterprise: No hard limit, use cost-based throttling instead
+        </div>
+
+        <h2 id="input-validation">6. Input Validation</h2>
+
+        <p>Every tool argument that comes from an LLM-generated prompt is potentially malicious. Treat all input as untrusted.</p>
+
+        <pre><code>"""
+Input validation patterns for MCP tools.
+"""
+import re
+from typing import Any, Optional
+
+class InputValidator:
+    """Validators for common MCP tool argument types."""
+    
+    @staticmethod
+    def validate_path(path: str, allowed_prefixes: list[str] = None) -> str:
+        """
+        Validate file path to prevent path traversal attacks.
+        CRITICAL: Always validate paths before file operations.
+        """
+        # Normalize the path (resolve .., symlinks, etc.)
+        import os
+        normalized = os.path.normpath(path)
+        
+        # Block obvious traversal attempts
+        if ".." in path or path.startswith("/"):
+            raise ValueError(f"Invalid path: {path}")
+        
+        # If allowed_prefixes specified, enforce them
+        if allowed_prefixes:
+            if not any(normalized.startswith(p) for p in allowed_prefixes):
+                raise ValueError(f"Path must be within allowed directories: {allowed_prefixes}")
+        
+        return normalized
+    
+    @staticmethod
+    def validate_sql(query: str, allowed_tables: list[str] = None) -> str:
+        """
+        Basic SQL injection prevention.
+        WARNING: For production, always use parameterized queries.
+        """
+        # Block comment-based injection
+        if "--" in query or ";" in query:
+            raise ValueError("SQL comments and multiple statements not allowed")
+        
+        # Basic keyword blocklist (supplement, not replace parameterized queries)
+        dangerous = ["DROP", "DELETE", "TRUNCATE", "ALTER", "INSERT", "UPDATE", "UNION"]
+        for kw in dangerous:
+            if re.search(rf'\b{kw}\b', query, re.IGNORECASE):
+                if allowed_tables:  # Only allow these in controlled contexts
+                    raise ValueError(f"Dangerous SQL keyword blocked: {kw}")
+        
+        return query
+    
+    @staticmethod
+    def validate_command(command: str, allowed_chars: str = None) -> str:
+        """Prevent command injection in shell commands."""
+        if re.search(r'[;&|`$(){}\\><]', command):
+            raise ValueError("Shell metacharacters not allowed")
+        return command
+
+# Usage in a tool
+@mcp.tool()
+def read_file_safe(path: str, context: dict) -> str:
+    allowed_dirs = ["/home/data/projects/", "/home/data/public/"]
+    safe_path = InputValidator.validate_path(path, allowed_prefixes=allowed_dirs)
+    # Now safe to proceed with actual file read
+    with open(safe_path) as f:
+        return f.read()</code></pre>
+
+        <h2 id="logging">7. Security Logging & Monitoring</h2>
+
+        <p>You can't protect what you can't see. Every security-relevant event should be logged with enough context for forensic analysis.</p>
+
+        <h3>What to Log</h3>
+
+        <table>
+            <tr><th>Event Type</th><th>Log Level</th><th>Required Data</th></tr>
+            <tr><td>Authentication success</td><td>INFO</td><td>User ID, timestamp, client IP, method</td></tr>
+            <tr><td>Authentication failure</td><td>WARN</td><td>Attempted ID, timestamp, client IP, failure reason</td></tr>
+            <tr><td>Tool access</td><td>INFO</td><td>User ID, tool name, arguments (sanitized), timestamp</td></tr>
+            <tr><td>Rate limit exceeded</td><td>WARN</td><td>Client ID, requested tool, current limit, retry-after</td></tr>
+            <tr><td>Input validation failure</td><td>WARN</td><td>Client ID, tool, attempted input (escaped), reason</td></tr>
+            <tr><td>Permission denied</td><td>WARN</td><td>User ID, requested action, missing permission</td></tr>
+            <tr><td>Internal errors</td><td>ERROR</td><td>Request ID, error type, stack trace (no secrets)</td></tr>
+        </table>
+
+        <div class="info">
+            <strong>💡 PII Handling:</strong> Never log raw API keys, passwords, tokens, or personal data. If you need to log arguments for debugging, hash or redact sensitive fields before storage. This is critical for GDPR/CCPA compliance.
+        </div>
+
+        <h2 id="production-checklist">8. Production Security Checklist</h2>
+
+        <p>Before going live with any MCP server:</p>
+
+        <ul>
+            <li>☐ <strong>Authentication implemented</strong> — API key, OAuth, or mTLS (not optional)</li>
+            <li>☐ <strong>Rate limiting enabled</strong> — per-client and per-tool limits configured</li>
+            <li>☐ <strong>Input validation on all tools</strong> — especially file paths, SQL, shell commands</li>
+            <li>☐ <strong>Security logging configured</strong> — all auth and permission events captured</li>
+            <li>☐ <strong>TLS enabled</strong> — MCP servers over network MUST use TLS 1.2+</li>
+            <li>☐ <strong>Secrets not in code</strong> — API keys, credentials in env vars or secret manager</li>
+            <li>☐ <strong>Dependencies audited</strong> — known CVEs in MCP SDKs and dependencies checked</li>
+            <li>☐ <strong>Scope/permission model defined</strong> — not all users can call all tools</li>
+            <li>☐ <strong>Timeout configured</strong> — prevent runaway tool executions</li>
+            <li>☐ <strong>Health check endpoint</strong> — separate from authenticated API</li>
+        </ul>
+
+        <div class="warning">
+            <strong>⚠️ MCP Security is an ongoing process.</strong> New attack vectors against AI agent systems are discovered regularly. Subscribe to MCP protocol updates, monitor your MCP server's usage patterns, and review logs weekly. Consider a penetration test if your MCP server handles high-value operations.
+        </div>
+
+        <footer>
+            <p><a href="index.html" style="color: var(--accent);">← Back to MCP Factory</a></p>
+            <p>Try_make_mcp — Build production-ready MCP servers with battle-tested templates.</p>
+        </footer>
+    </div>
+</body>
+</html>
