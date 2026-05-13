@@ -1,409 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Try_make_mcp — MCP Factory | Build Production-Ready MCP Servers</title>
-    <meta name="description" content="Try_make_mcp is an MCP service production factory. Build, validate, and deploy production-ready MCP servers in minutes. Free and open source.">
-    <meta name="keywords" content="MCP, Model Context Protocol, MCP server, MCP factory, AI agent tools, Claude tools, LLM integration">
-    <meta property="og:title" content="Try_make_mcp — MCP Factory">
-    <meta property="og:description" content="Build production-ready MCP servers in minutes with battle-tested templates.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://demo112.github.io/Try_make_mcp/">
-    <meta name="twitter:card" content="summary_large_image">
-    <style>
-        :root {
-            --bg: #0d1117;
-            --card-bg: #161b22;
-            --border: #30363d;
-            --text: #c9d1d9;
-            --text-muted: #8b949e;
-            --accent: #58a6ff;
-            --accent-green: #3fb950;
-            --accent-purple: #a371f7;
-            --accent-orange: #d29922;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-        header {
-            text-align: center;
-            padding: 3rem 0 2rem;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 3rem;
-        }
-        .badge-row {
-            display: flex;
-            justify-content: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        .badge {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 2rem;
-            padding: 0.35rem 1rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        .badge.mcp { border-color: var(--accent); color: var(--accent); }
-        .badge.python { border-color: var(--accent-green); color: var(--accent-green); }
-        .badge.license { border-color: var(--accent-purple); color: var(--accent-purple); }
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .tagline {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-        }
-        .cta-row {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: var(--accent);
-            color: #fff;
-            border: 1px solid var(--accent);
-        }
-        .btn-primary:hover { background: #4c9aed; }
-        .btn-secondary {
-            background: var(--card-bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover { border-color: var(--text-muted); }
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 2.5rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-        .stat { text-align: center; }
-        .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
-        .stat-label { font-size: 0.85rem; color: var(--text-muted); }
-        h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-        .section { margin-bottom: 3rem; }
-        .article-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1rem;
-        }
-        .article-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 1.25rem;
-            text-decoration: none;
-            color: inherit;
-            transition: border-color 0.2s, transform 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-        .article-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-        .article-cat {
-            font-size: 0.75rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-        }
-        .article-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-        }
-        .article-desc {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            flex: 1;
-        }
-        .article-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid var(--border);
-        }
-        .app-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .app-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .app-name {
-            font-family: monospace;
-            font-size: 0.9rem;
-            color: var(--accent-green);
-            margin-bottom: 0.25rem;
-        }
-        .app-desc { font-size: 0.8rem; color: var(--text-muted); }
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            border-top: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-        footer a { color: var(--accent); text-decoration: none; }
-        .new-tag {
-            display: inline-block;
-            background: var(--accent-green);
-            color: #000;
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 0.15rem 0.4rem;
-            border-radius: 3px;
-            margin-left: 0.4rem;
-            vertical-align: middle;
-        }
-        @media (max-width: 600px) {
-            h1 { font-size: 1.8rem; }
-            .stats { gap: 1.5rem; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Blog — Building AI Agents That Actually Work</title>
+<meta name="description" content="Practical guides on MCP servers, RAG workflows, and production AI agent patterns. Built with Try_make_mcp.">
+<link rel="canonical" href="https://demo112.github.io/Try_make_mcp/">
+<link rel="sitemap" type="application/xml" href="https://demo112.github.io/Try_make_mcp/sitemap.xml">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://demo112.github.io/Try_make_mcp/">
+<meta property="og:title" content="MCP Blog — Building AI Agents That Actually Work">
+<meta property="og:description" content="Practical guides on MCP servers, RAG workflows, and production AI agent patterns. Built with Try_make_mcp.">
+<meta property="og:site_name" content="MCP Blog">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@demo112">
+<meta name="twitter:title" content="MCP Blog — Building AI Agents That Actually Work">
+<meta name="twitter:description" content="Practical guides on MCP servers, RAG workflows, and production AI agent patterns.">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "MCP Blog",
+  "url": "https://demo112.github.io/Try_make_mcp/",
+  "description": "Practical guides on MCP servers, RAG workflows, and production AI agent patterns.",
+  "author": {
+    "@type": "Person",
+    "name": "demo112",
+    "url": "https://github.com/demo112"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Try_make_mcp",
+    "url": "https://github.com/demo112/Try_make_mcp"
+  }
+}
+</script>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:800px;margin:0 auto;padding:40px 20px;background:#0d1117;color:#c9d1d9}
+h1{color:#58a6ff;border-bottom:2px solid #30363d;padding-bottom:10px}
+.post{margin:30px 0;padding:20px;border:1px solid #30363d;border-radius:8px;animation:fadeIn 0.5s ease}
+.post:hover{border-color:#58a6ff50;background:#161b22}
+.post h2{color:#f0883e;margin-top:0}
+.post h3{color:#8b949e;font-size:0.9em;font-weight:400;margin-bottom:15px}
+.tag{background:#388bfd33;color:#58a6ff;padding:3px 10px;border-radius:12px;font-size:0.8em;margin-right:5px}
+.post-body{line-height:1.7}
+.post-body ul,.post-body ol{line-height:1.9}
+.post-body pre{background:#161b22;padding:15px;border-radius:6px;overflow-x:auto;font-size:0.85em;border:1px solid #30363d}
+.post-body code{color:#79c0ff;background:#161b22;padding:2px 6px;border-radius:4px}
+a{color:#58a6ff;text-decoration:none}
+a:hover{text-decoration:underline}
+.footer{margin-top:60px;padding-top:20px;border-top:1px solid #30363d;text-align:center;color:#8b949e;font-size:0.9em}
+.hero{background:linear-gradient(135deg,#161b22 0%,#0d1117 100%);padding:30px;border-radius:12px;margin-bottom:40px;border:1px solid #30363d}
+.hero h1{margin:0 0 10px 0;border:none;padding:0}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
 </head>
 <body>
-<div class="container">
 
-<!-- Header -->
-<header>
-    <div class="badge-row">
-        <span class="badge mcp">⚡ MCP</span>
-        <span class="badge python">🐍 Python 3.9+</span>
-        <span class="badge license">📄 MIT License</span>
-    </div>
-    <h1>Try_make_mcp</h1>
-    <p class="tagline">MCP Factory — Build, validate & deploy production-ready MCP servers in minutes</p>
-    <div class="cta-row">
-        <a class="btn btn-primary" href="https://github.com/demo112/Try_make_mcp">View on GitHub ⭐</a>
-        <a class="btn btn-secondary" href="https://github.com/punkpeye/awesome-mcp-servers/pull/6278">Listed in Awesome MCP</a>
-    </div>
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-num">8</div>
-            <div class="stat-label">Built-in Apps</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">3</div>
-            <div class="stat-label">MCP Templates</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">50+</div>
-            <div class="stat-label">Commits</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num">3,278</div>
-            <div class="stat-label">Lines of Code</div>
-        </div>
-    </div>
-</header>
-
-<!-- Quick Start -->
-<section class="section">
-    <h2>🚀 Quick Start</h2>
-    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.25rem; font-family: monospace; font-size: 0.9rem;">
-        <div style="color: var(--accent-green);"># Clone the repo</div>
-        <div style="color: var(--text-muted);">git clone https://github.com/demo112/Try_make_mcp.git</div>
-        <div style="color: var(--accent-green); margin-top: 0.75rem;"># Install dependencies</div>
-        <div style="color: var(--text-muted);">pip install -r requirements.txt</div>
-        <div style="color: var(--accent-green); margin-top: 0.75rem;"># Run the MCP factory</div>
-        <div style="color: var(--text-muted);">python src/mcp_factory/run.py</div>
-        <div style="color: var(--accent-green); margin-top: 0.75rem;"># Or use with Claude Desktop</div>
-        <div style="color: var(--text-muted);"># Add to claude_desktop_config.json</div>
-    </div>
-</section>
-
-<!-- Apps -->
-<section class="section">
-    <h2>⚡ Built-in Applications</h2>
-    <div class="app-grid">
-        <div class="app-card">
-            <div class="app-name">mcp_factory</div>
-            <div class="app-desc">The MCP that produces MCPs</div>
-        </div>
-        <div class="app-card">
-            <div class="app-name">md_converter</div>
-            <div class="app-desc">Doc ↔ MD conversion</div>
-        </div>
-        <div class="app-card">
-            <div class="app-name">rag_flow_mcp</div>
-            <div class="app-desc">RAG workflow engine</div>
-        </div>
-        <div class="app-card">
-            <div class="app-name">rag_eval_flow</div>
-            <div class="app-desc">RAG evaluation pipeline</div>
-        </div>
-        <div class="app-card">
-            <div class="app-name">Everything2MD</div>
-            <div class="app-desc">Windows search to Markdown</div>
-        </div>
-        <div class="app-card">
-            <div class="app-name">test_auto_gen</div>
-            <div class="app-desc">Auto test generation</div>
-        </div>
-    </div>
-</section>
-
-<!-- Blog Articles -->
-<section class="section">
-    <h2>📝 Blog & Tutorials</h2>
-    <div class="article-grid">
-
-        <!-- MCP Core -->
-        <a class="article-card" href="docs/mcp_factory/index.html">
-            <div class="article-cat">MCP Core</div>
-            <div class="article-title">What is Try_make_mcp? The MCP Factory Pattern</div>
-            <div class="article-desc">Learn how Try_make_mcp transforms scattered MCP development into a streamlined factory pipeline. From idea to production MCP server in minutes.</div>
-            <div class="article-meta">MCP · Factory · Architecture</div>
-        </a>
-
-        <a class="article-card" href="docs/tutorials/index.html">
-            <div class="article-cat">Tutorial</div>
-            <div class="article-title">Getting Started with MCP Servers in 2026</div>
-            <div class="article-desc">A comprehensive guide to building your first MCP server. Covers setup, tool definition, resource management, and deployment to production.</div>
-            <div class="article-meta">Beginner · Setup · Production</div>
-        </a>
-
-        <a class="article-card" href="docs/mcp_factory/mcp_vs_tool_calling.html">
-            <div class="article-cat">Deep Dive</div>
-            <div class="article-title">MCP vs Tool Calling: Which is Better for AI Agents?</div>
-            <div class="article-desc">Detailed comparison of Model Context Protocol and traditional Tool Calling. Performance, flexibility, use cases, and when to choose each approach.</div>
-            <div class="article-meta">AI Agents · Comparison · Architecture</div>
-        </a>
-
-        <!-- RAG & AI -->
-        <a class="article-card" href="docs/rag_flow_mcp/index.html">
-            <div class="article-cat">RAG</div>
-            <div class="article-title">Building RAG Pipelines with MCP Servers</div>
-            <div class="article-desc">Step-by-step guide to building production RAG (Retrieval-Augmented Generation) pipelines using MCP. Includes embedding, vector search, and LLM integration.</div>
-            <div class="article-meta">RAG · Vector DB · LLM</div>
-        </a>
-
-        <a class="article-card" href="docs/rag_eval_flow/index.html">
-            <div class="article-cat">Evaluation</div>
-            <div class="article-title">RAG Evaluation Metrics: Precision, Recall, and Beyond</div>
-            <div class="article-desc">How to measure RAG system quality with standard metrics. Covers RAGAS, semantic similarity, answer correctness, and automated evaluation workflows.</div>
-            <div class="article-meta">RAG · Metrics · Evaluation</div>
-        </a>
-
-        <!-- Development -->
-        <a class="article-card" href="docs/mcp_factory/docker_mcp_server.html">
-            <div class="article-cat">DevOps</div>
-            <div class="article-title">Dockerize Your MCP Server: Complete Production Guide</div>
-            <div class="article-desc">Containerize MCP servers with Docker for consistent deployment. Covers multi-stage builds, health checks, environment variables, and Docker Compose patterns.</div>
-            <div class="article-meta">Docker · Deployment · Production</div>
-        </a>
-
-        <a class="article-card" href="docs/tutorials/mcp_architecture_patterns.html">
-            <div class="article-cat">Architecture</div>
-            <div class="article-title">MCP Server Architecture Patterns: 6A Framework</div>
-            <div class="article-desc">Battle-tested patterns for building scalable MCP servers. Covers the 6A framework (Awareness, Authentication, Authorization, Abstraction, Adaptation, Action).</div>
-            <div class="article-meta">Architecture · Patterns · Best Practices</div>
-        </a>
-
-        <!-- Tools -->
-        <a class="article-card" href="docs/md_converter/index.html">
-            <div class="article-cat">Tool</div>
-            <div class="article-title">md_converter: Universal Document to Markdown Converter</div>
-            <div class="article-desc">Convert DOCX, PDF, HTML, and more to Markdown. Perfect for preprocessing documents for LLM ingestion and RAG pipelines.</div>
-            <div class="article-meta">Conversion · Document · Markdown</div>
-        </a>
-
-        <a class="article-card" href="docs/tutorials/mcp_server_patterns.html">
-            <div class="article-cat">Patterns</div>
-            <div class="article-title">10 MCP Server Patterns for Production AI Applications</div>
-            <div class="article-desc">Real-world patterns from 23,000+ MCP servers. Covers remote servers, streaming, pagination, rate limiting, and error handling best practices.</div>
-            <div class="article-meta">Patterns · Production · Scale</div>
-        </a>
-
-        <!-- Meta -->
-        <a class="article-card" href="docs/PROJECT_CHRONICLE.html">
-            <div class="article-cat">Behind the Scenes <span class="new-tag">NEW</span></div>
-            <div class="article-title">Building Try_make_mcp: A Developer's Chronicle</div>
-            <div class="article-desc">The story behind Try_make_mcp — from the first commit to 8 production MCP apps. Lessons learned, architecture decisions, and future roadmap.</div>
-            <div class="article-meta">Story · Architecture · Roadmap</div>
-        </a>
-
-        <a class="article-card" href="docs/mcp_factory/checklist.html">
-            <div class="article-cat">Checklist</div>
-            <div class="article-title">MCP Server Pre-Deployment Checklist</div>
-            <div class="article-desc">Before you ship your MCP server to production. Security audit, error handling, rate limiting, monitoring, documentation, and Glama submission guide.</div>
-            <div class="article-meta">Deployment · Checklist · Production</div>
-        </a>
-
-    </div>
-</section>
-
-<!-- Ecosystem -->
-<section class="section">
-    <h2>🌍 MCP Ecosystem</h2>
-    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1.5rem;">
-        <p style="margin-bottom: 1rem;">The MCP ecosystem is rapidly growing. <strong style="color: var(--accent);">Try_make_mcp</strong> is listed in the official <a href="https://github.com/punkpeye/awesome-mcp-servers" style="color: var(--accent);">awesome-mcp-servers</a> collection alongside 86k+ other repositories.</p>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 150px; padding: 1rem; background: var(--bg); border-radius: 4px; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">23,481</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">Total MCP Servers</div>
-            </div>
-            <div style="flex: 1; min-width: 150px; padding: 1rem; background: var(--bg); border-radius: 4px; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-green);">1,538</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">Claimed on Glama</div>
-            </div>
-            <div style="flex: 1; min-width: 150px; padding: 1rem; background: var(--bg); border-radius: 4px; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-purple);">8,101</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">Developer Tools</div>
-            </div>
-        </div>
-    </div>
-</section>
-
+<div class="hero">
+<h1>MCP Blog</h1>
+<p style="color:#8b949e;font-size:1.1em;margin:0">Building production-ready AI agents with the Model Context Protocol</p>
 </div>
-<footer>
-    <p>Built with ⚡ by <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> · 
-    <a href="https://github.com/punkpeye/awesome-mcp-servers/pull/6278">Listed in Awesome MCP Servers</a> ·
-    MIT License</p>
-    <p style="margin-top: 0.5rem;">23,000+ MCP servers in production · 2026</p>
-</footer>
+
+<div class="post">
+<h2>🚀 MCP vs Tool Calling: When to Use Each (And Why It Matters)</h2>
+<h3>May 13, 2026 · <span class="tag">Comparison</span> <span class="tag">Architecture</span> <span class="tag">Decision Guide</span></h3>
+<div class="post-body">
+<p>If you're building AI agents in 2026, you've hit this fork in the road: <strong>Model Context Protocol (MCP)</strong> vs <strong>native tool calling</strong>. The answer isn't obvious — and the wrong choice costs you months of rework.</p>
+
+<p><strong>The fundamental difference:</strong> Native tool calling bakes tool definitions directly into your agent's prompt. MCP externalizes them into a discoverable, reusable service layer. Think REST API vs embedded function calls.</p>
+
+<p><strong>Use native tool calling when:</strong></p>
+<ul>
+<li>You have &lt;10 tools and they won't change often</li>
+<li>You're building a single, self-contained agent</li>
+<li>Latency is your #1 constraint (MCP adds ~20-50ms overhead)</li>
+<li>You're prototyping and need to move fast</li>
+</ul>
+
+<p><strong>Use MCP when:</strong></p>
+<ul>
+<li>You need tools to be <strong>discoverable</strong> by multiple AI clients</li>
+<li>You're building a <strong>platform</strong> where others extend your agent</li>
+<li>Tools are owned by <strong>different teams or services</strong></li>
+<li>You want <strong>standardized authentication</strong>, logging, and rate limiting</li>
+<li>You're targeting the growing MCP ecosystem (9,600+ servers)</li>
+</ul>
+
+<p><strong>The hybrid approach that works:</strong></p>
+<p>Most production systems use MCP for stable, shared services (database access, file storage, authentication) and native tool calling for agent-specific, rapidly-changing logic. This gives you ecosystem compatibility without sacrificing iteration speed.</p>
+
+<pre><code># MCP for shared services
+# Native tool calling for agent-specific logic
+
+# MCP server (shared)
+class DatabaseMCP:
+    """Reusable by any AI client. Standard auth, logging."""
+    tools = ["query", "schema", "migrate"]
+
+# Native tool (agent-specific)
+def agent_specific_routing(user_intent):
+    """Changes daily. No MCP overhead needed."""
+    pass</code></pre>
+
+<p><strong>Bottom line:</strong> MCP is infrastructure. Native tool calling is custom code. Build infrastructure once, use custom code for differentiation.</p>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp">Start building with Try_make_mcp →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>📦 Dockerize Your MCP Server in 10 Minutes: A Production Checklist</h2>
+<h3>May 13, 2026 · <span class="tag">DevOps</span> <span class="tag">Docker</span> <span class="tag">Deployment</span></h3>
+<div class="post-body">
+<p>You've built a great MCP server. Now you need to ship it. This checklist covers everything from Dockerfile optimization to health checks that actually catch failures.</p>
+
+<p><strong>1. Multi-stage build — keep images lean</strong></p>
+<pre><code>FROM python:3.11-slim AS builder
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.11-slim
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY ./app /app
+WORKDIR /app
+CMD ["python", "-m", "mcp_factory", "serve"]</code></pre>
+
+<p><strong>2. Non-root user — security non-negotiable</strong></p>
+<pre><code>RUN addgroup -S mcp && adduser -S mcp -G mcp
+USER mcp</code></pre>
+
+<p><strong>3. Health check that actually works</strong></p>
+<pre><code>HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"</code></pre>
+
+<p><strong>4. Signal handling — graceful shutdown</strong></p>
+<pre><code>import signal, sys
+
+def shutdown(signum, frame):
+    print("Received SIGTERM, shutting down gracefully...")
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, shutdown)</code></pre>
+
+<p><strong>5. Environment validation on startup</strong></p>
+<pre><code>import os
+required = ["API_KEY", "DB_HOST"]
+missing = [k for k in required if not os.environ.get(k)]
+if missing:
+    raise RuntimeError(f"Missing required env vars: {missing}")</code></pre>
+
+<p><strong>Docker Compose for local dev:</strong></p>
+<pre><code>version: '3.8'
+services:
+  mcp-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s</code></pre>
+
+<p>The Dockerfile above is what Try_make_mcp generates automatically with <code>mcp_factory init</code>. You get production-ready containers without the checklist.</p>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp/tree/main/docs/mcp_factory">View mcp_factory templates →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>🧠 RAG Flow MCP: Building Self-Evolving Knowledge Assistants</h2>
+<h3>May 13, 2026 · <span class="tag">RAG</span> <span class="tag">Tutorial</span> <span class="tag">Advanced</span></h3>
+<div class="post-body">
+<p>Most RAG implementations answer questions. RAG Flow MCP does something more powerful: it <em>evolves</em> knowledge bases through structured feedback loops.</p>
+
+<p><strong>The 4-Engine Architecture:</strong></p>
+<ul>
+<li><strong>Inference Engine</strong> — semantic search over your knowledge base with confidence scoring</li>
+<li><strong>Evolution Engine</strong> — detects knowledge gaps and generates new documentation</li>
+<li><strong>Governance Engine</strong> — enforces consistency rules across all markdown docs</li>
+<li><strong>Lifecycle Engine</strong> — manages version history and deprecation chains</li>
+</ul>
+
+<p><strong>Real-world use case:</strong> Feed it your codebase, and it will identify undocumented patterns, draft docs for them, and flag inconsistencies — all via MCP protocol.</p>
+
+<pre><code># Start in 3 lines
+cd rag_flow_mcp
+python -m mcp_factory serve --template rag_flow
+# RAG Flow MCP is live on localhost:8000</code></pre>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp/tree/main/docs/rag_flow_mcp">View RAG Flow MCP Source →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>⚡ 6A Workflow: Build MCP Servers in Days, Not Months</h2>
+<h3>May 12, 2026 · <span class="tag">Workflow</span> <span class="tag">Best Practices</span></h3>
+<div class="post-body">
+<p>Creating an MCP server from scratch involves dozens of decisions: authentication, error handling, logging, health checks, deployment. The 6A workflow standardizes all of it.</p>
+
+<p><strong>The 6 Phases:</strong></p>
+<ol>
+<li><strong>Align</strong> — clarify requirements, get stakeholder consensus</li>
+<li><strong>Architect</strong> — design the system with unified architecture doc</li>
+<li><strong>Atomize</strong> — break down into concrete tasks with acceptance criteria</li>
+<li><strong>Approve</strong> — checklist review before execution</li>
+<li><strong>Automate</strong> — write code, run tests</li>
+<li><strong>Assess</strong> — acceptance report, lessons learned, delivery sign-off</li>
+</ol>
+
+<p><strong>Why it works:</strong> Most MCP projects fail because the "Align" and "Architect" phases are skipped. Teams jump straight to coding, then spend months on rewrites. The 6A workflow front-loads decisions.</p>
+
+<p>Try_make_mcp's mcp_factory CLI enforces the 6A pipeline automatically:</p>
+
+<pre><code>python -m mcp_factory init --name my_server --workflow 6a
+# Creates full 6A directory structure with templates</code></pre>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp/tree/main/docs/mcp_factory">View 6A Workflow Templates →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>🔧 MCP Server Patterns: Lessons from 6 Production Deployments</h2>
+<h3>May 11, 2026 · <span class="tag">Patterns</span> <span class="tag">Production</span></h3>
+<div class="post-body">
+<p>After building 6 MCP servers with Try_make_mcp, patterns emerge. Here are the 4 most important lessons:</p>
+
+<p><strong>1. Separate Tool Discovery from Tool Execution</strong></p>
+<p>Don't put business logic in your MCP handler. Use a "tool registry" pattern — the handler only routes requests. This makes testing 10x easier.</p>
+
+<p><strong>2. Health Check = Trust Signal</strong></p>
+<p>Every MCP server should expose a <code>/health</code> endpoint. Clients use it to verify connectivity before sending real requests. Without it, you'll get mysterious timeouts in production.</p>
+
+<p><strong>3. Structured Logging is Non-Negotiable</strong></p>
+<p>Use <code>structlog</code> or <code>json-logging</code>. Raw print statements don't survive production. You need log levels, request IDs, and trace context.</p>
+
+<p><strong>4. Graceful Degradation Over Hard Failures</strong></p>
+<p>If your RAG lookup times out, return a partial answer with a warning flag. Don't crash. The AI client can work with incomplete data; it can't work with exceptions.</p>
+
+<p><strong>TL;DR:</strong> Treat MCP servers like web APIs, not scripts. Design for failure, log aggressively, test with real clients.</p>
+
+<p>→ <a href="https://github.com/demo112/Try_make_mcp">Explore Try_make_mcp Templates →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>📦 Try_make_mcp: A Factory for MCP Servers</h2>
+<h3>May 13, 2026 · <span class="tag">MCP</span> <span class="tag">Tutorial</span></h3>
+<div class="post-body">
+<p>Creating a production MCP server from scratch takes days. Try_make_mcp is a Python CLI framework that standardizes and pipelines the entire process.</p>
+<p><strong>What it does:</strong></p>
+<ul>
+<li>6 pre-built MCP templates (RAG, document conversion, file operations, etc.)</li>
+<li>Standardized logging, error handling, and health checks</li>
+<li>One-command deployment to Claude Desktop</li>
+</ul>
+<p>→ <a href="https://github.com/demo112/Try_make_mcp">View on GitHub →</a></p>
+</div>
+</div>
+
+<div class="post">
+<h2>🔒 MCP Security: 7 Things You Must Check</h2>
+<h3>May 10, 2026 · <span class="tag">Security</span> <span class="tag">MCP</span></h3>
+<div class="post-body">
+<p>MCP servers connect AI models to real-world tools. That's powerful — and dangerous. Here are the 7 authentication vulnerabilities found in 281 MCP implementations.</p>
+<p>→ <a href="https://github.com/demo112/Try_make_mcp#security">Security Guide →</a></p>
+</div>
+</div>
+
+<div class="footer">
+<p>Built with <a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp</a> · Star on <a href="https://github.com/demo112/Try_make_mcp">GitHub</a></p>
+</div>
 </body>
 </html>
