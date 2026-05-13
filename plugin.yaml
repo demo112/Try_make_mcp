@@ -1,0 +1,59 @@
+# plugin.yaml — Try_make_mcp Plugin Manifest
+# This file makes Try_make_mcp discoverable as an agent plugin.
+# Learn more: https://list.agenium.net/plugins
+
+name: try-make-mcp
+display_name: Try_make_mcp - MCP Factory
+manifest_version: "1.0"
+description: >
+  Build custom MCP servers in minutes with 8 pre-built apps. Includes web search,
+  terminal execution, filesystem operations, time utilities, image generation,
+  weather queries, text translation, and a calculator. All accessible via the
+  Model Context Protocol (MCP) — just clone, configure, and run.
+
+author:
+  name: demo112
+  url: https://github.com/demo112
+
+repository: https://github.com/demo112/Try_make_mcp
+license: MIT
+
+categories:
+  - mcp-servers
+  - developer-tools
+  - utilities
+
+tags:
+  - mcp
+  - model-context-protocol
+  - factory
+  - web-search
+  - terminal
+  - file-system
+  - translator
+  - weather
+  - calculator
+  - image-generation
+  - python
+
+capabilities:
+  - web-search
+  - terminal-execution
+  - filesystem-operations
+  - time-utilities
+  - image-generation
+  - weather-queries
+  - text-translation
+  - calculator
+
+install:
+  pip: "git+https://github.com/demo112/Try_make_mcp.git"
+
+runtime:
+  language: python
+  min_python: "3.9"
+
+protocols:
+  - mcp
+transport:
+  - stdio

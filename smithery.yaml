@@ -1,0 +1,25 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    properties:
+      app:
+        type: string
+        description: "Which app to run (e.g., 'calculator', 'web_search', 'terminal', 'filesystem', 'time', 'image_generator', 'weather', 'translator')"
+        default: "calculator"
+      host:
+        type: string
+        description: "Server host"
+        default: "localhost"
+      port:
+        type: number
+        description: "Server port"
+        default: 8000
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => ({ command: 'python', args: ['-m', 'try_make_mcp', '--app', config.app || 'calculator', '--host', config.host || 'localhost', '--port', String(config.port || 8000)] })
+  exampleConfig: {}
