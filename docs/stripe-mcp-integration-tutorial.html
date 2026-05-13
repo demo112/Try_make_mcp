@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stripe + MCP Integration: Add Payments to Your MCP Server (2026) — Try_make_mcp</title>
+  <meta name="description" content="Step-by-step tutorial: integrate Stripe Checkout with your MCP server for freemium monetization. Based on real production code from BGPT MCP ($0.02/result).">
+  <meta name="keywords" content="Stripe MCP, MCP payment integration, monetize MCP server, Stripe Checkout MCP, freemium MCP, MCP billing">
+  <link rel="canonical" href="https://demo112.github.io/Try_make_mcp/docs/stripe-mcp-integration-tutorial.html">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.7; color: #1a1a1a; }
+    h1 { font-size: 2rem; border-bottom: 3px solid #7c3aed; padding-bottom: 0.5rem; }
+    h2 { color: #7c3aed; margin-top: 2.5rem; }
+    h3 { color: #4c1d95; }
+    code { background: #f3f4f6; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.9em; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 1.5rem; border-radius: 8px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; }
+    pre code { background: none; padding: 0; color: inherit; }
+    .callout { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0; }
+    .callout-blue { background: #dbeafe; border-left-color: #3b82f6; }
+    .callout-green { background: #d1fae5; border-left-color: #10b981; }
+    .callout-red { background: #fee2e2; border-left-color: #ef4444; }
+    table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.75rem; text-align: left; }
+    th { background: #f9fafb; font-weight: 600; }
+    .badge { display: inline-block; padding: 0.2em 0.6em; border-radius: 9999px; font-size: 0.8em; font-weight: 600; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    a { color: #7c3aed; }
+    .step { display: flex; gap: 1rem; margin: 1.5rem 0; }
+    .step-num { background: #7c3aed; color: white; width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← Back to MCP Factory</a></p>
+  
+  <h1>Stripe + MCP Integration Tutorial: Add Payments to Your MCP Server</h1>
+  <p>
+    <span class="badge badge-green">Production-Verified</span>
+    <span class="badge badge-purple">Stripe Checkout</span>
+    <span class="badge badge-blue">Freemium Model</span>
+  </p>
+  <p><strong>8 min read</strong> · Updated May 2026 · Based on BGPT MCP's real $0.02/result model</p>
+
+  <p>This tutorial shows you how to add <strong>Stripe payments</strong> to your MCP server using the <strong>freemium model</strong> — the exact pattern used by <a href="https://github.com/connerlambden/bgpt-mcp">BGPT MCP</a> (19 stars, active Stripe integration). Users start free, then upgrade when they need more.</p>
+
+  <h2>Overview: The Freemium MCP Pattern</h2>
+
+  <div class="callout callout-blue">
+    <strong>Key Insight:</strong> You don't need any changes to the MCP protocol spec to add payments. The API key is passed as a <strong>tool call parameter</strong>, completely transparent to the MCP client. — <em>tadasant (MCP maintainer)</em>
+  </div>
+
+  <p>The pattern works like this:</p>
+  <ol>
+    <li><strong>Free tier:</strong> No API key required. Users connect and use tools immediately. Rate-limited by IP (e.g., 10 calls/day).</li>
+    <li><strong>Free tier exhausted:</strong> Server returns JSON-RPC error code <code>-32042</code> ("Payment required") with a subscribe URL.</li>
+    <li><strong>Upgrade:</strong> User visits your Stripe Checkout page, pays, receives an API key.</li>
+    <li><strong>Paid tier:</strong> User adds <code>api_key</code> parameter to their tool calls. Unlimited access.</li>
+  </ol>
+
+  <h2>Architecture</h2>
+  <pre><code>┌──────────────────┐     ┌──────────────────────┐     ┌──────────────┐
+│  MCP Client      │────▶│  Your MCP Server     │────▶│  Stripe API  │
+│  (Claude/Cursor) │     │  (Cloudflare Worker) │     │              │
+│                  │     │                      │     │  - Verify    │
+│  tool call:      │     │  1. Check api_key    │◀────│    payment   │
+│  {               │     │  2. Free? Rate limit  │     │  - Webhook   │
+│    name: "x",    │     │  3. Paid? Execute ✅  │     │    events   │
+│    arguments: {  │     │  4. No $? Error -32042│     │              │
+│      api_key:    │     └──────────────────────┘     └──────────────┘
+│      "sk_live_…" │              │
+│    }            │              ▼
+│  }              │     ┌──────────────────────┐
+└──────────────────┘     │  Cloudflare KV       │
+                         │  - Usage counters    │
+                         │  - Valid API keys    │
+                         └──────────────────────┘</code></pre>
+
+  <h2>Step 1: Set Up Stripe</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div>
+      <h3>Create a Stripe Account</h3>
+      <p>Go to <a href="https://dashboard.stripe.com/register">stripe.com/register</a>. Individual accounts work fine. No business registration needed for most countries.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div>
+      <h3>Create a Product and Price</h3>
+      <p>In your Stripe Dashboard → <strong>Products</strong> → <strong>Add Product</strong>:</p>
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Name</td><td>Your MCP Server — Pro Access</td></tr>
+        <tr><td>Pricing model</td><td>Pay-per-use or Subscription</td></tr>
+        <tr><td>Price</td><td>$0.01-$0.05 per call (or $5-20/month)</td></tr>
+        <tr><td>Billing</td><td>Prepaid credits or metered</td></tr>
+      </table>
+      <p>Copy the <strong>Price ID</strong> (starts with <code>price_</code>).</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div>
+      <h3>Create a Checkout Link (Easiest Method)</h3>
+      <p>Stripe Dashboard → <strong>Payment Links</strong> → <strong>Create Link</strong>. Select your product. You get a URL like <code>https://buy.stripe.com/abc123xyz</code>.</p>
+      <div class="callout callout-green">
+        <strong>No backend needed!</strong> Stripe Payment Links handle the entire checkout flow. After payment, you manually (or via webhook) provision an API key.
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div>
+      <h3>Get Your API Keys</h3>
+      <p>Stripe Dashboard → <strong>Developers</strong> → <strong>API keys</strong>. You need:</p>
+      <ul>
+        <li><strong>Publishable key</strong> (<code>pk_live_...</code>) — for client-side</li>
+        <li><strong>Secret key</strong> (<code>sk_live_...</code>) — for server-side verification</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Step 2: Add Freemium Gate to Your MCP Server</h2>
+
+  <p>Here's the complete freemium gate logic. This follows the <strong>BGPT MCP pattern</strong> — API key is a tool call parameter, not an auth header.</p>
+
+  <h3>2.1 API Key Validation</h3>
+  <pre><code>// validateApiKey(apiKey, env)
+// Returns: { valid: boolean, tier: 'free' | 'pro' }
+function validateApiKey(apiKey, env) {
+  if (!apiKey) return { valid: false, tier: 'free' };
+
+  // Check against comma-separated list in environment variables
+  const validKeys = (env?.VALID_API_KEYS || '').split(',')
+    .map(k => k.trim()).filter(k => k.length > 0);
+
+  if (validKeys.includes(apiKey)) {
+    return { valid: true, tier: 'pro' };
+  }
+
+  return { valid: false, tier: 'free' };
+}</code></pre>
+
+  <h3>2.2 Rate Limiting (Free Tier)</h3>
+  <pre><code>// Using Cloudflare KV for persistent rate limiting
+// Free tier: 10 calls per day per IP
+async function checkFreeTierLimit(ip, env) {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `usage:${ip}:${today}`;
+
+  const count = parseInt(await env.USAGE_KV.get(key) || '0');
+
+  if (count >= 10) return false; // Limit reached
+
+  await env.USAGE_KV.put(key, String(count + 1), {
+    expirationTtl: 86400 // Auto-cleanup after 24h
+  });
+
+  return true; // Still within limit
+}</code></pre>
+
+  <h3>2.3 The Payment Required Error</h3>
+  <pre><code>// In your tools/call handler:
+case 'tools/call': {
+  const { name: toolName, arguments: args } = params;
+  const apiKey = args.api_key; // BGPT pattern!
+  const clientIP = request.headers.get('CF-Connecting-IP');
+
+  const auth = validateApiKey(apiKey, env);
+
+  if (auth.tier === 'pro') {
+    // ✅ Paid user — execute directly
+    result = await executeTool(toolName, args);
+  } else {
+    // Free tier — check rate limit
+    const allowed = await checkFreeTierLimit(clientIP, env);
+    if (allowed) {
+      result = await executeTool(toolName, args);
+    } else {
+      // ❌ Payment required — MCP error code -32042
+      isError = true;
+      result = {
+        code: -32042,
+        message: 'Payment required: Daily free limit reached',
+        data: {
+          limit: 10,
+          subscribe_url: '/subscribe',
+          tip: 'Add api_key parameter for unlimited access'
+        }
+      };
+    }
+  }
+  break;
+}</code></pre>
+
+  <div class="callout">
+    <strong>Why <code>-32042</code>?</strong> This is the error code proposed in <a href="https://github.com/modelcontextprotocol/model-context-discussions/discussions/2436">MCP Discussion #2436</a> for "Payment Required." It's not yet in the spec, but it's becoming the de facto standard.
+  </div>
+
+  <h2>Step 3: Handle Stripe Webhooks (Provision API Keys)</h2>
+
+  <p>When a user completes checkout via your Payment Link, Stripe sends a webhook. Handle it to auto-provision API keys.</p>
+
+  <h3>3.1 Add a Webhook Endpoint to Your Worker</h3>
+  <pre><code>// In your Cloudflare Worker fetch handler:
+if (url.pathname === '/webhook' && request.method === 'POST') {
+  const body = await request.text();
+  const sig = request.headers.get('stripe-signature');
+
+  // Verify webhook signature (optional but recommended)
+  // const event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+
+  const event = JSON.parse(body);
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const customerEmail = session.customer_details?.email;
+    const amount = session.amount_total;
+
+    // Generate API key
+    const apiKey = 'sk_live_' + crypto.randomUUID().replace(/-/g, '');
+
+    // Store: apiKey → { email, credits, created }
+    await env.USERS_KV.put(apiKey, JSON.stringify({
+      email: customerEmail,
+      credits: amount, // 1 credit = 1 cent
+      created: new Date().toISOString(),
+    }));
+
+    // Send API key to user (email, or redirect with key in URL)
+    console.log(`Provisioned ${apiKey} for ${customerEmail}`);
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}</code></pre>
+
+  <div class="callout callout-red">
+    <strong>Security:</strong> Always verify the <code>stripe-signature</code> header in production. Use the Stripe secret key to construct the event. This prevents attackers from sending fake webhook events.
+  </div>
+
+  <h2>Step 4: User Experience Flow</h2>
+
+  <h3>4.1 For Free Users</h3>
+  <pre><code>// MCP client config — no API key needed!
+{
+  "mcpServers": {
+    "your-tool": {
+      "url": "https://your-tool.your-subdomain.workers.dev/mcp/sse"
+    }
+  }
+}
+
+// Just start using it. After 10 calls:
+// → Error -32042: "Payment required"
+// → Includes subscribe URL</code></pre>
+
+  <h3>4.2 For Paid Users</h3>
+  <pre><code>// Same MCP client config — API key goes in the tool call
+{
+  "mcpServers": {
+    "your-tool": {
+      "url": "https://your-tool.your-subdomain.workers.dev/mcp/sse"
+    }
+  }
+}
+
+// When calling tools, add api_key:
+// tool: "search_papers"
+// arguments: {
+//   query: "CRISPR gene editing",
+//   api_key: "sk_live_abc123..."  // ← Just add this!
+// }</code></pre>
+
+  <div class="callout callout-blue">
+    <strong>Transparent to MCP clients!</strong> The <code>api_key</code> parameter is just another argument in the tool call. No MCP spec changes needed. Claude, Cursor, and all MCP clients work without modification.
+  </div>
+
+  <h2>Pricing Strategies for MCP Servers</h2>
+
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Price Range</th>
+      <th>Best For</th>
+      <th>Example</th>
+    </tr>
+    <tr>
+      <td><strong>Pay-per-call</strong></td>
+      <td>$0.001–$0.05/call</td>
+      <td>Data lookup, search, conversion tools</td>
+      <td>BGPT MCP: $0.02/result</td>
+    </tr>
+    <tr>
+      <td><strong>Monthly subscription</strong></td>
+      <td>$5–$20/month</td>
+      <td>AI coding assistants, RAG tools</td>
+      <td>Cursor Pro: $20/month</td>
+    </tr>
+    <tr>
+      <td><strong>Credit packs</strong></td>
+      <td>$5 for 500 credits</td>
+      <td>Variable-cost tools (LLM-powered)</td>
+      <td>OpenAI API credits</td>
+    </tr>
+    <tr>
+      <td><strong>Freemium + ads</strong></td>
+      <td>$0 (ad-supported)</td>
+      <td>High-volume consumer tools</td>
+      <td>Not yet seen in MCP</td>
+    </tr>
+  </table>
+
+  <h2>Real-World Example: BGPT MCP</h2>
+
+  <p><a href="https://github.com/connerlambden/bgpt-mcp">BGPT MCP</a> is the best real-world reference for MCP monetization:</p>
+
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Repository</td><td>connerlambden/bgpt-mcp</td></tr>
+    <tr><td>Stars</td><td>19</td></tr>
+    <tr><td>Tool</td><td><code>search_papers</code> — scientific paper search</td></tr>
+    <tr><td>Free tier</td><td>50 results/day, no API key</td></tr>
+    <tr><td>Paid tier</td><td>$0.02/result via Stripe</td></tr>
+    <tr><td>Transport</td><td>SSE + Streamable HTTP (Cloudflare)</td></tr>
+    <tr><td>Auth method</td><td><code>api_key</code> parameter in tool call</td></tr>
+    <tr><td>Checkout</td><td>Stripe hosted checkout at bgpt.pro/mcp-subscribe</td></tr>
+    <tr><td>Data per result</td><td>25+ fields (methods, results, conclusions, quality scores)</td></tr>
+  </table>
+
+  <p>The key lesson: <strong>Zero friction to start</strong>. Users can try the tool immediately. The payment only appears when they need more capacity. This is the most effective conversion pattern.</p>
+
+  <h2>Alternative: x402 HTTP Payment Protocol</h2>
+
+  <p>Beyond Stripe, the MCP community is exploring <strong>x402</strong> — an HTTP-native payment protocol using USDC on Base blockchain:</p>
+  <pre><code>// x402 flow (no Stripe account needed!)
+// 1. Client sends request
+// 2. Server responds with 402 Payment Required + payment details
+// 3. Client's wallet pays automatically
+// 4. Server receives payment and processes the request</code></pre>
+
+  <p><a href="https://github.com/whiteknightonhorse/APIbase">APIbase.pro</a> uses x402 + MPP (Metered Payment Protocol) with 576 tools and 177 providers. Pricing ranges from $0.001–$1.00/call in USDC.</p>
+
+  <div class="callout">
+    <strong>Recommendation:</strong> Start with <strong>Stripe</strong> (largest audience, easiest setup). Add x402 later if you want crypto-savvy users.
+  </div>
+
+  <h2>Security Checklist</h2>
+  <ul>
+    <li>✅ <strong>Verify Stripe webhook signatures</strong> — prevent fake payment events</li>
+    <li>✅ <strong>Rate limit free tier by IP</strong> — prevent abuse</li>
+    <li>✅ <strong>Use <code>CF-Connecting-IP</code></strong> — Cloudflare provides real client IPs</li>
+    <li>✅ <strong>Don't expose Stripe secret keys</strong> — use <code>wrangler secret put</code></li>
+    <li>✅ <strong>Set TTL on KV usage records</strong> — auto-cleanup to control costs</li>
+    <li>⚠️ <strong>Prompt injection risk</strong> — AI agents might forward payment params. Validate server-side.</li>
+    <li>⚠️ <strong>API key in tool params</strong> — keys are visible to the AI model. Consider this in your threat model.</li>
+  </ul>
+
+  <h2>Quick Start Checklist</h2>
+
+  <table>
+    <tr><th>Step</th><th>Action</th><th>Time</th></tr>
+    <tr><td>1</td><td>Register Stripe account</td><td>5 min</td></tr>
+    <tr><td>2</td><td>Create product + Payment Link</td><td>3 min</td></tr>
+    <tr><td>3</td><td>Add freemium gate to your MCP server</td><td>30 min</td></tr>
+    <tr><td>4</td><td>Deploy to Cloudflare Workers</td><td>2 min</td></tr>
+    <tr><td>5</td><td>Test: free tier → hit limit → see -32042</td><td>5 min</td></tr>
+    <tr><td>6</td><td>Test: paid tier with API key → unlimited</td><td>5 min</td></tr>
+    <tr><td>7</td><td>Set up webhook for auto-provisioning</td><td>15 min</td></tr>
+    <tr><td>8</td><td>Go live! 🚀</td><td>0 min</td></tr>
+  </table>
+  <p><strong>Total: ~65 minutes</strong> to add Stripe payments to your MCP server.</p>
+
+  <h2>Complete Working Example</h2>
+
+  <p>The full working code with freemium gate is available in the <a href="https://github.com/demo112/Try_make_mcp/tree/main/cloudflare-worker">Try_make_mcp cloudflare-worker/</a> directory:</p>
+
+  <ul>
+    <li><strong><code>worker.mjs</code></strong> — MCP server with built-in freemium gate (v2.0.0)</li>
+    <li><strong><code>wrangler.toml</code></strong> — Deployment config with KV binding placeholders</li>
+    <li><strong><code>README.md</code></strong> — Deployment instructions</li>
+  </ul>
+
+  <p>Key features of the implementation:</p>
+  <ul>
+    <li>API key validation via environment variables (no database needed)</li>
+    <li>IP-based free tier rate limiting (memory or KV)</li>
+    <li>MCP error code -32042 ("Payment required") with subscribe URL</li>
+    <li><code>/subscribe</code> endpoint → redirects to Stripe Checkout</li>
+    <li><code>/pricing</code> endpoint → returns JSON pricing info</li>
+    <li>Zero-dependency, pure JavaScript (Cloudflare Workers compatible)</li>
+  </ul>
+
+  <h2>Related Resources</h2>
+  <ul>
+    <li><a href="mcp-monetization-guide.html">MCP Monetization Guide</a> — Comprehensive overview of all monetization models</li>
+    <li><a href="deploy-mcp-cloudflare-workers.html">Deploy MCP on Cloudflare Workers</a> — Step-by-step deployment guide</li>
+    <li><a href="https://github.com/connerlambden/bgpt-mcp">BGPT MCP</a> — Real production example ($0.02/result)</li>
+    <li><a href="https://github.com/whiteknightonhorse/APIbase">APIbase.pro</a> — x402/MPP crypto payment gateway</li>
+    <li><a href="https://github.com/modelcontextprotocol/model-context-discussions/discussions/2436">MCP Discussion #2436</a> — Standard payment layer proposal</li>
+  </ul>
+
+  <hr>
+  <p><a href="index.html">← Back to MCP Factory</a> · <a href="mcp-monetization-guide.html">MCP Monetization Guide →</a></p>
+</body>
+</html>

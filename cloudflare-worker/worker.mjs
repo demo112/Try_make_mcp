@@ -1,8 +1,8 @@
 /**
  * Try_make_mcp — Cloudflare Worker MCP Server (Remote / Streamable HTTP)
  * 
- * 最简化的 MCP server 端点，部署到 Cloudflare Workers 免费套餐。
  * 支持 streamable-http 和 sse 两种传输方式。
+ * 内置 Freemium API Key 验证（Stripe Checkout 集成就绪）。
  * 
  * 部署步骤（Cooper）:
  * 1. 注册 Cloudflare 账号: https://dash.cloudflare.com/sign-up
@@ -11,11 +11,34 @@
  * 4. cd /tmp/try_make_mcp/cloudflare-worker
  * 5. wrangler deploy
  * 6. 记下输出的 URL (如 https://try-make-mcp.your-subdomain.workers.dev)
- * 7. 更新 server.json 中的 remotes URL
+ * 
+ * 变现模式（Stripe Checkout）:
+ * 1. 注册 Stripe: https://dashboard.stripe.com/register
+ * 2. 创建 Checkout Session → 用户付款后获得 API key
+ * 3. 在 wrangler.toml 或 Cloudflare Dashboard 设置环境变量:
+ *    - STRIPE_SECRET_KEY: sk_live_...
+ *    - STRIPE_PRICE_ID: price_... (产品价格ID)
+ *    - VALID_API_KEYS: "key1,key2,key3" (已验证的API key列表)
+ * 4. 部署: wrangler deploy
+ * 
+ * 免费层: 无需 API key，每工具每 IP 10次/天
+ * 付费层: 传入 api_key 参数，无限调用
  */
 
+// ─── Freemium Configuration ───────────────────────────────────
+// 免费 tier 每 IP 每天 10 次调用
+const FREE_TIER_DAILY_LIMIT = 10;
+
+// 需要付费的工具（免费层限流，付费层无限）
+// 'all' = 所有工具都限流, [] = 所有工具都免费
+const PAID_TOOLS = ['all'];
+
+// 你的 Stripe Checkout URL（Cooper 注册 Stripe 后替换）
+// 示例: https://buy.stripe.com/xxx
+const STRIPE_CHECKOUT_URL = 'https://buy.stripe.com/YOUR_LINK_HERE';
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
@@ -29,9 +52,37 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
+    // Stripe Checkout redirect
+    if (url.pathname === '/subscribe') {
+      return Response.redirect(STRIPE_CHECKOUT_URL, 302);
+    }
+
+    // Pricing info page
+    if (url.pathname === '/pricing') {
+      return new Response(JSON.stringify({
+        name: 'try-make-mcp',
+        pricing: {
+          free: {
+            price: '$0',
+            limits: `${FREE_TIER_DAILY_LIMIT} tool calls per day per IP`,
+            auth: 'None required',
+          },
+          pro: {
+            price: '$0.01/call (pay-as-you-go)',
+            limits: 'Unlimited',
+            auth: 'Stripe API key via tool parameter',
+            subscribe: '/subscribe',
+          },
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     // MCP endpoint (POST /mcp)
     if (url.pathname === '/mcp' && request.method === 'POST') {
-      return handleMCPRequest(request, corsHeaders);
+      return handleMCPRequest(request, corsHeaders, env);
     }
 
     // SSE endpoint (GET /sse) — legacy transport
@@ -43,14 +94,20 @@ export default {
     if (url.pathname === '/' || url.pathname === '/health') {
       return new Response(JSON.stringify({
         name: 'try-make-mcp',
-        version: '1.0.0',
-        description: 'MCP Factory — Multi-tool MCP server hosted on Cloudflare Workers',
+        version: '2.0.0',
+        description: 'MCP Factory — Multi-tool MCP server with freemium API key auth',
         transport: ['streamable-http', 'sse'],
         endpoints: {
           mcp: '/mcp',
           sse: '/sse',
+          subscribe: '/subscribe',
+          pricing: '/pricing',
         },
         tools: getToolList(),
+        freemium: {
+          free_tier_limit: FREE_TIER_DAILY_LIMIT,
+          auth_mode: 'api_key_parameter',
+        },
       }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -152,10 +209,59 @@ function getToolList() {
 
 // ─── Streamable HTTP Handler ─────────────────────────────────────
 
-async function handleMCPRequest(request, corsHeaders) {
+// ─── API Key Validation ────────────────────────────────────────
+
+/**
+ * 验证 API key。模式与 BGPT MCP 一致：
+ * - api_key 作为 tool call 参数传入
+ * - 如果提供了有效 key → 付费层，无限调用
+ * - 如果没有 key → 免费层，基于 IP 的限流
+ */
+function validateApiKey(apiKey, env) {
+  if (!apiKey) return { valid: false, tier: 'free' };
+  
+  // 检查环境变量中的有效 key 列表
+  // 格式: "sk_live_xxx,sk_live_yyy,sk_live_zzz"
+  const validKeys = env?.VALID_API_KEYS || '';
+  const keyList = validKeys.split(',').map(k => k.trim()).filter(k => k.length > 0);
+  
+  if (keyList.includes(apiKey)) {
+    return { valid: true, tier: 'pro' };
+  }
+  
+  // 可选: 通过 Stripe API 验证（Cooper 设置 STRIPE_SECRET_KEY 后启用）
+  // const stripeKey = env?.STRIPE_SECRET_KEY;
+  // if (stripeKey) { /* call Stripe API to verify */ }
+  
+  return { valid: false, tier: 'free' };
+}
+
+/**
+ * 检查免费层限流（基于 CF-KV 或简单的全局计数器）
+ * 在 Cloudflare Workers 免费套餐中，用 KV 做计数最可靠。
+ * 这里用内存计数（单实例），生产环境建议用 KV:
+ * 
+ *   const count = await env.USAGE_KV.get(ipKey) || 0;
+ *   if (count >= FREE_TIER_DAILY_LIMIT) → deny
+ *   await env.USAGE_KV.put(ipKey, count + 1, { expirationTtl: 86400 });
+ */
+function checkFreeTierLimit(ip) {
+  // 生产环境: 用 Cloudflare KV
+  // 开发环境: 简单的内存计数（每次 Worker 冷启动重置）
+  if (!globalThis.__freeTierUsage) globalThis.__freeTierUsage = {};
+  const key = `ip:${ip}:${new Date().toISOString().split('T')[0]}`;
+  const count = globalThis.__freeTierUsage[key] || 0;
+  globalThis.__freeTierUsage[key] = count + 1;
+  return count < FREE_TIER_DAILY_LIMIT;
+}
+
+// ─── Streamable HTTP Handler ─────────────────────────────────────
+
+async function handleMCPRequest(request, corsHeaders, env) {
   try {
     const body = await request.json();
     const { method, params, id } = body;
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
 
     let result;
     let isError = false;
@@ -169,7 +275,7 @@ async function handleMCPRequest(request, corsHeaders) {
           },
           serverInfo: {
             name: 'try-make-mcp',
-            version: '1.0.0',
+            version: '2.0.0',
           },
         };
         break;
@@ -182,15 +288,65 @@ async function handleMCPRequest(request, corsHeaders) {
         result = { tools: getToolList() };
         break;
 
-      case 'tools/call':
-        result = await handleToolCall(params);
-        if (result.isError) {
-          isError = true;
-          result = result.content;
+      case 'tools/call': {
+        const toolName = params?.name;
+        const args = params?.arguments || {};
+        const apiKey = args.api_key;  // BGPT 模式: api_key 作为工具参数
+
+        // 检查此工具是否需要付费验证
+        const needsAuth = PAID_TOOLS.includes('all') || PAID_TOOLS.includes(toolName);
+        
+        if (needsAuth) {
+          const auth = validateApiKey(apiKey, env);
+          
+          if (auth.tier === 'pro') {
+            // ✅ 付费用户: 直接执行
+            result = await handleToolCall(params);
+            if (result.isError) {
+              isError = true;
+              result = result.content;
+            } else {
+              result = result.content;
+            }
+          } else {
+            // 免费层: 检查限流
+            const allowed = checkFreeTierLimit(clientIP);
+            if (allowed) {
+              result = await handleToolCall(params);
+              if (result.isError) {
+                isError = true;
+                result = result.content;
+              } else {
+                result = result.content;
+              }
+            } else {
+              // ❌ 免费额度用完: 返回 MCP Payment Required error
+              // 参考: MCP GitHub Discussion #2436 提议的 error code -32042
+              isError = true;
+              result = {
+                code: -32042,
+                message: 'Payment required: Free tier daily limit reached',
+                data: {
+                  limit: FREE_TIER_DAILY_LIMIT,
+                  subscribe: '/subscribe',
+                  pricing: '/pricing',
+                  tip: 'Add an api_key parameter to your tool call for unlimited access. Get one at /subscribe',
+                },
+              };
+            }
+          }
         } else {
-          result = result.content;
+          // 非付费工具: 直接执行
+          result = await handleToolCall(params);
+          if (result.isError) {
+            isError = true;
+            result = result.content;
+          } else {
+            result = result.content;
+          }
         }
         break;
+      }
 
       case 'ping':
         result = {};
