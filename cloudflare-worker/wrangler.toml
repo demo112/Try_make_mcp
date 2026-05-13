@@ -1,0 +1,12 @@
+name = "try-make-mcp"
+main = "worker.mjs"
+compatibility_date = "2025-06-18"
+workers_dev = true
+
+# No KV, no D1, no secrets needed — pure compute!
+# Free tier: 100,000 requests/day, 10ms CPU time per request
+
+[vars]
+# Environment metadata
+MCP_SERVER_NAME = "try-make-mcp"
+MCP_SERVER_VERSION = "1.0.0"
