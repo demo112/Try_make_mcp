@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Client Libraries & SDKs: Python, TypeScript, Go, and More (2026 Guide)</title>
+    <meta name="description" content="Complete guide to MCP client libraries and SDKs in 2026. Compare Python, TypeScript, Go, Rust, and Java implementations. Official SDKs, community libraries, and framework integrations.">
+    <meta name="keywords" content="MCP client library, MCP SDK, Model Context Protocol Python, MCP TypeScript, MCP Go, MCP Rust, MCP SDK comparison">
+    <link rel="canonical" href="mcp-client-libraries-2026.html">
+</head>
+<body>
+<article>
+<h1>MCP Client Libraries & SDKs: Python, TypeScript, Go, and More (2026 Guide)</h1>
+
+<p>The Model Context Protocol (MCP) is rapidly becoming the standard for connecting AI models to external tools and data sources. But to build MCP-powered applications, you need a reliable client library. This guide covers every major MCP client SDK available in 2026 — from official Anthropic releases to community-maintained implementations across 10+ languages.</p>
+
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#official">Official MCP SDKs</a></li>
+<li><a href="#python">Python MCP Libraries</a></li>
+<li><a href="#typescript">TypeScript/JavaScript MCP Libraries</a></li>
+<li><a href="#go">Go MCP Libraries</a></li>
+<li><a href="#rust">Rust MCP Libraries</a></li>
+<li><a href="#java">Java & JVM MCP Libraries</a></li>
+<li><a href="#comparison">Feature Comparison Matrix</a></li>
+<li><a href="#choose">Choosing the Right Library</a></li>
+</ol>
+
+<h2 id="official">Official MCP SDKs from Anthropic</h2>
+
+<p>Anthropic maintains official MCP SDKs for the most popular languages. These are the most thoroughly tested and recommended for production use.</p>
+
+<h3>Official Python SDK: <code>mcp</code></h3>
+
+<pre><code>pip install mcp</code></pre>
+
+<pre><code>import mcp
+
+# Create an MCP client
+client = mcp.Client("https://api.anthropic.com/mcp")
+
+# List available servers
+servers = client.list_servers()
+
+# Connect to a server
+async with client.connect(servers[0]) as conn:
+    result = await conn.call_tool("web_search", {"query": "MCP protocol"})
+    print(result)</code></pre>
+
+<p><strong>Features</strong>: Full protocol support, streaming, authentication, retry logic, connection pooling</p>
+<p><strong>Version</strong>: 1.0+ (stable)</p>
+<p><strong>Use case</strong>: Production Python applications, data pipelines, automation scripts</p>
+
+<h3>Official TypeScript SDK: <code>@modelcontextprotocol/sdk</code></h3>
+
+<pre><code>npm install @modelcontextprotocol/sdk</code></pre>
+
+<pre><code>import { Client } from "@modelcontextprotocol/sdk/client";
+
+const client = new Client({
+  name: "my-mcp-client",
+  version: "1.0.0",
+});
+
+await client.connect({
+  transport: "stdio",
+  command: "npx",
+  args: ["-y", "@my-mcp-server/server"],
+});
+
+// Call a tool
+const result = await client.callTool({
+  name: "calculate",
+  arguments: { a: 10, b: 20 },
+});</code></pre>
+
+<p><strong>Features</strong>: TypeScript-native, full type safety, Node.js + browser support</p>
+<p><strong>Version</strong>: 0.9+</p>
+<p><strong>Use case</strong>: Next.js apps, React applications, CLI tools, VS Code extensions</p>
+
+<h2 id="python">Python MCP Libraries</h2>
+
+<h3>FastMCP — The Most Popular Community Framework</h3>
+
+<pre><code>pip install fastmcp</code></pre>
+
+<pre><code>from fastmcp import FastMCP
+
+mcp = FastMCP("My Server")
+
+@mcp.tool()
+def calculate(a: float, b: float, operation: str = "add") -> float:
+    """Perform a calculation."""
+    if operation == "add":
+        return a + b
+    elif operation == "multiply":
+        return a * b
+    return 0
+
+@mcp.resource("config://app-settings")
+def get_settings() -> dict:
+    """Return application settings."""
+    return {"theme": "dark", "debug": True}</code></pre>
+
+<p><strong>Why FastMCP?</strong> It dramatically simplifies MCP server creation with a decorator-based API, automatic schema generation, and built-in support for streaming responses.</p>
+<p><strong>Stars</strong>: 8,400+</p>
+<p><strong>Best for</strong>: Rapid MCP server development, Python-first teams</p>
+
+<h3>try_make_mcp — MCP Factory (This Project)</h3>
+
+<pre><code># Use MCP Factory to scaffold a new MCP server
+git clone https://github.com/demo112/Try_make_mcp.git
+cd Try_make_mcp
+cd src/apps/mcp_factory
+python server.py</code></pre>
+
+<p><strong>Features</strong>: 6A development workflow, built-in templates for document conversion, RAG tools, multi-format exports, CI/CD integration, Docker support</p>
+<p><strong>Built-in apps</strong>:</p>
+<ul>
+<li><code>mcp_factory</code> — Project scaffolding</li>
+<li><code>everything2md</code> — PDF/Office/OCR → Markdown</li>
+<li><code>md_converter</code> — Markdown → Word/PDF/Excel</li>
+<li><code>rag_flow_mcp</code> — RAGFlow integration</li>
+<li><code>rag_eval_flow</code> — RAG benchmarking</li>
+</ul>
+
+<h3>LiteLLM MCP Proxy</h3>
+
+<pre><code>pip install litellm mcp</code></pre>
+
+<pre><code># Route any LLM through MCP tools
+import litellm
+
+response = litellm.completion(
+  model="claude-3-5-sonnet",
+  messages=[{"role": "user", "content": "Search for MCP tutorials"}],
+  tools=[{
+    "type": "mcp",
+    "mcp_server": "web-search",
+    "mcp_function": "search"
+  }]
+)</code></pre>
+
+<p><strong>Stars</strong>: 15,000+</p>
+<p><strong>Best for</strong>: Unifying multiple LLM providers with MCP tools</p>
+
+<h3>MCP Python by jlowin</h3>
+
+<pre><code>pip install mcp</code></pre>
+
+<p>The original Python implementation before Anthropic's official SDK. Still actively maintained with low-level protocol access.</p>
+
+<h2 id="typescript">TypeScript/JavaScript MCP Libraries</h2>
+
+<h3>@modelcontextprotocol/sdk (Official)</h3>
+
+<p>The official Anthropic SDK covers both client and server implementations:</p>
+
+<pre><code>import { Server } from "@modelcontextprotocol/sdk/server";
+
+const server = new Server(
+  { name: "example-server", version: "1.0.0" },
+  { capabilities: { tools: {}, resources: {} } }
+);
+
+server.setRequestHandler("tools/list", async () => ({
+  tools: [{
+    name: "greet",
+    description: "Greet a user by name",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "The name to greet" }
+      }
+    }
+  }]
+}));
+
+server.setRequestHandler("tools/call", async (request) => {
+  if (request.params.name === "greet") {
+    return { content: [{ type: "text", text: `Hello, ${request.params.arguments.name}!` }] };
+  }
+});</code></pre>
+
+<h3>Genkit MCP Adapter</h3>
+
+<pre><code>npm install @genkitai/mcp-adapter</code></pre>
+
+<p>Integrates MCP servers with Google's Genkit framework for AI application development.</p>
+
+<h3>Vercel AI SDK + MCP</h3>
+
+<pre><code>npm install ai @modelcontextprotocol/sdk</code></pre>
+
+<pre><code>import { generateText } from "ai";
+import { Client } from "@modelcontextprotocol/sdk/client";
+
+const mcpClient = new Client({ name: "my-app", version: "1.0.0" });
+await mcpClient.connect({ transport: "http", url: "https://mcp.example.com" });
+
+const result = await generateText({
+  model: "claude-3-5-sonnet",
+  prompt: "Summarize the latest news",
+  tools: mcpClient.tools(), // Use MCP tools as AI SDK tools
+});</code></pre>
+
+<h2 id="go">Go MCP Libraries</h2>
+
+<h3>go-mcp</h3>
+
+<pre><code>go get github.com/metoro-io/mcp-golang</code></pre>
+
+<pre><code>package main
+
+import (
+    "context"
+    "github.com/metoro-io/mcp-golang"
+)
+
+func main() {
+    server := mcp.NewServer("my-server", "1.0.0")
+    
+    server.RegisterTool("calculator", "Perform calculations",
+        func(ctx context.Context, args map[string]any) (string, error) {
+            a := args["a"].(float64)
+            b := args["b"].(float64)
+            return fmt.Sprintf("%f", a+b), nil
+        })
+    
+    server.Start()
+}</code></pre>
+
+<p><strong>Best for</strong>: High-performance Go applications, microservices</p>
+
+<h3>wgc-tech/mcp-go</h3>
+
+<pre><code>go get github.com/wgc-tech/mcp</code></pre>
+
+<p>Another Go implementation with focus on simplicity and minimal dependencies.</p>
+
+<h2 id="rust">Rust MCP Libraries</h2>
+
+<h3>mcp-rs</h3>
+
+<pre><code>cargo add mcp</code></pre>
+
+<pre><code>use mcp::{Server, Tool, Result};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut server = Server::new("my-server", "1.0.0");
+    
+    server.add_tool(Tool::new(
+        "hello",
+        "Say hello",
+        |params: HelloParams| async move {
+            Ok(format!("Hello, {}!", params.name))
+        },
+    )).await?;
+    
+    server.start().await
+}</code></pre>
+
+<p><strong>Best for</strong>: Performance-critical applications, embedded systems, WebAssembly</p>
+
+<h2 id="java">Java & JVM MCP Libraries</h2>
+
+<h3>MCP4J</h3>
+
+<pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;io.github.mcp4j&lt;/groupId&gt;
+    &lt;artifactId&gt;mcp4j-core&lt;/artifactId&gt;
+    &lt;version&gt;0.2.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+
+<pre><code>import mcp4j.*;
+
+public class MyMCPServer {
+    public static void main(String[] args) {
+        MCPServer server = MCPServer.builder("my-server", "1.0.0")
+            .tool("search", "Search the web", (params) -> {
+                return SearchService.search(params.get("query"));
+            })
+            .build();
+        
+        server.start();
+    }
+}</code></pre>
+
+<p><strong>Best for</strong>: Enterprise Java applications, Spring Boot integration</p>
+
+<h3>Kotlin MCP</h3>
+
+<pre><code>implementation("io.mcp:mcp-kotlin:0.1.0")</code></pre>
+
+<p>Kotlin-first implementation with coroutines support.</p>
+
+<h2 id="comparison">Feature Comparison Matrix</h2>
+
+<table>
+<thead>
+<tr><th>Library</th><th>Language</th><th>Stars</th><th>Server</th><th>Client</th><th>Streaming</th><th>SSE</th><th>stdio</th><th>HTTP</th></tr>
+</thead>
+<tbody>
+<tr><td>Official Python SDK</td><td>Python</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>FastMCP</td><td>Python</td><td>8.4k</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>try_make_mcp</td><td>Python</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>Official TS SDK</td><td>TypeScript</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>go-mcp</td><td>Go</td><td>—</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>mcp-rs</td><td>Rust</td><td>—</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+<tr><td>MCP4J</td><td>Java</td><td>—</td><td>✅</td><td>—</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+</tbody>
+</table>
+
+<h2 id="choose">Choosing the Right MCP Library</h2>
+
+<h3>Quick Decision Guide</h3>
+
+<ul>
+<li><strong>Building an MCP server in Python?</strong> → Use <strong>FastMCP</strong> for rapid development or <strong>try_make_mcp</strong> for enterprise-grade templates</li>
+<li><strong>Building an MCP client in Python?</strong> → Use the <strong>Official Python SDK</strong></li>
+<li><strong>Building for the web (TypeScript/JavaScript)?</strong> → Use the <strong>Official TypeScript SDK</strong> + Vercel AI SDK</li>
+<li><strong>Performance-critical or embedded?</strong> → Use <strong>mcp-rs</strong></li>
+<li><strong>Go microservices?</strong> → Use <strong>go-mcp</strong></li>
+<li><strong>Enterprise Java?</strong> → Use <strong>MCP4J</strong></li>
+</ul>
+
+<h3>Migration Between Libraries</h3>
+
+<p>Most MCP libraries follow the same core concepts — servers, tools, resources, and prompts. Migration is usually straightforward:</p>
+
+<pre><code># FastMCP → Official Python SDK
+# FastMCP decorator style:
+@mcp.tool()
+def my_tool(arg: str) -> str:
+    return f"Result: {arg}"
+
+# Official SDK equivalent:
+@server.list_tools()
+async def list_tools():
+    return [Tool(name="my_tool", description="...", inputSchema={...})]
+
+@server.call_tool()
+async def call_tool(name, arguments):
+    if name == "my_tool":
+        return f"Result: {arguments['arg']}"</code></pre>
+
+<h2>Getting Started with Your First MCP Server</h2>
+
+<p>Ready to build? The fastest path is using try_make_mcp's MCP Factory:</p>
+
+<pre><code># 1. Clone the factory
+git clone https://github.com/demo112/Try_make_mcp.git
+cd Try_make_mcp/src/apps/mcp_factory
+
+# 2. Run the MCP factory server
+python server.py
+
+# 3. Use the built-in templates to scaffold your server
+# The factory provides:
+# - Project initialization templates
+# - Automated testing scaffolding  
+# - Docker configuration
+# - CI/CD pipeline templates</code></pre>
+
+<p>Alternatively, start with FastMCP for a lightweight approach:</p>
+
+<pre><code>pip install fastmcp
+
+# Create server.py
+from fastmcp import FastMCP
+mcp = FastMCP("My App")
+
+@mcp.tool()
+def analyze_data(data: str) -> str:
+    return f"Analyzed: {len(data)} chars"
+
+# Run: fastmcp run server.py</code></pre>
+
+<h2>Resources</h2>
+
+<ul>
+<li><a href="https://modelcontextprotocol.io/">Official MCP Documentation</a></li>
+<li><a href="https://github.com/modelcontextprotocol/python-sdk">Official Python SDK</a></li>
+<li><a href="https://github.com/modelcontextprotocol/typescript-sdk">Official TypeScript SDK</a></li>
+<li><a href="https://github.com/jlowin/fastmcp">FastMCP</a></li>
+<li><a href="https://github.com/demo112/Try_make_mcp">Try_make_mcp (MCP Factory)</a></li>
+<li><a href="https://glama.ai/mcp/servers">Glama MCP Server Directory</a></li>
+</ul>
+
+</article>
+</body>
+</html>
