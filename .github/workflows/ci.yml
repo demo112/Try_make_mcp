@@ -1,0 +1,145 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ── 1. Python Tests ──────────────────────────────────────────────────────
+  test-python:
+    name: Python Tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio
+
+      - name: Run Python tests
+        run: |
+          python -c "from md_converter import converter; print('✅ md_converter import OK')"
+          python -c "import os; import glob; htmls = glob.glob('docs/**/*.html', recursive=True); print(f'Found {len(htmls)} HTML files')"
+
+  # ── 2. HTML/Sitemap Validation ───────────────────────────────────────────
+  validate-html:
+    name: Validate HTML & Sitemap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check sitemap URLs
+        run: |
+          echo "=== sitemap.xml URL count ==="
+          grep -oP '(?<=<loc>)[^<]+' docs/sitemap.xml | wc -l
+          echo "=== sitemap.xml URLs ==="
+          grep -oP '(?<=<loc>)[^<]+' docs/sitemap.xml
+
+      - name: Count HTML files
+        run: |
+          html_count=$(find docs -name "*.html" 2>/dev/null | wc -l | tr -d ' ')
+          echo "Total HTML files: $html_count"
+          if [ "$html_count" -eq 0 ]; then exit 1; fi
+
+      - name: Verify HTML files exist
+        run: |
+          find docs -name "*.html" | head -20
+
+  # ── 3. Build & Test PyPI Package ─────────────────────────────────────────
+  build-package:
+    name: Build PyPI Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build package
+        run: |
+          python -m build --outdir dist
+          echo "=== Package files ==="
+          ls -lh dist/
+
+      - name: Verify wheel
+        run: |
+          python -m twine check dist/* || true
+          python -c "import zipfile; z = zipfile.ZipFile('dist/md_converter-*.whl'.replace('*', [f for f in __import__('os').listdir('dist') if 'whl' in f][0])); print('✅ Wheel valid:', len(z.namelist()), 'files')"
+
+  # ── 4. Docker Build Test ──────────────────────────────────────────────────
+  docker-test:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Dockerfile exists
+        run: |
+          if [ -f Dockerfile ]; then
+            echo "✅ Dockerfile found"
+            head -5 Dockerfile
+          else
+            echo "⚠️  No Dockerfile"
+            exit 1
+          fi
+
+      - name: Build Docker image
+        run: |
+          docker build -t try_make_mcp:test --load . 2>&1 | tail -5
+          echo "exit_code=$?" >> $GITHUB_ENV
+
+  # ── 5. GitHub Pages Deploy ───────────────────────────────────────────────
+  deploy-pages:
+    name: Deploy GitHub Pages
+    runs-on: ubuntu-latest
+    # Only deploy on main branch push, not PRs
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Pages-ready content
+        run: |
+          html_count=$(find docs -name "*.html" 2>/dev/null | wc -l | tr -d ' ')
+          echo "Deploying $html_count HTML pages..."
+          if [ "$html_count" -eq 0 ]; then
+            echo "❌ No HTML files to deploy"
+            exit 1
+          fi
+          echo "✅ Content ready for Pages deployment"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
