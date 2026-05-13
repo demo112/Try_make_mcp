@@ -1,0 +1,14 @@
+mcp[cli]>=0.1.0
+markdown
+python-docx
+xhtml2pdf
+openpyxl
+beautifulsoup4
+fastmcp
+litellm
+pandas
+markdown-it-py
+mdformat
+pytest
+tabulate
+GitPython

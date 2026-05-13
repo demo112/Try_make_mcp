@@ -1,0 +1,13 @@
+{
+  "id": "General_General_1",
+  "question": "What should be the timeout for API calls?",
+  "answer": "The timeout should be set to 500ms.",
+  "source_doc": "C:\\Users\\Administrator\\Documents\\trae_projects\\Try_make_mcp\\src\\apps\\rag_flow_mcp\\test_run\\docs\\MockProduct\\04_Approve\\test_clarification.md",
+  "metadata": {
+    "product": "General",
+    "module": "General"
+  },
+  "harvested_at": "2025-12-22T23:40:00.960829",
+  "status": "promoted",
+  "promoted_at": "2025-12-22T23:40:00.962416"
+}

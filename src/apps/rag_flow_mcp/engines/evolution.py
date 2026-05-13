@@ -1,0 +1,186 @@
+import os
+import re
+import datetime
+from typing import Dict, Any, List, Tuple
+from .base import BaseEngine
+from src.apps.rag_flow_mcp.core.rag_client import RAGClient
+from src.apps.rag_flow_mcp.core.markdown_ast import MarkdownASTManager
+# from src.apps.rag_flow_mcp.core.shadow_file_manager import ShadowFileManager # Removed
+
+class EvolutionEngine(BaseEngine):
+    """
+    进化引擎 (Evolution Engine)
+    
+    职责:
+    1. 基于澄清结果，自动迭代方案文档。
+    2. 维护文档版本和修订日志。
+    """
+    
+    def initialize(self) -> bool:
+        self.logger.info("正在初始化进化引擎...")
+        try:
+            # rag_client and query_rewriter are initialized in BaseEngine
+            self.ast_manager = MarkdownASTManager()
+            # self.shadow_manager = ShadowFileManager() # Removed, using FileService
+            return True
+        except Exception as e:
+            self.logger.error(f"进化引擎初始化失败: {e}")
+            return False
+        
+    def _extract_headers(self, content: str) -> List[str]:
+        """
+        Extract all headers from the document to guide LLM.
+        """
+        headers = []
+        tokens = self.ast_manager.parse(content)
+        for i, token in enumerate(tokens):
+            if token.type == "heading_open":
+                if i + 1 < len(tokens) and tokens[i+1].type == "inline":
+                    headers.append(tokens[i+1].content)
+        return headers
+
+    def evolve_scheme_document(self, scheme_doc_path: str, clarification_doc_path: str) -> Dict[str, Any]:
+        """
+        进化方案文档 (Evolve Scheme Document)
+        
+        Args:
+            scheme_doc_path: 原方案文档路径 (v1.0)
+            clarification_doc_path: 已决策的澄清文档路径 (04_评审问题记录.md)
+            
+        Returns:
+            Dict: 进化结果 (新文档路径, 修改点摘要)
+        """
+        self.logger.info(f"正在基于 {clarification_doc_path} 进化方案 {scheme_doc_path}")
+        
+        if not os.path.exists(scheme_doc_path) or not os.path.exists(clarification_doc_path):
+            return {"status": "error", "message": "文件未找到"}
+            
+        try:
+            # 1. 解析决策
+            decisions = self._parse_decisions(clarification_doc_path)
+            if not decisions:
+                return {"status": "success", "message": "未发现需要进化的决策点。", "changes": []}
+            
+            # 2. 读取方案文档
+            with open(scheme_doc_path, 'r', encoding='utf-8') as f:
+                scheme_content = f.read()
+                
+            # Extract valid headers
+            valid_headers = self._extract_headers(scheme_content)
+            valid_headers_str = "\n".join([f"- {h}" for h in valid_headers])
+            
+            changes_log = []
+            current_content = scheme_content
+            
+            # 3. 应用进化
+            for idx, (question, answer) in enumerate(decisions):
+                self.logger.info(f"正在处理决策 {idx+1}/{len(decisions)}...")
+                
+                # Prompt Engineering: Ask LLM for specific section Header and Content
+                prompt = (
+                    f"你是一位技术文档撰写专家。"
+                    f"请基于以下决策点更新文档。\n\n"
+                    f"**决策点**:\n问题: {question}\n回答: {answer}\n\n"
+                    f"**现有章节标题 (Valid Headers)**:\n{valid_headers_str}\n\n"
+                    f"**任务**:\n"
+                    f"1. 从上述现有章节标题中选择一个最相关的章节标题（Target Header）。严禁创造不存在的标题。\n"
+                    f"2. 重写该章节下的内容以包含决策点。\n"
+                    f"3. 严格按以下 JSON 格式返回:\n"
+                    f"```json\n"
+                    f"{{\n"
+                    f"  \"target_header\": \"章节标题\",\n"
+                    f"  \"new_content\": \"新内容(Markdown格式)...\"\n"
+                    f"}}\n"
+                    f"```\n"
+                    f"如果无需修改，返回 `{{\"target_header\": null}}`。"
+                )
+                
+                # Truncate content for context
+                truncated_content = current_content[:8000] 
+                
+                # Use QueryRewriter to optimize the prompt (optional, but good practice)
+                # Here we are asking LLM to generate JSON, so maybe rewrite is not needed for the prompt itself,
+                # but we can use it to "Search" for relevant sections if we were doing RAG first.
+                # In this specific flow, we are using 'agentic_search' which calls LLM.
+                # Let's keep it direct for now, but we can rewrite the 'question' part of the prompt if needed.
+                
+                response = self.rag_client.agentic_search(
+                    global_ctx=truncated_content,
+                    local_ctx="",
+                    question=prompt
+                )
+                
+                generated_text = response.get("answer", "")
+                
+                # Extract JSON
+                try:
+                    import json
+                    match = re.search(r'```json\n(.*?)\n```', generated_text, re.DOTALL)
+                    if match:
+                        json_str = match.group(1)
+                        result = json.loads(json_str)
+                        target_header = result.get("target_header")
+                        new_content = result.get("new_content")
+                        
+                        if target_header and new_content:
+                            # Validation: Check if header is valid
+                            if target_header not in valid_headers:
+                                self.logger.warning(f"Invalid header '{target_header}' returned by LLM. Skipping.")
+                                continue
+                                
+                            # Apply AST Replacement
+                            current_content = self.ast_manager.replace_section(current_content, target_header, new_content)
+                            changes_log.append(f"Updated section '{target_header}' for question: {question[:30]}...")
+                            
+                except Exception as parse_err:
+                    self.logger.warning(f"Failed to parse LLM response for evolution: {parse_err}")
+                    continue
+
+            # 4. Save Shadow Copy
+            if changes_log:
+                # Add revision log
+                revision_log = "\n\n## 修订记录 (Auto-generated)\n" + "\n".join([f"- {log}" for log in changes_log])
+                current_content += revision_log
+                
+                shadow_path, diff_path = self.file_service.create_shadow_copy(scheme_doc_path, current_content)
+                
+                return {
+                    "status": "success",
+                    "shadow_path": shadow_path,
+                    "diff_path": diff_path,
+                    "changes": changes_log,
+                    "message": "已生成进化后的影子副本，请 Review。"
+                }
+            else:
+                return {"status": "success", "message": "未产生有效修改。", "changes": []}
+
+        except Exception as e:
+            self.logger.error(f"进化过程失败: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _parse_decisions(self, doc_path: str) -> List[Tuple[str, str]]:
+        """
+        解析评审问题记录，提取已决策的条目
+        """
+        content = self.file_service.read_text(doc_path)
+            
+        decisions = []
+        # Match ## [index].[title] blocks, same as InferenceEngine
+        pattern = re.compile(r'(##\s+(\d+)\.(.+?)\n)(.*?)(?=\n##\s+\d+\.|\Z)', re.DOTALL)
+        matches = pattern.findall(content)
+        
+        for header, idx, title, body in matches:
+            # Look for Question Description and Answer
+            # Support both English and Chinese colons
+            q_match = re.search(r'\*\*问题描述\*\*[:：](.*?)\n', body) or re.search(r'\*\*描述\*\*[:：](.*?)\n', body)
+            a_match = re.search(r'\*\*回答\*\*[:：](.*?)\n', body)
+            
+            if q_match and a_match:
+                q_text = q_match.group(1).strip()
+                a_text = a_match.group(1).strip()
+                
+                # Filter out empty answers or placeholders
+                if a_text and "待回答" not in a_text:
+                    decisions.append((q_text, a_text))
+                    
+        return decisions
